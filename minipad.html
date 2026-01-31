@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minipad</title>
+
+    <!-- Librerie esterne -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+
+    <style>
+        /* --- Base Styles & Windows 11 Theme --- */
+        :root {
+            --bg-color: #ffffff;
+            --sidebar-bg: #f3f3f3;
+            --text-color: #202020;
+            --accent-color: #0067c0;
+            --border-color: #e5e5e5;
+            --hover-color: rgba(0, 0, 0, 0.04);
+            --math-btn-bg: #f9f9f9;
+            --math-btn-border: #ccc;
+            --font-ui: 'Segoe UI Variable', 'Segoe UI', sans-serif;
+            --shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #202020;
+            --sidebar-bg: #2d2d2d;
+            --text-color: #ffffff;
+            --accent-color: #4cc2ff;
+            --border-color: #444;
+            --hover-color: rgba(255, 255, 255, 0.06);
+            --math-btn-bg: #333;
+            --math-btn-border: #555;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-ui);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- TITLE BAR --- */
+        #titlebar {
+            height: 40px;
+            background: var(--bg-color);
+            display: flex;
+            align-items: center;
+            padding: 0 12px 0 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+            justify-content: space-between;
+            user-select: none;
+        }
+
+        .drag-region {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+            height: 100%;
+        }
+
+        .menu-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-color);
+            padding: 4px 8px;
+            font-size: 13px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            height: 32px;
+        }
+
+        .menu-btn:hover {
+            background-color: var(--hover-color);
+        }
+
+        .icon-btn-title {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn-title:hover {
+            background-color: var(--hover-color);
+        }
+
+        .icon-btn-title svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2;
+        }
+
+        /* Dropdowns generic styles */
+        .dropdown-menu {
+            position: absolute;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            border-radius: 4px;
+            width: 200px;
+            display: none;
+            flex-direction: column;
+            padding: 4px;
+            z-index: 2000;
+            /* VERY HIGH Z-INDEX to be above math toolbar */
+        }
+
+        .dropdown-menu.show {
+            display: flex;
+        }
+
+        .dropdown-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--hover-color);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 4px 0;
+        }
+
+        #save-indicator {
+            font-size: 11px;
+            color: #888;
+            margin-left: auto;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        #save-indicator.visible {
+            opacity: 1;
+            color: var(--accent-color);
+        }
+
+        .window-controls {
+            display: flex;
+            height: 100%;
+        }
+
+        .control-btn {
+            width: 46px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: transparent;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .control-btn:hover {
+            background-color: var(--hover-color);
+        }
+
+        .close-btn:hover {
+            background-color: #e81123;
+            color: white;
+        }
+
+        /* --- MAIN TOOLBAR --- */
+        #toolbar {
+            display: flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-color);
+            gap: 4px;
+            flex-wrap: wrap;
+            position: relative;
+            /* Context for dropdowns */
+            justify-content: flex-start;
+            /* Align all to start */
+        }
+
+        .tool-group {
+            display: flex;
+            gap: 2px;
+            padding-right: 8px;
+            border-right: 1px solid var(--border-color);
+            align-items: center;
+            height: 28px;
+            position: relative;
+        }
+
+        /* Last group shouldn't have border if possible, but standardising is fine */
+
+
+        .format-btn {
+            width: 26px;
+            height: 26px;
+            border: none;
+            background: transparent;
+            color: var(--text-color);
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .format-btn:hover {
+            background-color: var(--hover-color);
+        }
+
+        .format-btn svg {
+            width: 12px;
+            height: 12px;
+            fill: currentColor;
+        }
+
+        /* Inputs */
+        select.tool-select {
+            padding: 2px 4px;
+            border-radius: 3px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 12px;
+            max-width: 110px;
+        }
+
+        input.number-input {
+            width: 40px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* Color Pickers */
+        .color-wrapper {
+            position: relative;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .color-wrapper:hover {
+            background-color: var(--hover-color);
+            border-radius: 3px;
+        }
+
+        input[type="color"] {
+            opacity: 0;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        /* --- MATH TOOLBAR --- */
+        #math-toolbar {
+            display: none;
+            background: #f0f0f0;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0;
+            flex-direction: column;
+            z-index: 1000;
+            /* Below dropdowns, above editor */
+        }
+
+        [data-theme="dark"] #math-toolbar {
+            background: #252525;
+        }
+
+        #math-toolbar.show {
+            display: flex;
+        }
+
+        .math-tabs {
+            display: flex;
+            gap: 1px;
+            padding: 2px;
+            background: #e5e5e5;
+            border-bottom: 1px solid #ccc;
+            overflow-x: auto;
+        }
+
+        [data-theme="dark"] .math-tabs {
+            background: #333;
+            border-bottom: #444;
+        }
+
+        .math-tab {
+            padding: 4px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            border-radius: 3px 3px 0 0;
+            border: 1px solid transparent;
+            white-space: nowrap;
+            background: transparent;
+            color: #555;
+        }
+
+        .math-tab:hover {
+            background: #fff;
+            color: #000;
+        }
+
+        .math-tab.active {
+            background: #f9f9f9;
+            border-color: #ccc;
+            border-bottom-color: #f9f9f9;
+            font-weight: bold;
+            color: #000;
+            box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .math-tab {
+            background: transparent;
+            color: #aaa;
+        }
+
+        [data-theme="dark"] .math-tab:hover {
+            background: #444;
+            color: #fff;
+        }
+
+        [data-theme="dark"] .math-tab.active {
+            background: #333;
+            border-color: #555;
+            border-bottom-color: #333;
+            color: #fff;
+        }
+
+        .math-content {
+            padding: 4px;
+            overflow-x: auto;
+            background: var(--math-btn-bg);
+            max-height: 160px;
+        }
+
+        .math-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+            gap: 2px;
+        }
+
+        /* The Compact Math Button Style */
+        .math-btn {
+            height: 28px;
+            width: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+            cursor: pointer;
+            color: #000;
+            font-size: 14px;
+            transition: all 0.05s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .math-btn {
+            background: #444;
+            border-color: #555;
+            color: white;
+        }
+
+        .math-btn:hover {
+            background: #e8f0fe;
+            border-color: #8ab4f8;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 2;
+        }
+
+        [data-theme="dark"] .math-btn:hover {
+            background: #555;
+            border-color: var(--accent-color);
+        }
+
+        .math-btn:active {
+            transform: translateY(1px);
+            box-shadow: none;
+        }
+
+        /* --- DIAGRAM MODAL (NEW) --- */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--bg-color);
+            padding: 20px;
+            border-radius: 8px;
+            width: 800px;
+            max-width: 95%;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal h2 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-modal {
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .diagram-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 10px 0;
+        }
+
+        .diagram-card {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.2s;
+        }
+
+        .diagram-card:hover {
+            background-color: var(--sidebar-bg);
+            border-color: var(--accent-color);
+        }
+
+        .diagram-preview {
+            background: white;
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 10px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        [data-theme="dark"] .diagram-preview {
+            background: #333;
+            border-color: #555;
+        }
+
+        .diagram-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        /* --- TOOLTIP --- */
+        #math-tooltip {
+            position: fixed;
+            display: none;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            border-radius: 8px;
+            padding: 10px 15px;
+            pointer-events: none;
+            z-index: 9999;
+            transition: opacity 0.1s;
+        }
+
+        #math-tooltip .katex {
+            font-size: 1.5rem;
+            color: var(--text-color);
+        }
+
+        /* --- TABS --- */
+        #tabs-container {
+            display: flex;
+            background: var(--sidebar-bg);
+            padding-left: 10px;
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 6px 12px;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--tab-inactive-bg);
+            color: var(--text-color);
+            border: 1px solid transparent;
+            margin-top: 4px;
+        }
+
+        .tab.active {
+            background: var(--tab-active-bg);
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--tab-active-bg);
+            margin-bottom: -1px;
+            z-index: 10;
+        }
+
+        .tab-close {
+            opacity: 0.5;
+            font-size: 14px;
+        }
+
+        .tab-close:hover {
+            opacity: 1;
+            color: #e81123;
+        }
+
+        /* --- WORKSPACE --- */
+        #workspace {
+            display: flex;
+            flex-grow: 1;
+            height: calc(100vh - 130px);
+        }
+
+        #editor-pane {
+            width: 50%;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #preview-pane {
+            width: 50%;
+            overflow-y: auto;
+            padding: 30px;
+            background: var(--bg-color);
+        }
+
+        textarea#editor {
+            flex-grow: 1;
+            border: none;
+            resize: none;
+            padding: 20px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            outline: none;
+            line-height: 1.6;
+        }
+
+        /* Preview Styles */
+        #preview-content {
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        #preview-content h1,
+        #preview-content h2 {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.3em;
+            margin-top: 1em;
+        }
+
+        #preview-content code {
+            background: rgba(127, 127, 127, 0.15);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        #preview-content pre {
+            background: var(--sidebar-bg);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        #preview-content blockquote {
+            border-left: 4px solid var(--accent-color);
+            padding-left: 15px;
+            color: #888;
+            font-style: italic;
+        }
+
+        #preview-content img {
+            max-width: 100%;
+            border-radius: 4px;
+        }
+
+        #preview-content table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        #preview-content th,
+        #preview-content td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
+        }
+
+        /* --- STATUS BAR --- */
+        #statusbar {
+            height: 22px;
+            background: var(--accent-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 11px;
+            justify-content: space-between;
+            opacity: 0.9;
+        }
+
+        /* --- GUIDA MODAL --- */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--bg-color);
+            padding: 20px;
+            border-radius: 8px;
+            width: 700px;
+            max-width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        .modal h2 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .modal table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .modal th,
+        .modal td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .modal code {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .close-modal {
+            float: right;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+            line-height: 20px;
+        }
+
+        /* Print */
+        @media print {
+
+            #titlebar,
+            #toolbar,
+            #math-toolbar,
+            #tabs-container,
+            #editor-pane,
+            #statusbar,
+            .modal,
+            #math-tooltip {
+                display: none !important;
+            }
+
+            #preview-pane {
+                width: 100% !important;
+                margin: 0;
+                padding: 0;
+                overflow: visible;
+            }
+
+            body {
+                height: auto;
+                overflow: visible;
+                background: white;
+                color: black;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Tooltip Element -->
+    <div id="math-tooltip"></div>
+
+    <!-- Diagram Modal -->
+    <div id="diagram-modal" class="modal">
+        <div class="modal-content">
+            <h2>Inserisci Diagramma</h2>
+            <div class="diagram-grid" id="diagram-grid"></div>
+        </div>
+    </div>
+
+    <!-- Title Bar -->
+    <header id="titlebar">
+        <div class="drag-region">
+            <button class="menu-btn" id="file-btn" onclick="toggleFileMenu()">
+                <span style="margin-right:4px;">File</span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 9l6 6 6-6" />
+                </svg>
+            </button>
+
+            <!-- File Dropdown -->
+            <div class="dropdown-menu" id="file-menu">
+                <div class="dropdown-item" onclick="newTab()">Nuovo</div>
+                <div class="dropdown-item" onclick="promptExport('md')">Salva con nome...</div>
+                <!-- Defaults to MD (Source) -->
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="exportPDF()">Esporta PDF</div>
+                <div class="dropdown-item" onclick="exportHTML()">Esporta HTML</div>
+                <div class="dropdown-item" onclick="exportMD()">Esporta Markdown (.md)</div>
+                <div class="dropdown-item" onclick="exportTEX()">Esporta LaTeX (.tex)</div>
+            </div>
+
+            <button class="icon-btn-title" onclick="saveNow()" title="Salva Ora">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+            </button>
+
+            <span id="save-indicator">Salvato</span>
+        </div>
+
+        <!-- Window Controls -->
+        <div class="window-controls">
+            <div class="control-btn" onclick="toggleFullScreen()" title="Schermo Intero">
+                <svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                </svg>
+            </div>
+            <div class="control-btn close-btn" onclick="if(confirm('Chiudere Minipad?')) window.close()" title="Chiudi">
+                <svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+        </div>
+    </header>
+
+    <!-- Formatting Toolbar -->
+    <div id="toolbar">
+        <!-- Fonts -->
+        <div class="tool-group">
+            <select class="tool-select" id="font-family" onchange="changeFont()">
+                <option value="'Segoe UI', sans-serif" selected>Segoe UI</option>
+                <option value="'Arial', sans-serif">Arial</option>
+                <option value="'Verdana', sans-serif">Verdana</option>
+                <option value="'Georgia', serif">Georgia</option>
+                <option value="'Consolas', monospace">Consolas</option>
+                <option value="'Courier New', monospace">Courier New</option>
+                <option value="'Roboto', sans-serif">Roboto</option>
+                <option value="'Monaco', monospace">Monaco</option>
+            </select>
+            <input type="number" id="font-size" class="number-input" value="14" min="8" max="72"
+                onchange="changeFontSize()">
+        </div>
+
+        <!-- Basic Format -->
+        <div class="tool-group">
+            <button class="format-btn" onclick="insertMarkdown('**', '**')"
+                title="Grassetto"><strong>B</strong></button>
+            <button class="format-btn" onclick="insertMarkdown('*', '*')" title="Corsivo"><em>I</em></button>
+            <button class="format-btn" onclick="insertMarkdown('<u>', '</u>')" title="Sottolineato"><u>U</u></button>
+            <button class="format-btn" onclick="insertMarkdown('~~', '~~')" title="Barrato"><s>S</s></button>
+            <button class="format-btn" onclick="insertMarkdown('<sup>', '</sup>')" title="Apice">x²</button>
+            <button class="format-btn" onclick="insertMarkdown('<sub>', '</sub>')" title="Pedice">x₂</button>
+            <button class="format-btn" onclick="insertMarkdown('`', '`')" title="Codice">&lt;/&gt;</button>
+        </div>
+
+        <!-- Colors -->
+        <div class="tool-group">
+            <button class="format-btn" onclick="document.getElementById('text-color-picker').click()"
+                title="Colore Testo">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 20h16" />
+                    <path d="M12 4l-6 13h12L12 4z" />
+                    <path d="M12 15h0" stroke-width="4" stroke="var(--accent-color)" />
+                </svg>
+            </button>
+            <input type="color" id="text-color-picker" style="display:none" onchange="insertColor('color', this.value)"
+                value="#000000">
+
+            <button class="format-btn" onclick="document.getElementById('bg-color-picker').click()"
+                title="Evidenziatore">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15.24 6.36l-3.53-3.53a2 2 0 0 0-2.83 0l-7.79 7.79a2 2 0 0 0 0 2.83L6.36 18.76" />
+                    <path d="M12.41 9.19l3.54 3.54" />
+                    <path d="M14 18h6v2h-6z" />
+                    <path d="M9.19 12.41l-2.43 2.43" />
+                </svg>
+            </button>
+            <input type="color" id="bg-color-picker" style="display:none"
+                onchange="insertColor('background-color', this.value)" value="#ffff00">
+        </div>
+
+        <!-- Headings Dropdown -->
+        <div class="tool-group">
+            <button class="format-btn" onclick="toggleHMenu()" title="Titoli">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M5 4v3h5.5v12h3V7H19V4z" />
+                </svg>
+            </button>
+            <div class="dropdown-menu" id="h-menu" style="top: 30px; left: 0;">
+                <div class="dropdown-item" onclick="applyHeading(1)">Titolo 1</div>
+                <div class="dropdown-item" onclick="applyHeading(2)">Titolo 2</div>
+                <div class="dropdown-item" onclick="applyHeading(3)">Titolo 3</div>
+                <div class="dropdown-item" onclick="applyHeading(4)">Titolo 4</div>
+                <div class="dropdown-item" onclick="applyHeading(5)">Titolo 5</div>
+                <div class="dropdown-item" onclick="applyHeading(6)">Titolo 6</div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="applyHeading(0)">Paragrafo Normale</div>
+            </div>
+        </div>
+
+        <!-- Lists Dropdown -->
+        <div class="tool-group">
+            <button class="format-btn" onclick="toggleListMenu()" title="Elenchi">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="8" cy="6" r="2" />
+                    <circle cx="8" cy="12" r="2" />
+                    <circle cx="8" cy="18" r="2" />
+                    <path d="M16 8h2M16 14h2M16 20h2" />
+                </svg>
+            </button>
+            <div class="dropdown-menu" id="list-menu" style="top: 30px; left: 0;">
+                <div class="dropdown-item" onclick="applyList('- ')">Elenchi Puntati (-)</div>
+                <div class="dropdown-item" onclick="applyList('* ')">Elenchi Puntati (*)</div>
+                <div class="dropdown-item" onclick="applyList('1. ')">Elenchi Numerati</div>
+                <div class="dropdown-item" onclick="applyList('- [ ] ')">Checklist - [ ]</div>
+            </div>
+        </div>
+
+        <!-- MATH SECTION (Moved to left) -->
+        <div class="tool-group">
+            <button class="format-btn" onclick="insertFormula()" title="Inserisci Formula ($$...$$)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 7c0-5-9-5-9-5s-8 2-8 9c0 5 7 5 7 5s9-2 9-9z" style="display:none" />
+                    <!-- Sigma Like Icon -->
+                    <path d="M5 4h14L10 12l9 8H5" />
+                </svg>
+            </button>
+            <button class="format-btn" onclick="toggleMathBar()" title="Strumenti Matematici">
+                <span
+                    style="font-family: 'Times New Roman', serif; font-weight: bold; font-size: 18px; line-height: 1;">&pi;</span>
+            </button>
+        </div>
+
+        <!-- Diagrams -->
+        <div class="tool-group">
+            <button class="format-btn" onclick="openDiagramModal()" title="Grafici e Diagrammi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M8 12h8" />
+                    <path d="M12 8v8" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Tables (New) -->
+        <div class="tool-group">
+            <button class="format-btn" onclick="toggleTableMenu()" title="Tabella">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M3 9h18" />
+                    <path d="M9 21V9" />
+                </svg>
+            </button>
+            <div class="dropdown-menu" id="table-menu" style="width: 150px; padding: 8px;">
+                <div style="margin-bottom: 4px; font-size: 11px; color: #666;">Seleziona dimensione:</div>
+                <div id="table-grid" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px;">
+                    <!-- Generated by JS -->
+                </div>
+                <div id="table-size-label" style="text-align: center; margin-top: 4px; font-size: 11px;">0 x 0</div>
+            </div>
+        </div>
+
+        <!-- Help Button (Aligned rightmost but part of flow? Or separate? User said "close to other buttons") -->
+        <!-- We'll keep it as a tool group but maybe push it to the end OR just keep it in line. User requested all aligned left to right. -->
+        <div class="tool-group" style="border-right: none;">
+            <button class="format-btn" onclick="openHelp()" title="Guida">
+                <strong>?</strong>
+            </button>
+        </div>
+    </div>
+
+    <!-- MATH TOOLBAR -->
+    <div id="math-toolbar">
+        <div class="math-tabs" id="math-tabs-container"></div>
+        <div class="math-content">
+            <div class="math-grid" id="math-grid"></div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div id="tabs-container"></div>
+
+    <!-- Workspace -->
+    <div id="workspace">
+        <div id="editor-pane">
+            <textarea id="editor" spellcheck="false" placeholder="Scrivi qui... Usa $$ ... $$ per formule."></textarea>
+        </div>
+        <div id="preview-pane">
+            <div id="preview-content"></div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div id="statusbar">
+        <span id="status-left">Pronto</span>
+        <span id="status-right">Minipad Ready</span>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeHelp()">&times;</span>
+            <h2>Guida Completa</h2>
+            <h3>Markdown</h3>
+            <table>
+                <tr>
+                    <th>Sintassi</th>
+                    <th>Risultato</th>
+                </tr>
+                <tr>
+                    <td><code>**Grassetto**</code></td>
+                    <td><strong>Grassetto</strong></td>
+                </tr>
+                <tr>
+                    <td><code>*Corsivo*</code></td>
+                    <td><em>Corsivo</em></td>
+                </tr>
+                <tr>
+                    <td><code>~~Barrato~~</code></td>
+                    <td><s>Barrato</s></td>
+                </tr>
+                <tr>
+                    <td><code># Titolo 1</code></td>
+                    <td>
+                        <h1>Titolo 1</h1>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>- Elemento lista</code></td>
+                    <td>
+                        <ul>
+                            <li>Elemento lista</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><code>[Testo](url)</code></td>
+                    <td>Link</td>
+                </tr>
+                <tr>
+                    <td><code>![alt](url)</code></td>
+                    <td>Immagine</td>
+                </tr>
+            </table>
+            <br>
+            <h3>LaTeX</h3>
+            <p>Usa <code>$...$</code> per formule in linea o <code>$$...$$</code> per formule a tutto schermo.</p>
+            <table>
+                <tr>
+                    <th>Comando</th>
+                    <th>Simbolo</th>
+                </tr>
+                <tr>
+                    <td><code>\\frac{a}{b}</code></td>
+                    <td>Frazione $\frac{a}{b}$</td>
+                </tr>
+                <tr>
+                    <td><code>\\int_{a}^{b}</code></td>
+                    <td>Integrale con limiti $\int_{a}^{b}$</td>
+                </tr>
+                <tr>
+                    <td><code>\\sum_{i=1}^{n}</code></td>
+                    <td>Somma $\sum_{i=1}^{n}$</td>
+                </tr>
+                <tr>
+                    <td><code>\\sqrt{x}</code></td>
+                    <td>Radice $\sqrt{x}$</td>
+                </tr>
+                <tr>
+                    <td><code>\\alpha</code>, <code>\\beta</code></td>
+                    <td>Greco $\alpha, \beta$</td>
+                </tr>
+                <tr>
+                    <td><code>\\mathbb{R}</code></td>
+                    <td>Ins. Numeri $\mathbb{R}$</td>
+                </tr>
+                <tr>
+                    <td><code>\\vec{x}</code></td>
+                    <td>Vettore $\vec{x}$</td>
+                </tr>
+            </table>
+            <br>
+            <h3>Diagrammi (Mermaid)</h3>
+            <p>Usa il pulsante grafico per inserire schemi. Ecco un esempio di codice generato:</p>
+            <pre><code>graph TD;
+    A[Start] --> B{Is OK?};
+    B -- Yes --> C[End];
+    B -- No --> D[Error];</code></pre>
+        </div>
+    </div>
+
+    <script>
+        marked.setOptions({ gfm: true, breaks: true, headerIds: true });
+        mermaid.initialize({ startOnLoad: false, theme: 'default' });
+
+        let tabs = [];
+        let activeTabId = null;
+        let autoSaveTimeout = null;
+
+        // --- DIAGRAM DATA TEMPLATES ---
+        const diagramTemplates = [
+            { title: "Flusso", code: "graph TD;\n  A[Inizio] --> B[Processo];\n  B --> C{Scelta?};\n  C -- Sì --> D[Fine];\n  C -- No --> E[Errore];" },
+            { title: "Sequenza", code: "sequenceDiagram\n  part Alice->>Bob: Ciao\n  Bob->>Alice: Tutto bene?" },
+            { title: "Gantt", code: "gantt\n  title Un Progetto\n  dateFormat  YYYY-MM-DD\n  section Design\n  Design :a1, 2022-01-01, 30d\n  section Implementazione\n  Codice :crit, after a1, 2022-02-01, 30d\n  Test      :crit, after a2, 2022-03-01, 30d" },
+            { title: "Classe (UML)", code: "classDiagram\n  Animal <|-- Duck\n  Animal <|-- Fish\n  Animal <|-- Zebra\n  Animal :o-- Carnivore" },
+            { title: "Stato", code: "stateDiagram-v2\n  [*] Ancora\n  [*] Attiva\n  Attiva --> Sospesa\n  Sospesa --> Attiva" },
+            { title: "ER", code: "erDiagram\n  CUSTOMER ||--o{ ORDINE } : places\n  ORDINE ||--|{ DELIVERY } : includes" },
+            { title: "Torta", code: "pie title Pets\n  Dogs : 386\n  Cats : 85\n  Fish : 142" }
+        ];
+
+        // --- MATH DATA (EXTENSIVE) ---
+        const mathCategories = {
+            "Greco": [
+                { cmd: "\\alpha", html: "\\alpha" }, { cmd: "\\beta", html: "\\beta" }, { cmd: "\\gamma", html: "\\gamma" }, { cmd: "\\delta", html: "\\delta" }, { cmd: "\\epsilon", html: "\\epsilon" },
+                { cmd: "\\zeta", html: "\\zeta" }, { cmd: "\\eta", html: "\\eta" }, { cmd: "\\theta", html: "\\theta" }, { cmd: "\\iota", html: "\\iota" }, { cmd: "\\kappa", html: "\\kappa" },
+                { cmd: "\\lambda", html: "\\lambda" }, { cmd: "\\mu", html: "\\mu" }, { cmd: "\\nu", html: "\\nu" }, { cmd: "\\xi", html: "\\xi" }, { cmd: "\\pi", html: "\\pi" },
+                { cmd: "\\rho", html: "\\rho" }, { cmd: "\\sigma", html: "\\sigma" }, { cmd: "\\tau", html: "\\tau" }, { cmd: "\\upsilon", html: "\\upsilon" }, { cmd: "\\phi", html: "\\phi" },
+                { cmd: "\\chi", html: "\\chi" }, { cmd: "\\psi", html: "\\psi" }, { cmd: "\\omega", html: "\\omega" },
+                { cmd: "\\Gamma", html: "\\Gamma" }, { cmd: "\\Delta", html: "\\Delta" }, { cmd: "\\Theta", html: "\\Theta" }, { cmd: "\\Lambda", html: "\\Lambda" }, { cmd: "\\Sigma", html: "\\Sigma" }, { cmd: "\\Omega", html: "\\Omega" }
+            ],
+            "Greco Var.": [
+                { cmd: "\\varepsilon", html: "\\varepsilon" }, { cmd: "\\varphi", html: "\\varphi" }, { cmd: "\\varpi", html: "\\varpi" }, { cmd: "\\varrho", html: "\\varrho" }, { cmd: "\\varsigma", html: "\\varsigma" },
+                { cmd: "\\vartheta", html: "\\vartheta" }
+            ],
+            "Funzioni": [
+                { cmd: "\\sin", html: "\\sin" }, { cmd: "\\cos", html: "\\cos" }, { cmd: "\\tan", html: "\\tan" }, { cmd: "\\cot", html: "\\cot" },
+                { cmd: "\\sec", html: "\\sec" }, { cmd: "\\csc", html: "\\csc" }, { cmd: "\\sinh", html: "\\sinh" }, { cmd: "\\cosh", html: "\\cosh" }, { cmd: "\\tanh", html: "\\tanh" },
+                { cmd: "\\ln", html: "\\ln" }, { cmd: "\\log", html: "\\log" }, { cmd: "\\exp", html: "\\exp" },
+                { cmd: "\\max", html: "\\max" }, { cmd: "\\min", html: "\\min" }, { cmd: "\\sup", html: "\\sup" }, { cmd: "\\inf", html: "\\inf" }, { cmd: "\\det", html: "\\det" }
+            ],
+            "Op. Limiti": [
+                { cmd: "\\int_{a}^{b}", html: "\\int_{a}^{b}" }, { cmd: "\\int_{0}^{\\infty}", html: "\\int_{0}^{\\infty}" }, { cmd: "\\iint_{D}", html: "\\iint_{D}" }, { cmd: "\\iiint_{V}", html: "\\iiint_{V}" }, { cmd: "\\oint_{C}", html: "\\oint_{C}" },
+                { cmd: "\\sum_{i=0}^{n}", html: "\\sum_{i=0}^{n}" }, { cmd: "\\sum_{i=1}^{\\infty}", html: "\\sum_{i=1}^{\\infty}" }, { cmd: "\\prod_{i=1}^{n}", html: "\\prod_{i=1}^{n}" }, { cmd: "\\coprod_{i=1}^{n}", html: "\\coprod_{i=1}^{n}" },
+                { cmd: "\\lim_{x \\to 0}", html: "\\lim_{x \\to 0}" }, { cmd: "\\lim_{x \\to \\infty}", html: "\\lim_{x \\to \\infty}" }
+            ],
+            "Op. Base": [
+                { cmd: "\\int", html: "\\int" }, { cmd: "\\oint", html: "\\oint" }, { cmd: "\\iint", html: "\\iint" }, { cmd: "\\iiint", html: "\\iiint" },
+                { cmd: "\\sum", html: "\\sum" }, { cmd: "\\prod", html: "\\prod" }, { cmd: "\\bigcup", html: "\\bigcup" }, { cmd: "\\bigcap", html: "\\bigcap" },
+                { cmd: "\\bigvee", html: "\\bigvee" }, { cmd: "\\bigwedge", html: "\\bigwedge" }, { cmd: "\\bigoplus", html: "\\bigoplus" }, { cmd: "\\bigotimes", html: "\\bigotimes" },
+                { cmd: "\\cup", html: "\\cup" }, { cmd: "\\cap", html: "\\cap" }, { cmd: "\\setminus", html: "\\setminus" }, { cmd: "\\sqcup", html: "\\sqcup" },
+                { cmd: "\\wedge", html: "\\wedge" }, { cmd: "\\vee", html: "\\vee" }, { cmd: "\\oplus", html: "\\oplus" }, { cmd: "\\otimes", html: "\\otimes" },
+                { cmd: "\\pm", html: "\\pm" }, { cmd: "\\mp", html: "\\mp" }, { cmd: "\\times", html: "\\times" }, { cmd: "\\div", html: "\\div" }, { cmd: "\\cdot", html: "\\cdot" }
+            ],
+            "Simboli": [
+                { cmd: "\\forall", html: "\\forall" }, { cmd: "\\exists", html: "\\exists" }, { cmd: "\\nexists", html: "\\nexists" }, { cmd: "\\neg", html: "\\neg" }, { cmd: "\\top", html: "\\top" }, { cmd: "\\bot", html: "\\bot" },
+                { cmd: "\\infty", html: "\\infty" }, { cmd: "\\partial", html: "\\partial" }, { cmd: "\\nabla", html: "\\nabla" }, { cmd: "\\Delta", html: "\\Delta" }, { cmd: "\\angle", html: "\\angle" },
+                { cmd: "\\diamond", html: "\\diamond" }, { cmd: "\\triangle", html: "\\triangle" }, { cmd: "\\square", html: "\\square" }, { cmd: "\\blacksquare", html: "\\blacksquare" },
+                { cmd: "\\hbar", html: "\\hbar" }, { cmd: "\\ell", html: "\\ell" }, { cmd: "\\wp", html: "\\wp" }, { cmd: "\\Re", html: "\\Re" }, { cmd: "\\Im", html: "\\Im" }, { cmd: "\\emptyset", html: "\\emptyset" }
+            ],
+            "Relazioni": [
+                { cmd: "\\leq", html: "\\leq" }, { cmd: "\\geq", html: "\\geq" }, { cmd: "\\neq", html: "\\neq" }, { cmd: "\\approx", html: "\\approx" }, { cmd: "\\equiv", html: "\\equiv" },
+                { cmd: "\\sim", html: "\\sim" }, { cmd: "\\simeq", html: "\\simeq" }, { cmd: "\\cong", html: "\\cong" }, { cmd: "\\propto", html: "\\propto" }, { cmd: "\\doteq", html: "\\doteq" },
+                { cmd: "\\subset", html: "\\subset" }, { cmd: "\\supset", html: "\\supset" }, { cmd: "\\subseteq", html: "\\subseteq" }, { cmd: "\\supseteq", html: "\\supseteq" }, { cmd: "\\in", html: "\\in" },
+                { cmd: "\\notin", html: "\\notin" }, { cmd: "\\ni", html: "\\ni" }, { cmd: "\\prec", html: "\\prec" }, { cmd: "\\succ", html: "\\succ" }, { cmd: "\\preceq", html: "\\preceq" },
+                { cmd: "\\succeq", html: "\\succeq" }, { cmd: "\\parallel", html: "\\parallel" }, { cmd: "\\perp", html: "\\perp" }, { cmd: "\\mid", html: "\\mid" }, { cmd: "\\models", html: "\\models" }
+            ],
+            "Frecce": [
+                { cmd: "\\rightarrow", html: "\\rightarrow" }, { cmd: "\\leftarrow", html: "\\leftarrow" }, { cmd: "\\leftrightarrow", html: "\\leftrightarrow" }, { cmd: "\\uparrow", html: "\\uparrow" },
+                { cmd: "\\downarrow", html: "\\downarrow" }, { cmd: "\\Rightarrow", html: "\\Rightarrow" }, { cmd: "\\Leftarrow", html: "\\Leftarrow" }, { cmd: "\\Leftrightarrow", html: "\\Leftrightarrow" },
+                { cmd: "\\mapsto", html: "\\mapsto" }, { cmd: "\\to", html: "\\to" }, { cmd: "\\implies", html: "\\implies" }, { cmd: "\\iff", html: "\\iff" },
+                { cmd: "\\longrightarrow", html: "\\longrightarrow" }, { cmd: "\\longleftarrow", html: "\\longleftarrow" }, { cmd: "\\Longleftrightarrow", html: "\\Longleftrightarrow" },
+                { cmd: "\\xrightarrow{abc}", html: "\\xrightarrow{abc}" }, { cmd: "\\xleftarrow{abc}", html: "\\xleftarrow{abc}" },
+                { cmd: "\\nwarrow", html: "\\nwarrow" }, { cmd: "\\nearrow", html: "\\nearrow" }, { cmd: "\\swarrow", html: "\\swarrow" }, { cmd: "\\searrow", html: "\\searrow" }
+            ],
+            "Strutture": [
+                { cmd: "\\frac{a}{b}", html: "\\frac{a}{b}" }, { cmd: "\\dfrac{a}{b}", html: "\\dfrac{a}{b}" }, { cmd: "\\tfrac{a}{b}", html: "\\tfrac{a}{b}" },
+                { cmd: "\\sqrt{x}", html: "\\sqrt{x}" }, { cmd: "\\sqrt[n]{x}", html: "\\sqrt[n]{x}" },
+                { cmd: "\\binom{n}{k}", html: "\\binom{n}{k}" },
+                { cmd: "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}", html: "\\left( \\begin{smallmatrix} a & b \\\\ c & d \\end{smallmatrix} \\right)" },
+                { cmd: "\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}", html: "\\left[ \\begin{smallmatrix} a & b \\\\ c & d \\end{smallmatrix} \\right]" },
+                { cmd: "\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}", html: "\\lvert \\begin{smallmatrix} a & b \\\\ c & d \\end{smallmatrix} \\rvert" },
+                { cmd: "\\begin{matrix} a & b \\\\ c & d \\end{matrix}", html: "\\begin{smallmatrix} a & b \\\\ c & d \\end{smallmatrix}" },
+                { cmd: "\\begin{cases} x & \\\\ y \\end{cases}", html: "\\begin{cases} x & \\\\ y \\end{cases}" },
+                { cmd: "\\underbrace{abc}_{\\text{}}", html: "\\underbrace{abc}_{\\text{}}" },
+                { cmd: "\\overline{abc}", html: "\\overline{abc}" }, { cmd: "\\underline{abc}", html: "\\underline{abc}" },
+                { cmd: "\\vec{x}", html: "\\vec{x}" }, { cmd: "\\overrightarrow{x}", html: "\\overrightarrow{x}" },
+                { cmd: "\\hat{x}", html: "\\hat{x}" }, { cmd: "\\widehat{abc}", html: "\\widehat{abc}" }, { cmd: "\\tilde{x}", html: "\\tilde{x}" }, { cmd: "\\widetilde{abc}", html: "\\widetilde{abc}" }
+            ],
+            "Parentesi": [
+                { cmd: "\\left( \\right)", html: "\\left( \\right)" }, { cmd: "\\left[ \\right]", html: "\\left[ \\right]" }, { cmd: "\\left\\{ \\right\\}", html: "\\left\\{ \\right\\}" },
+                { cmd: "\\langle \\rangle", html: "\\langle \\rangle" }, { cmd: "| |", html: "| |" }, { cmd: "\\| \\|", html: "\\| \\|" }, { cmd: "\\lfloor \\rfloor", html: "\\lfloor \\rfloor" }, { cmd: "\\lceil \\rceil", html: "\\lceil \\rceil" },
+                { cmd: "\\big( \\big)", html: "\\big( \\big)" }, { cmd: "\\Big( \\Big)", html: "\\Big( \\Big)" }, { cmd: "\\bigg( \\bigg)", html: "\\bigg( \\bigg)" }
+            ],
+            "Logica & Insiemi": [
+                { cmd: "\\forall", html: "\\forall" }, { cmd: "\\exists", html: "\\exists" }, { cmd: "\\nexists", html: "\\nexists" }, { cmd: "\\therefore", html: "\\therefore" }, { cmd: "\\because", html: "\\because" },
+                { cmd: "\\subset", html: "\\subset" }, { cmd: "\\subseteq", html: "\\subseteq" }, { cmd: "\\not\\subset", html: "\\not\\subset" }, { cmd: "\\in", html: "\\in" }, { cmd: "\\notin", html: "\\notin" },
+                { cmd: "\\cup", html: "\\cup" }, { cmd: "\\cap", html: "\\cap" }, { cmd: "\\setminus", html: "\\setminus" }, { cmd: "\\emptyset", html: "\\emptyset" },
+                { cmd: "\\land", html: "\\land" }, { cmd: "\\lor", html: "\\lor" }, { cmd: "\\neg", html: "\\neg" }, { cmd: "\\implies", html: "\\implies" }, { cmd: "\\iff", html: "\\iff" }
+            ],
+
+            "Stili": [
+                { cmd: "\\mathbb{R}", html: "\\mathbb{R}" }, { cmd: "\\mathbb{N}", html: "\\mathbb{N}" }, { cmd: "\\mathbb{Z}", html: "\\mathbb{Z}" }, { cmd: "\\mathbb{Q}", html: "\\mathbb{Q}" }, { cmd: "\\mathbb{C}", html: "\\mathbb{C}" },
+                { cmd: "\\mathcal{A}", html: "\\mathcal{A}" }, { cmd: "\\mathcal{B}", html: "\\mathcal{B}" }, { cmd: "\\mathcal{C}", html: "\\mathcal{C}" }, { cmd: "\\mathcal{L}", html: "\\mathcal{L}" },
+                { cmd: "\\mathfrak{g}", html: "\\mathfrak{g}" }, { cmd: "\\mathfrak{h}", html: "\\mathfrak{h}" }, { cmd: "\\text{}", html: "\\text{}" }
+            ],
+            "Punteggiatura": [
+                { cmd: "\\quad", html: "\\quad" }, { cmd: "\\qquad", html: "\\qquad" }, { cmd: "\\,", html: "\\," }, { cmd: "\\;", html: "\\;" }, { cmd: "\\:", html: "\\:" },
+                { cmd: "\\ldots", html: "\\ldots" }, { cmd: "\\cdots", html: "\\cdots" }, { cmd: "\\vdots", html: "\\vdots" }, { cmd: "\\ddots", html: "\\ddots" },
+                { cmd: "\\cdot", html: "\\cdot" }, { cmd: "\\prime", html: "\\prime" }, { cmd: "\\ast", html: "\\ast" }, { cmd: "\\dagger", html: "\\dagger" }, { cmd: "\\ddagger", html: "\\ddagger" }
+            ],
+
+            "TikZ/Grafici": [
+                { cmd: "\\begin{tikzpicture}\\draw[thick,->] (0,0) -- (1,0);\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>` }, // Arrow
+                { cmd: "\\begin{tikzpicture}\\draw (0,0) circle (1cm);\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>` }, // Circle
+                { cmd: "\\begin{tikzpicture}\\draw (0,0) rectangle (2,1);\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>` }, // Rect
+                { cmd: "\\begin{tikzpicture}\\draw (0,0) -- (1,1) -- (2,0) -- cycle;\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3L2 21h20L12 3z"/></svg>` }, // Triangle
+                { cmd: "\\begin{tikzpicture}\\draw[help lines] (0,0) grid (2,2);\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M9 3v18"/><path d="M15 3v18"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>` }, // Grid
+                { cmd: "\\begin{tikzpicture}\\node[draw,circle] (A) at (0,0) {A};\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="currentColor">A</text></svg>` }, // Node
+                { cmd: "\\begin{figure}\\centering\\includegraphics[width=0.5\\textwidth]{img}\\caption{...}\\end{figure}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>` }, // Image
+
+                // NEW ITEMS
+                { cmd: "\\begin{tikzpicture}\\draw[<->] (0,2) -- (0,0) -- (2,0);\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M3 21V3"/></svg>` }, // Axes
+                { cmd: "\\begin{tikzpicture}\\draw[domain=0:4] plot (\\x, {sin(\\x r)});\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-10 10-10 10 10 10 10"/></svg>` } // Function
+            ]
+        };
+
+        function init() {
+            initMathToolbar();
+            initDiagramGrid();
+            initTableGrid(); // New
+
+            // PERSISTENCE FIX: Ensure we read from localStorage
+            const savedData = localStorage.getItem('minipad_tabs');
+            if (savedData && savedData !== "[]") {
+                try {
+                    tabs = JSON.parse(savedData);
+                    // Ensure at least one tab
+                    if (tabs.length === 0) throw new Error("No tabs");
+                } catch (e) {
+                    // Fallback
+                    createTab("Benvenuto", "# Benvenuto in Minipad\n\nScrivi qui...");
+                }
+            } else {
+                createTab("Benvenuto", "# Benvenuto in Minipad\n\n## Ripristinato\n\nFunzionalità pronte.");
+            }
+
+            renderTabs();
+
+            // Restore active tab
+            if (tabs.length > 0) {
+                const lastActive = tabs[tabs.length - 1].id; // Default to last
+                switchTab(lastActive);
+            }
+
+            document.getElementById('editor').addEventListener('input', handleInput);
+            document.getElementById('editor').addEventListener('keydown', handleShortcuts);
+            updatePreview();
+        }
+
+        /* --- DIAGRAM LOGIC --- */
+        /* --- DIAGRAM LOGIC REMOVED (Redefined below) --- */
+        function openDiagramModal() {
+            document.getElementById('diagram-modal').style.display = 'flex';
+            document.getElementById('diagram-modal').classList.add('active'); // Add active class to CSS to handle z-index
+        }
+
+        // Helper to handle z-index of modals correctly
+        document.querySelectorAll('.modal').forEach(m => {
+            m.addEventListener('click', (e) => {
+                if (e.target === m) m.style.display = 'none';
+            });
+        });
+
+        /* --- MATH TOOLBAR LOGIC --- */
+        function initMathToolbar() {
+            const tabsContainer = document.getElementById('math-tabs-container');
+            Object.keys(mathCategories).forEach((catName, index) => {
+                const btn = document.createElement('div');
+                btn.className = `math-tab ${index === 0 ? 'active' : ''}`;
+                btn.textContent = catName;
+                btn.onclick = () => switchMathTab(catName, btn);
+                tabsContainer.appendChild(btn);
+            });
+            loadMathCategory(Object.keys(mathCategories)[0]);
+        }
+
+        function switchMathTab(catName, clickedTab) {
+            document.querySelectorAll('.math-tab').forEach(t => t.classList.remove('active'));
+            clickedTab.classList.add('active');
+            loadMathCategory(catName);
+        }
+
+        function loadMathCategory(catName) {
+            const grid = document.getElementById('math-grid');
+            grid.innerHTML = '';
+            mathCategories[catName].forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'math-btn';
+
+                // Render: HTML/SVG or LaTeX
+                if (item.html.trim().startsWith('<')) {
+                    btn.innerHTML = item.html;
+                } else {
+                    try {
+                        btn.innerHTML = katex.renderToString(item.html, { throwOnError: false, displayMode: false });
+                    } catch (e) {
+                        btn.textContent = item.html;
+                    }
+                }
+
+                btn.title = item.cmd;
+
+                // HOVER PREVIEW
+                btn.addEventListener('mouseenter', (e) => showTooltip(e, item));
+                btn.addEventListener('mousemove', moveTooltip);
+                btn.addEventListener('mouseleave', hideTooltip);
+
+                btn.onclick = () => insertLatex(item.cmd);
+                grid.appendChild(btn);
+            });
+        }
+
+        function toggleMathBar() {
+            document.getElementById('math-toolbar').classList.toggle('show');
+        }
+
+        function insertLatex(code) {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            const val = field.value;
+
+            let cursorPos = start + code.length;
+            if (code.includes('\\frac{a}{b}') || code.includes('\\dfrac{a}{b}')) cursorPos = start + code.indexOf('{a}') + 1;
+            else if (code.includes('\\tfrac')) cursorPos = start + code.indexOf('{a}') + 1;
+            else if (code.includes('\\sqrt{x}')) cursorPos = start + code.indexOf('{x}') + 1;
+            else if (code.includes('\\binom{n}{k}')) cursorPos = start + code.indexOf('{n}') + 1;
+            else if (code.includes('\\begin{pmatrix}')) cursorPos = start + code.indexOf('{a}') + 1;
+            else if (code.includes('\\lim_{x \\to 0}')) cursorPos = start + code.indexOf('x');
+
+            field.value = val.substring(0, start) + code + val.substring(end);
+            field.focus();
+            field.setSelectionRange(cursorPos, cursorPos);
+            handleInput();
+        }
+
+        function insertDiagram(code) {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            const val = field.value;
+
+            // Insert as Markdown code block
+            const block = "```mermaid\n" + code + "\n```";
+            field.value = val.substring(0, start) + block + val.substring(end);
+
+            document.getElementById('diagram-modal').style.display = 'none';
+            handleInput();
+        }
+
+        /* --- TOOLTIP FUNCTIONS --- */
+        const tooltip = document.getElementById('math-tooltip');
+
+        function showTooltip(e, item) {
+            // If item has HTML (SVG), show it directly
+            if (item.html.trim().startsWith('<')) {
+                tooltip.innerHTML = item.html;
+                // Scale up SVG in tooltip if needed
+                const svg = tooltip.querySelector('svg');
+                if (svg) { svg.style.width = '40px'; svg.style.height = '40px'; }
+            } else {
+                try {
+                    // Render LARGE preview (displayMode: true)
+                    tooltip.innerHTML = katex.renderToString(item.html, { throwOnError: false, displayMode: true });
+                } catch (e) {
+                    tooltip.innerText = item.html;
+                }
+            }
+            tooltip.style.display = 'block';
+            moveTooltip(e);
+        }
+
+        function moveTooltip(e) {
+            const x = e.clientX + 15;
+            const y = e.clientY + 15;
+
+            const rect = tooltip.getBoundingClientRect();
+            const winWidth = window.innerWidth;
+            const winHeight = window.innerHeight;
+
+            let finalX = x;
+            let finalY = y;
+
+            if (x + rect.width > winWidth) finalX = x - rect.width - 10;
+            if (y + rect.height > winHeight) finalY = y - rect.height - 10;
+
+            tooltip.style.left = finalX + 'px';
+            tooltip.style.top = finalY + 'px';
+        }
+
+        function hideTooltip() {
+            tooltip.style.display = 'none';
+        }
+
+        /* --- CORE PREVIEW LOGIC --- */
+        async function updatePreview() {
+            const rawMarkdown = document.getElementById('editor').value;
+            let html = marked.parse(rawMarkdown);
+            html = DOMPurify.sanitize(html);
+
+            html = html.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
+                try { return katex.renderToString(math.trim(), { throwOnError: false, displayMode: true }); } catch (e) { return match; }
+            });
+            html = html.replace(/\$(.*?)\$/g, (match, math) => {
+                try { return katex.renderToString(math, { throwOnError: false, displayMode: false }); } catch (e) { return match; }
+            });
+
+            document.getElementById('preview-content').innerHTML = html;
+
+            mermaid.initialize({ startOnLoad: false, suppressErrorRendering: true });
+
+            document.querySelectorAll('#preview-content .mermaid').forEach(async (element, index) => {
+                const id = 'mermaid-' + index;
+                element.id = id;
+                const code = element.textContent.trim();
+
+                if (!code) return; // Skip empty matches
+
+                try {
+                    // Pre-check syntax to avoid partial renders throwing hard errors
+                    // valid = await mermaid.parse(code); 
+                    // Note: mermaid.parse throws if invalid.
+
+                    const { svg } = await mermaid.render(id, code);
+                    element.innerHTML = svg;
+                } catch (e) {
+                    element.innerHTML = "<div style='color:red; font-size:10px; border:1px solid red;'>Errore Sintassi Diagramma</div>";
+                    // Console has the real error but user doesn't see "Syntax error in text" overlay
+                }
+            });
+        }
+
+        /* --- FILE & EXPORTS --- */
+        function toggleFileMenu() {
+            document.getElementById('file-menu').classList.toggle('show');
+            closeOtherMenus('file-menu');
+        }
+
+        function toggleHMenu() {
+            document.getElementById('h-menu').classList.toggle('show');
+            closeOtherMenus('h-menu');
+        }
+
+        function toggleListMenu() {
+            document.getElementById('list-menu').classList.toggle('show');
+            closeOtherMenus('list-menu');
+        }
+
+        function toggleTableMenu() {
+            document.getElementById('table-menu').classList.toggle('show');
+            closeOtherMenus('table-menu');
+        }
+
+        function closeOtherMenus(exceptId) {
+            ['file-menu', 'h-menu', 'list-menu', 'table-menu'].forEach(id => {
+                if (id !== exceptId) document.getElementById(id).classList.remove('show');
+            });
+        }
+
+        function applyHeading(level) {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            const val = field.value;
+            const selected = val.substring(start, end);
+            let prefix = '';
+            for (let i = 0; i < level; i++) prefix += '#';
+
+            if (level === 0) {
+                const lines = selected.split('\n');
+                const newLines = lines.map(l => l.replace(/^#+\s*/, ''));
+                field.value = val.substring(0, start) + newLines.join('\n') + val.substring(end);
+            } else {
+                // Apply to the beginning of the line(s)
+                field.value = val.substring(0, start) + prefix + ' ' + selected + val.substring(end);
+            }
+            handleInput();
+        }
+
+        // Updated Insert Formula (Wraps selection)
+        function insertFormula() {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            const val = field.value;
+            const selected = val.substring(start, end); // Get selection
+
+            if (selected.length > 0) {
+                // Wrap selected
+                field.value = val.substring(0, start) + "$$ " + selected + " $$" + val.substring(end);
+                field.selectionStart = start;
+                field.selectionEnd = end + 6; // Adjust selection to include $$
+            } else {
+                // Insert empty
+                const code = "$$  $$";
+                field.value = val.substring(0, start) + code + val.substring(end);
+                field.selectionStart = start + 3;
+                field.selectionEnd = start + 3;
+            }
+            field.focus();
+            handleInput();
+        }
+
+        /* --- FONT & COLOR with Span --- */
+        function applyStyle(styleStart, styleEnd) {
+            insertMarkdown(styleStart, styleEnd);
+        }
+
+        function changeFont() {
+            const font = document.getElementById('font-family').value;
+            applyStyle(`<span style="font-family:${font}">`, `</span>`);
+        }
+
+        function changeFontSize() {
+            const size = document.getElementById('font-size').value;
+            applyStyle(`<span style="font-size:${size}px">`, `</span>`);
+        }
+
+        /* --- TABLE BUILDER --- */
+        function initTableGrid() {
+            const grid = document.getElementById('table-grid');
+            const label = document.getElementById('table-size-label');
+            grid.innerHTML = '';
+
+            for (let r = 1; r <= 8; r++) {
+                for (let c = 1; c <= 8; c++) {
+                    const cell = document.createElement('div');
+                    cell.style.width = '12px';
+                    cell.style.height = '12px';
+                    cell.style.border = '1px solid #ccc';
+                    cell.style.background = '#fff';
+                    cell.style.cursor = 'pointer';
+
+                    cell.onmouseenter = () => highlightGrid(r, c);
+                    cell.onclick = () => insertTable(r, c);
+
+                    grid.appendChild(cell);
+                }
+            }
+
+            grid.onmouseleave = () => {
+                const cells = grid.children;
+                for (let cell of cells) cell.style.background = '#fff';
+                label.textContent = "0 x 0";
+            };
+        }
+
+        function highlightGrid(rows, cols) {
+            const grid = document.getElementById('table-grid');
+            Array.from(grid.children).forEach((cell, index) => {
+                const r = Math.floor(index / 8) + 1;
+                const c = (index % 8) + 1;
+                if (r <= rows && c <= cols) cell.style.background = 'var(--accent-color)';
+                else cell.style.background = '#fff';
+            });
+            document.getElementById('table-size-label').textContent = `${rows} x ${cols}`;
+        }
+
+        function insertTable(rows, cols) {
+            let table = "|";
+            for (let c = 0; c < cols; c++) table += " Col " + (c + 1) + " |";
+            table += "\n|";
+            for (let c = 0; c < cols; c++) table += " --- |";
+            table += "\n";
+            for (let r = 0; r < rows; r++) {
+                table += "|";
+                for (let c = 0; c < cols; c++) table += "     |";
+                table += "\n";
+            }
+
+            insertMarkdown(table, "");
+            toggleTableMenu();
+        }
+
+        /* --- FILE MENU FIX --- */
+        window.addEventListener('click', (e) => {
+            // Ignore clicks on menu buttons themselves
+            if (e.target.closest('.menu-btn') || e.target.closest('#file-btn')) return;
+
+            if (!e.target.closest('.tool-group') && !e.target.closest('.dropdown-menu')) {
+                document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('show'));
+            }
+        });
+
+        function applyList(prefix) {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            const val = field.value;
+            const selected = val.substring(start, end);
+
+            const lines = selected.split('\n');
+            const newLines = lines.map(l => prefix + l);
+
+            field.value = val.substring(0, start) + newLines.join('\n') + val.substring(end);
+            handleInput();
+        }
+
+        /* --- DOWNLOADS --- */
+        function promptExport(type) {
+            const t = tabs.find(x => x.id === activeTabId);
+            if (!t) return;
+            const name = prompt("Inserisci il nome del file:", t.name || "documento");
+            if (!name) return;
+
+            if (type === 'md') downloadFile(name + ".md", t.content, "text/markdown");
+            if (type === 'txt') downloadFile(name + ".txt", t.content, "text/plain");
+            if (type === 'tex') downloadFile(name + ".tex", t.content, "text/plain");
+            if (type === 'html') {
+                const c = document.getElementById('preview-content').innerHTML;
+                const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${name}</title><style>body{font-family:sans-serif;padding:20px;}</style></head><body>${c}</body></html>`;
+                downloadFile(name + ".html", html, "text/html");
+            }
+            if (type === 'pdf') window.print();
+        }
+
+        function downloadFile(filename, content, type) {
+            const blob = new Blob([content], { type: type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportPDF() { promptExport('pdf'); toggleFileMenu(); }
+        function exportHTML() { promptExport('html'); toggleFileMenu(); }
+        function exportMD() { promptExport('md'); toggleFileMenu(); }
+        function exportTXT() { promptExport('txt'); toggleFileMenu(); }
+        function exportTEX() { promptExport('tex'); toggleFileMenu(); }
+        function saveNow() { saveToStorage(); showSavedIndicator(); }
+
+        /* --- EDITING --- */
+        function insertMarkdown(start, end) {
+            const field = document.getElementById('editor');
+            const sStart = field.selectionStart;
+            const sEnd = field.selectionEnd;
+            const val = field.value;
+            const selected = val.substring(sStart, sEnd);
+            field.value = val.substring(0, sStart) + start + selected + end + val.substring(sEnd);
+            field.focus();
+            field.selectionStart = sStart + start.length;
+            field.selectionEnd = sEnd + start.length;
+            handleInput();
+        }
+
+        function insertColor(prop, color) {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            const val = field.value;
+            const selected = val.substring(start, end);
+            field.value = val.substring(0, start) + `<span style="${prop}:${color}">` + selected + `</span>` + val.substring(end);
+            handleInput();
+        }
+
+        /* --- DIAGRAM LOGIC UPDATED --- */
+        function initDiagramGrid() {
+            const grid = document.getElementById('diagram-grid');
+            grid.innerHTML = '';
+
+            // Use expanded templates
+            const extendedTemplates = [
+                ...diagramTemplates,
+                { title: "Mappa Mentale (Mindmap)", code: "mindmap\n  root((Mindmap))\n    Idee\n      Origini\n      Sviluppi\n    Prodotti\n      Web\n      App" },
+                { title: "Timeline", code: "timeline\n    title History\n    2020 : Pandemic\n    2022 : Recovery\n    2024 : Growth" },
+                { title: "Quadrante", code: "quadrantChart\n    title Reach vs Engagement\n    x-axis Low Reach --> High Reach\n    y-axis Low Engagement --> High Engagement\n    Quadrant 1: [0.3, 0.6]\n    Quadrant 2: [0.4, 0.23]\n    Quadrant 3: [0.57, 0.69]\n    Quadrant 4: [0.78, 0.34]" }
+            ];
+
+            extendedTemplates.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'diagram-card';
+                card.onclick = () => insertDiagram(item.code);
+
+                // Create Preview 
+                const preview = document.createElement('div');
+                preview.className = 'diagram-preview';
+                const pid = 'preview-tmpl-' + index;
+                preview.id = pid;
+
+                const title = document.createElement('div');
+                title.className = 'diagram-title';
+                title.textContent = item.title;
+
+                card.appendChild(title);
+                card.appendChild(preview);
+                grid.appendChild(card);
+
+                // Render async
+                setTimeout(async () => {
+                    try {
+                        const { svg } = await mermaid.render(pid + '-svg', item.code);
+                        preview.innerHTML = svg;
+                        // Adjust SVG style to fit
+                        const svgEl = preview.querySelector('svg');
+                        if (svgEl) { svgEl.style.width = '100%'; svgEl.style.height = '100%'; svgEl.style.maxHeight = '80px'; }
+                    } catch (e) {
+                        preview.innerHTML = "<small>Anteprima non disp.</small>";
+                    }
+                }, 100);
+            });
+        }
+
+        /* --- OLD FUNCTIONS REMOVED (Replaced above) --- */
+
+        /* --- CORE TABS LOGIC --- */
+        function createTab(name, content) {
+            const id = Date.now().toString();
+            tabs.push({ id, name, content });
+            saveToStorage();
+            switchTab(id);
+        }
+        function newTab() { createTab("Nuova Nota", ""); toggleFileMenu(); }
+        function switchTab(id) {
+            activeTabId = id;
+            const tab = tabs.find(t => t.id === id);
+            if (tab) document.getElementById('editor').value = tab.content;
+            renderTabs();
+            updatePreview();
+            updateStats();
+        }
+        function renderTabs() {
+            const container = document.getElementById('tabs-container');
+            container.innerHTML = '';
+            tabs.forEach(tab => {
+                const div = document.createElement('div');
+                div.className = `tab ${tab.id === activeTabId ? 'active' : ''}`;
+                div.onclick = () => switchTab(tab.id);
+                div.innerHTML = `<span>${tab.name}</span><span class="tab-close" onclick="closeTab(event, '${tab.id}')">×</span>`;
+                container.appendChild(div);
+            });
+
+            // NEW BTN
+            const newBtn = document.createElement('div');
+            newBtn.className = 'tab new-tab-btn';
+            newBtn.innerHTML = '+';
+            newBtn.title = "Nuova Scheda";
+            newBtn.style.padding = "0 10px";
+            newBtn.style.fontWeight = "bold";
+            newBtn.onclick = (e) => { e.stopPropagation(); createTab("Nuova Scheda", ""); };
+            container.appendChild(newBtn);
+        }
+        function closeTab(e, id) {
+            e.stopPropagation();
+            if (tabs.length === 1) { if (!confirm("Chiudere l'ultima scheda?")) return; tabs[0].content = ""; tabs[0].name = "Senza nome"; switchTab(tabs[0].id); return; }
+            tabs = tabs.filter(t => t.id !== id);
+            saveToStorage();
+            if (activeTabId === id) switchTab(tabs[tabs.length - 1].id);
+            else renderTabs();
+        }
+        function handleInput() {
+            const tab = tabs.find(t => t.id === activeTabId);
+            if (tab) {
+                tab.content = document.getElementById('editor').value;
+                const lines = tab.content.split('\n');
+                for (let line of lines) if (line.trim().startsWith('#')) { tab.name = line.replace(/#/g, '').trim().substring(0, 20); break; }
+                if (!tab.name || tab.name === "") tab.name = lines[0].substring(0, 15) || "Senza nome";
+            }
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => { saveToStorage(); showSavedIndicator(); }, 1000);
+            updatePreview();
+            updateStats();
+        }
+        function saveToStorage() { localStorage.setItem('minipad_tabs', JSON.stringify(tabs)); }
+        function showSavedIndicator() { const el = document.getElementById('save-indicator'); el.classList.add('visible'); setTimeout(() => el.classList.remove('visible'), 2000); }
+
+        function toggleView(mode) {
+            const eP = document.getElementById('editor-pane');
+            const pP = document.getElementById('preview-pane');
+            document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            if (mode === 'split') { eP.classList.remove('hidden'); pP.classList.remove('hidden'); eP.style.width = '50%'; pP.style.width = '50%'; }
+            else if (mode === 'editor') { eP.classList.remove('hidden'); pP.classList.add('hidden'); eP.style.width = '100%'; }
+            else if (mode === 'preview') { eP.classList.add('hidden'); pP.classList.remove('hidden'); pP.style.width = '100%'; }
+        }
+
+        function openHelp() {
+            const m = document.getElementById('help-modal');
+            m.style.display = 'flex';
+            m.style.zIndex = '3001'; // Above diagram modal
+        }
+        function closeHelp() { document.getElementById('help-modal').style.display = 'none'; }
+        function updateStats() { const t = document.getElementById('editor').value; document.getElementById('status-left').textContent = `Caratteri: ${t.length} | Parole: ${t.split(/\s+/).filter(w => w).length}`; }
+        function handleShortcuts(e) { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveNow(); } }
+        function toggleFullScreen() { !document.fullscreenElement ? document.documentElement.requestFullscreen() : document.exitFullscreen(); }
+
+        init();
+    </script>
+</body>
+
+</html>
