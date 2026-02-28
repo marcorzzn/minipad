@@ -384,25 +384,26 @@
 
         .math-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
-            gap: 2px;
+            grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+            gap: 6px;
+            padding: 4px;
         }
 
         /* The Compact Math Button Style */
         .math-btn {
-            height: 28px;
-            width: 28px;
+            height: 38px;
+            width: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: #fff;
             border: 1px solid #ccc;
-            border-radius: 2px;
+            border-radius: 6px;
             cursor: pointer;
             color: #000;
-            font-size: 14px;
-            transition: all 0.05s;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            font-size: 18px;
+            transition: all 0.1s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             overflow: hidden;
         }
 
@@ -760,6 +761,51 @@
             }
         }
 
+        /* --- MOBILE RESPONSIVENESS --- */
+        @media (max-width: 768px) {
+            #workspace {
+                flex-direction: column;
+                height: calc(100vh - 150px);
+            }
+
+            #editor-pane,
+            #preview-pane {
+                width: 100% !important;
+                height: 50%;
+                border-right: none;
+            }
+
+            #preview-pane {
+                border-top: 1px solid var(--border-color);
+                padding: 15px;
+            }
+
+            #toolbar {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 2px;
+            }
+
+            .tool-group {
+                flex-shrink: 0;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 10px;
+            }
+
+            #titlebar {
+                font-size: 11px;
+            }
+
+            .math-tabs {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 2px;
+            }
+        }
+
         .hidden {
             display: none !important;
         }
@@ -860,7 +906,7 @@
         </div>
 
         <!-- Colors -->
-        <div class="tool-group">
+        <div class="tool-group" onmousedown="saveSelection()">
             <button class="format-btn" onclick="document.getElementById('text-color-picker').click()"
                 title="Colore Testo">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1102,6 +1148,13 @@
         let tabs = [];
         let activeTabId = null;
         let autoSaveTimeout = null;
+        let previewTimeout = null;
+        let savedSelection = null;
+
+        function saveSelection() {
+            const field = document.getElementById('editor');
+            savedSelection = { start: field.selectionStart, end: field.selectionEnd };
+        }
 
         // --- DIAGRAM DATA TEMPLATES ---
         const diagramTemplates = [
@@ -1152,6 +1205,21 @@
                 { cmd: "\\infty", html: "\\infty" }, { cmd: "\\partial", html: "\\partial" }, { cmd: "\\nabla", html: "\\nabla" }, { cmd: "\\Delta", html: "\\Delta" }, { cmd: "\\angle", html: "\\angle" },
                 { cmd: "\\diamond", html: "\\diamond" }, { cmd: "\\triangle", html: "\\triangle" }, { cmd: "\\square", html: "\\square" }, { cmd: "\\blacksquare", html: "\\blacksquare" },
                 { cmd: "\\hbar", html: "\\hbar" }, { cmd: "\\ell", html: "\\ell" }, { cmd: "\\wp", html: "\\wp" }, { cmd: "\\Re", html: "\\Re" }, { cmd: "\\Im", html: "\\Im" }, { cmd: "\\emptyset", html: "\\emptyset" }
+            ],
+            "Analisi": [
+                { cmd: "\\frac{d}{dx}", html: "\\frac{d}{dx}" }, { cmd: "\\frac{\\partial}{\\partial x}", html: "\\frac{\\partial}{\\partial x}" },
+                { cmd: "\\int_{-\\infty}^{\\infty}", html: "\\int_{-\\infty}^{\\infty}" }, { cmd: "\\oint_C", html: "\\oint_C" },
+                { cmd: "\\lim_{x \\to 0}", html: "\\lim_{x \\to 0}" }, { cmd: "\\lim_{n \\to \\infty}", html: "\\lim_{n \\to \\infty}" },
+                { cmd: "\\sum_{i=1}^{n}", html: "\\sum_{i=1}^{n}" }, { cmd: "\\prod_{i=1}^{n}", html: "\\prod_{i=1}^{n}" },
+                { cmd: "\\nabla", html: "\\nabla" }, { cmd: "\\Delta", html: "\\Delta" }, { cmd: "\\infty", html: "\\infty" }
+            ],
+            "Algebra": [
+                { cmd: "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}", html: "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}" },
+                { cmd: "\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}", html: "\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}" },
+                { cmd: "\\det(A)", html: "\\det(A)" }, { cmd: "\\operatorname{tr}(A)", html: "\\operatorname{tr}(A)" },
+                { cmd: "\\vec{v}", html: "\\vec{v}" }, { cmd: "\\mathbf{v}", html: "\\mathbf{v}" }, { cmd: "\\hat{v}", html: "\\hat{v}" },
+                { cmd: "\\langle u, v \\rangle", html: "\\langle u, v \\rangle" }, { cmd: "\\| u \\|", html: "\\| u \\|" }, { cmd: "\\oplus", html: "\\oplus" }, { cmd: "\\otimes", html: "\\otimes" },
+                { cmd: "\\dim", html: "\\dim" }, { cmd: "\\ker", html: "\\ker" }, { cmd: "\\Im", html: "\\Im" }
             ],
             "Relazioni": [
                 { cmd: "\\leq", html: "\\leq" }, { cmd: "\\geq", html: "\\geq" }, { cmd: "\\neq", html: "\\neq" }, { cmd: "\\approx", html: "\\approx" }, { cmd: "\\equiv", html: "\\equiv" },
@@ -1653,11 +1721,26 @@
 
         function insertColor(prop, color) {
             const field = document.getElementById('editor');
-            const start = field.selectionStart;
-            const end = field.selectionEnd;
+            let start = field.selectionStart;
+            let end = field.selectionEnd;
+            if (savedSelection && start === end) {
+                start = savedSelection.start;
+                end = savedSelection.end;
+            }
             const val = field.value;
-            const selected = val.substring(start, end);
-            field.value = val.substring(0, start) + `<span style="${prop}:${color}">` + selected + `</span>` + val.substring(end);
+            let selected = val.substring(start, end);
+            if (!selected) selected = "Testo";
+
+            const insertText = `<span style="${prop}:${color}">` + selected + `</span>`;
+            field.value = val.substring(0, start) + insertText + val.substring(end);
+
+            savedSelection = null;
+
+            setTimeout(() => {
+                field.focus();
+                field.setSelectionRange(start, start + insertText.length);
+            }, 10);
+
             handleInput();
         }
 
@@ -1765,7 +1848,10 @@
             }
             clearTimeout(autoSaveTimeout);
             autoSaveTimeout = setTimeout(() => { saveToStorage(); showSavedIndicator(); }, 1000);
-            updatePreview();
+
+            clearTimeout(previewTimeout);
+            previewTimeout = setTimeout(() => { updatePreview(); }, 300);
+
             updateStats();
         }
         function saveToStorage() { localStorage.setItem('minipad_tabs', JSON.stringify(tabs)); }
