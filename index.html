@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="it">
 
 <head>
@@ -700,7 +700,9 @@
 
         #preview-content table {
             border-collapse: collapse;
-            width: 100%;
+            width: auto;
+            min-width: 100%;
+            table-layout: auto;
         }
 
         #preview-content th,
@@ -977,13 +979,16 @@
         <!-- Basic Format -->
         <div class="tool-group">
             <button class="format-btn" onclick="insertMarkdown('**', '**')"
-                title="Grassetto"><strong>B</strong></button>
-            <button class="format-btn" onclick="insertMarkdown('*', '*')" title="Corsivo"><em>I</em></button>
+                title="Grassetto (Ctrl+B)"><strong>B</strong></button>
+            <button class="format-btn" onclick="insertMarkdown('*', '*')" title="Corsivo (Ctrl+I)"><em>I</em></button>
             <button class="format-btn" onclick="insertMarkdown('<u>', '</u>')" title="Sottolineato"><u>U</u></button>
             <button class="format-btn" onclick="insertMarkdown('~~', '~~')" title="Barrato"><s>S</s></button>
-            <button class="format-btn" onclick="insertMarkdown('<sup>', '</sup>')" title="Apice">x²</button>
-            <button class="format-btn" onclick="insertMarkdown('<sub>', '</sub>')" title="Pedice">x₂</button>
-            <button class="format-btn" onclick="insertMarkdown('`', '`')" title="Codice">&lt;/&gt;</button>
+            <button class="format-btn" onclick="insertMarkdown('<sup>', '</sup>')" title="Apice"
+                style="font-size:11px;">x²</button>
+            <button class="format-btn" onclick="insertMarkdown('<sub>', '</sub>')" title="Pedice"
+                style="font-size:11px;">x₂</button>
+            <button class="format-btn" onclick="insertMarkdown('`', '`')" title="Codice Inline"
+                style="font-size:10px; letter-spacing:-1px;">&lt;/&gt;</button>
         </div>
 
         <!-- Colors -->
@@ -1014,86 +1019,77 @@
 
         <!-- Headings Flat -->
         <div class="tool-group">
-            <button class="format-btn" onclick="applyHeading(1)" title="Titolo 1"><strong
+            <button class="format-btn" onclick="applyHeading(1)" title="Titolo H1"><strong
                     style="font-size:14px">H1</strong></button>
-            <button class="format-btn" onclick="applyHeading(2)" title="Titolo 2"><strong
+            <button class="format-btn" onclick="applyHeading(2)" title="Titolo H2"><strong
                     style="font-size:13px">H2</strong></button>
-            <button class="format-btn" onclick="applyHeading(3)" title="Titolo 3"><strong
+            <button class="format-btn" onclick="applyHeading(3)" title="Titolo H3"><strong
                     style="font-size:12px">H3</strong></button>
+            <button class="format-btn" onclick="applyHeading(0)" title="Paragrafo Normale"
+                style="font-size:11px;">¶</button>
         </div>
 
         <!-- Lists Flat -->
         <div class="tool-group">
-            <button class="format-btn" onclick="applyList('- ')" title="Elenco Puntato">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="8" cy="6" r="2" />
-                    <circle cx="8" cy="12" r="2" />
-                    <circle cx="8" cy="18" r="2" />
-                    <path d="M16 8h2M16 14h2M16 20h2" />
+            <button class="format-btn" onclick="applyList('- ')" title="Elenco Puntato (•)">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;">
+                    <circle cx="5" cy="6" r="2" />
+                    <circle cx="5" cy="12" r="2" />
+                    <circle cx="5" cy="18" r="2" />
+                    <line x1="11" y1="6" x2="22" y2="6" stroke="currentColor" stroke-width="2.5" />
+                    <line x1="11" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2.5" />
+                    <line x1="11" y1="18" x2="22" y2="18" stroke="currentColor" stroke-width="2.5" />
                 </svg>
+                <span style="font-size:9px;margin-left:1px;">•—</span>
             </button>
-            <button class="format-btn" onclick="applyList('1. ')" title="Elenco Numerato">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <line x1="10" y1="6" x2="21" y2="6"></line>
-                    <line x1="10" y1="12" x2="21" y2="12"></line>
-                    <line x1="10" y1="18" x2="21" y2="18"></line>
-                    <path d="M4 6h1v4"></path>
-                    <path d="M4 10h2"></path>
-                    <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path>
+            <button class="format-btn" onclick="applyList('1. ')" title="Elenco Numerato (1. 2. 3.)"
+                style="font-size:10px; letter-spacing:-0.5px;">1.<br>2.</button>
+            <button class="format-btn" onclick="applyList('- [ ] ')" title="Checklist (☐)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    style="width:14px;height:14px;">
+                    <rect x="3" y="3" width="18" height="18" rx="3" />
+                    <path d="M7 12l4 4 6-6" />
                 </svg>
-            </button>
-            <button class="format-btn" onclick="applyList('- [ ] ')" title="Checklist">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <path d="M9 12l2 2 4-4" />
-                </svg>
+                <span style="font-size:9px;margin-left:1px;">☐</span>
             </button>
         </div>
 
         <!-- MATH SECTION -->
         <div class="tool-group">
-            <button class="format-btn" onclick="toggleFormulaMenu(event)" title="Inserisci Formula ($ / $$)">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M5 4h14L10 12l9 8H5" />
-                </svg>
+            <button class="format-btn" onclick="toggleFormulaMenu(event)" title="Inserisci Formula LaTeX">
+                <span
+                    style="font-family: 'Times New Roman', serif; font-style:italic; font-size:15px; line-height:1;">∑x</span>
             </button>
             <div class="dropdown-menu" id="formula-menu">
-                <div class="dropdown-item" onclick="insertFormulaInline()">Formula in Linea ($...$)</div>
-                <div class="dropdown-item" onclick="insertFormulaBlock()">Blocco Formula ($$...$$)</div>
+                <div class="dropdown-item" onclick="insertFormulaInline()">$ Formula in linea $</div>
+                <div class="dropdown-item" onclick="insertFormulaBlock()">$$ Blocco centrato $$</div>
             </div>
-            <button class="format-btn" onclick="toggleMathBar()" title="Strumenti Matematici">
-                <span
-                    style="font-family: 'Times New Roman', serif; font-weight: bold; font-size: 18px; line-height: 1;">&pi;</span>
+            <button class="format-btn" onclick="toggleMathBar()" title="Tavolozza Simboli Matematici">
+                <span style="font-family: 'Times New Roman', serif; font-size: 17px; line-height:1;">&pi;▾</span>
             </button>
         </div>
 
         <!-- Extra Markdown -->
         <div class="tool-group">
-            <button class="format-btn" onclick="insertMarkdown('> ', '')" title="Citazione">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3 21h3V9H3v12zm7 0h3V3h-3v18zm7 0h3V9h-3v12z" />
-                    <path d="M14 3h8v6h-8z" style="display:none" />
-                    <path d="M6 3a3 3 0 0 1 3 3v11H6V3zm8 0a3 3 0 0 1 3 3v11h-3V3z" />
+            <button class="format-btn" onclick="insertMarkdown('> ', '')" title="Citazione Blockquote">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;">
+                    <path
+                        d="M3 21v-5a4 4 0 0 1 4-4h1V8a4 4 0 0 1 4-4h1v6h-1a2 2 0 0 0-2 2v5H3zm10 0v-5a4 4 0 0 1 4-4h1V8a4 4 0 0 0-1-3V3h1a4 4 0 0 1 4 4v4h-1a2 2 0 0 0-2 2v5h-6z" />
                 </svg>
+                <span style="font-size:9px;margin-left:1px;">❝</span>
             </button>
-            <button class="format-btn" onclick="insertHR()" title="Separatore Orizzontale">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-            </button>
-            <button class="format-btn" onclick="insertLink()" title="Link (Ctrl+K)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button class="format-btn" onclick="insertHR()" title="Separatore Orizzontale (---)"
+                style="font-size:10px;">─ HR</button>
+            <button class="format-btn" onclick="insertLink()" title="Inserisci Link (Ctrl+K)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="width:14px;height:14px;">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                 </svg>
+                <span style="font-size:9px;margin-left:1px;">URL</span>
             </button>
-            <button class="format-btn" onclick="insertMarkdown('\n```\n', '\n```\n')" title="Blocco Codice">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="16 18 22 12 16 6" />
-                    <polyline points="8 6 2 12 8 18" />
-                </svg>
-            </button>
+            <button class="format-btn" onclick="insertMarkdown('\n```\n', '\n```\n')" title="Blocco di Codice (```)"
+                style="font-size:10px; letter-spacing:-1px;">&lt;/&gt;</button>
         </div>
 
         <!-- Diagrams -->
@@ -1109,17 +1105,33 @@
 
         <!-- Tables -->
         <div class="tool-group">
-            <button class="format-btn" onclick="toggleTableMenu(event)" title="Tabella">
+            <button class="format-btn" onclick="toggleTableMenu(event)" title="Inserisci Tabella">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" />
                     <path d="M3 9h18" />
                     <path d="M9 21V9" />
                 </svg>
+                <span style="font-size:10px; margin-left:2px;">Tab</span>
             </button>
-            <div class="dropdown-menu" id="table-menu" style="width: 160px; padding: 8px;">
-                <div style="margin-bottom: 4px; font-size: 11px; color: #888;">Seleziona dimensione:</div>
-                <div id="table-grid" style="display: grid; grid-template-columns: repeat(8, 16px); gap: 2px;"></div>
-                <div id="table-size-label" style="text-align: center; margin-top: 4px; font-size: 11px;">0 x 0</div>
+            <div class="dropdown-menu" id="table-menu"
+                style="width:230px; padding:10px; flex-direction:column; gap:6px;">
+                <div style="font-size:11px; font-weight:600; color:var(--accent-color);">Inserisci Tabella</div>
+                <div style="font-size:10px; color:#888;">Selezione rapida (max 8x8):</div>
+                <div id="table-grid" style="display:grid; grid-template-columns:repeat(8, 14px); gap:2px;"></div>
+                <div id="table-size-label" style="text-align:center; font-size:10px; color:#888;">0 x 0</div>
+                <hr style="border:none; border-top:1px solid var(--border-color); margin:4px 0;">
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <label style="font-size:11px;">Righe:</label>
+                    <input type="number" id="table-rows-input" value="3" min="1" max="50"
+                        style="width:50px; padding:2px 4px; border:1px solid var(--border-color); border-radius:3px; background:var(--bg-color); color:var(--text-color); font-size:12px;">
+                    <label style="font-size:11px;">Col:</label>
+                    <input type="number" id="table-cols-input" value="3" min="1" max="20"
+                        style="width:50px; padding:2px 4px; border:1px solid var(--border-color); border-radius:3px; background:var(--bg-color); color:var(--text-color); font-size:12px;">
+                </div>
+                <button onclick="insertTableFromInputs()"
+                    style="background:var(--accent-color);color:white;border:none;border-radius:4px;padding:6px 12px;cursor:pointer;font-size:12px;width:100%;margin-top:2px;">
+                    Inserisci Tabella ↵
+                </button>
             </div>
         </div>
 
@@ -1157,7 +1169,28 @@
                 </svg>
             </button>
             <button class="format-btn" onclick="openHelp()" title="Guida"><strong>?</strong></button>
+            <button class="format-btn" onclick="toggleFindBar()" title="Cerca (Ctrl+F)"
+                style="font-size:10px;">🔍</button>
+            <button class="format-btn" onclick="generateTOC()" title="Genera Indice (TOC)"
+                style="font-size:10px;">📑</button>
         </div>
+    </div>
+
+    <!-- FIND/REPLACE BAR -->
+    <div id="find-bar"
+        style="display:none; background:var(--toolbar-bg); border-bottom:1px solid var(--border-color); padding:6px 12px; display:none; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px;">
+        <label style="font-weight:600;">Cerca:</label>
+        <input type="text" id="find-input" placeholder="Testo da cercare..." oninput="highlightFind()"
+            style="padding:3px 7px; border:1px solid var(--border-color); border-radius:3px; background:var(--bg-color); color:var(--text-color); min-width:160px;">
+        <label>Sostituisci:</label>
+        <input type="text" id="replace-input" placeholder="Sostituisci con..."
+            style="padding:3px 7px; border:1px solid var(--border-color); border-radius:3px; background:var(--bg-color); color:var(--text-color); min-width:140px;">
+        <button onclick="findAndReplace()"
+            style="padding:3px 10px; background:var(--accent-color); color:white; border:none; border-radius:3px; cursor:pointer; font-size:11px;">Sostituisci
+            tutto</button>
+        <span id="find-count" style="color:#888; font-size:11px;"></span>
+        <button onclick="closeFindBar()"
+            style="margin-left:auto; background:none; border:none; cursor:pointer; font-size:16px; color:#888;">&times;</button>
     </div>
 
     <!-- MATH TOOLBAR -->
@@ -1314,128 +1347,361 @@
             { title: "Torta", code: "pie title Pets\n  Dogs : 386\n  Cats : 85\n  Fish : 142" }
         ];
 
-        // --- MATH DATA (EXTENSIVE) ---
+        // --- MATH DATA (EXHAUSTIVE - 28 CATEGORIES) ---
         const mathCategories = {
-            "Greco": [
-                { cmd: "\\alpha", html: "\\alpha" }, { cmd: "\\beta", html: "\\beta" }, { cmd: "\\gamma", html: "\\gamma" }, { cmd: "\\delta", html: "\\delta" }, { cmd: "\\epsilon", html: "\\epsilon" },
-                { cmd: "\\zeta", html: "\\zeta" }, { cmd: "\\eta", html: "\\eta" }, { cmd: "\\theta", html: "\\theta" }, { cmd: "\\iota", html: "\\iota" }, { cmd: "\\kappa", html: "\\kappa" },
-                { cmd: "\\lambda", html: "\\lambda" }, { cmd: "\\mu", html: "\\mu" }, { cmd: "\\nu", html: "\\nu" }, { cmd: "\\xi", html: "\\xi" }, { cmd: "\\pi", html: "\\pi" },
-                { cmd: "\\rho", html: "\\rho" }, { cmd: "\\sigma", html: "\\sigma" }, { cmd: "\\tau", html: "\\tau" }, { cmd: "\\upsilon", html: "\\upsilon" }, { cmd: "\\phi", html: "\\phi" },
-                { cmd: "\\chi", html: "\\chi" }, { cmd: "\\psi", html: "\\psi" }, { cmd: "\\omega", html: "\\omega" },
-                { cmd: "\\Gamma", html: "\\Gamma" }, { cmd: "\\Delta", html: "\\Delta" }, { cmd: "\\Theta", html: "\\Theta" }, { cmd: "\\Lambda", html: "\\Lambda" }, { cmd: "\\Sigma", html: "\\Sigma" }, { cmd: "\\Omega", html: "\\Omega" }
+            // ── GREEK ──
+            "Greco min.": [
+                { cmd: "\\alpha", html: "\\alpha" }, { cmd: "\\beta", html: "\\beta" },
+                { cmd: "\\gamma", html: "\\gamma" }, { cmd: "\\delta", html: "\\delta" },
+                { cmd: "\\epsilon", html: "\\epsilon" }, { cmd: "\\zeta", html: "\\zeta" },
+                { cmd: "\\eta", html: "\\eta" }, { cmd: "\\theta", html: "\\theta" },
+                { cmd: "\\iota", html: "\\iota" }, { cmd: "\\kappa", html: "\\kappa" },
+                { cmd: "\\lambda", html: "\\lambda" }, { cmd: "\\mu", html: "\\mu" },
+                { cmd: "\\nu", html: "\\nu" }, { cmd: "\\xi", html: "\\xi" },
+                { cmd: "\\pi", html: "\\pi" }, { cmd: "\\rho", html: "\\rho" },
+                { cmd: "\\sigma", html: "\\sigma" }, { cmd: "\\tau", html: "\\tau" },
+                { cmd: "\\upsilon", html: "\\upsilon" }, { cmd: "\\phi", html: "\\phi" },
+                { cmd: "\\chi", html: "\\chi" }, { cmd: "\\psi", html: "\\psi" },
+                { cmd: "\\omega", html: "\\omega" }
             ],
-            "Greco Var.": [
-                { cmd: "\\varepsilon", html: "\\varepsilon" }, { cmd: "\\varphi", html: "\\varphi" }, { cmd: "\\varpi", html: "\\varpi" }, { cmd: "\\varrho", html: "\\varrho" }, { cmd: "\\varsigma", html: "\\varsigma" },
-                { cmd: "\\vartheta", html: "\\vartheta" }
+            "Greco mai.": [
+                { cmd: "\\Gamma", html: "\\Gamma" }, { cmd: "\\Delta", html: "\\Delta" },
+                { cmd: "\\Theta", html: "\\Theta" }, { cmd: "\\Lambda", html: "\\Lambda" },
+                { cmd: "\\Xi", html: "\\Xi" }, { cmd: "\\Pi", html: "\\Pi" },
+                { cmd: "\\Sigma", html: "\\Sigma" }, { cmd: "\\Upsilon", html: "\\Upsilon" },
+                { cmd: "\\Phi", html: "\\Phi" }, { cmd: "\\Psi", html: "\\Psi" },
+                { cmd: "\\Omega", html: "\\Omega" }
             ],
-            "Funzioni": [
-                { cmd: "\\sin", html: "\\sin" }, { cmd: "\\cos", html: "\\cos" }, { cmd: "\\tan", html: "\\tan" }, { cmd: "\\cot", html: "\\cot" },
-                { cmd: "\\sec", html: "\\sec" }, { cmd: "\\csc", html: "\\csc" }, { cmd: "\\sinh", html: "\\sinh" }, { cmd: "\\cosh", html: "\\cosh" }, { cmd: "\\tanh", html: "\\tanh" },
-                { cmd: "\\ln", html: "\\ln" }, { cmd: "\\log", html: "\\log" }, { cmd: "\\exp", html: "\\exp" },
-                { cmd: "\\max", html: "\\max" }, { cmd: "\\min", html: "\\min" }, { cmd: "\\sup", html: "\\sup" }, { cmd: "\\inf", html: "\\inf" }, { cmd: "\\det", html: "\\det" }
+            "Greco var.": [
+                { cmd: "\\varepsilon", html: "\\varepsilon" }, { cmd: "\\varphi", html: "\\varphi" },
+                { cmd: "\\varpi", html: "\\varpi" }, { cmd: "\\varrho", html: "\\varrho" },
+                { cmd: "\\varsigma", html: "\\varsigma" }, { cmd: "\\vartheta", html: "\\vartheta" },
+                { cmd: "\\varkappa", html: "\\varkappa" }
             ],
-            "Op. Limiti": [
-                { cmd: "\\int_{a}^{b}", html: "\\int_{a}^{b}" }, { cmd: "\\int_{0}^{\\infty}", html: "\\int_{0}^{\\infty}" }, { cmd: "\\iint_{D}", html: "\\iint_{D}" }, { cmd: "\\iiint_{V}", html: "\\iiint_{V}" }, { cmd: "\\oint_{C}", html: "\\oint_{C}" },
-                { cmd: "\\sum_{i=0}^{n}", html: "\\sum_{i=0}^{n}" }, { cmd: "\\sum_{i=1}^{\\infty}", html: "\\sum_{i=1}^{\\infty}" }, { cmd: "\\prod_{i=1}^{n}", html: "\\prod_{i=1}^{n}" }, { cmd: "\\coprod_{i=1}^{n}", html: "\\coprod_{i=1}^{n}" },
-                { cmd: "\\lim_{x \\to 0}", html: "\\lim_{x \\to 0}" }, { cmd: "\\lim_{x \\to \\infty}", html: "\\lim_{x \\to \\infty}" }
+            // ── INTEGRALI ──
+            "Integrali": [
+                { cmd: "\\int", html: "\\int" },
+                { cmd: "\\int_{a}^{b}", html: "\\int_{a}^{b}" },
+                { cmd: "\\int_{a}^{b} f(x)\\,dx", html: "\\int_{a}^{b} f(x)\\,dx" },
+                { cmd: "\\int_{0}^{\\infty} f(x)\\,dx", html: "\\int_{0}^{\\infty} f(x)\\,dx" },
+                { cmd: "\\int_{-\\infty}^{+\\infty} f(x)\\,dx", html: "\\int_{-\\infty}^{+\\infty} f(x)\\,dx" },
+                { cmd: "\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}", html: "\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}" },
+                { cmd: "\\iint_{D}", html: "\\iint_{D}" },
+                { cmd: "\\iint_{D} f(x,y)\\,dA", html: "\\iint_{D} f(x,y)\\,dA" },
+                { cmd: "\\iiint_{V}", html: "\\iiint_{V}" },
+                { cmd: "\\iiint_{V} f(x,y,z)\\,dV", html: "\\iiint_{V} f(x,y,z)\\,dV" },
+                { cmd: "\\oint_{C}", html: "\\oint_{C}" },
+                { cmd: "\\oint_{C} \\mathbf{F} \\cdot d\\mathbf{r}", html: "\\oint_{C} \\mathbf{F} \\cdot d\\mathbf{r}" },
+                { cmd: "\\int_0^{2\\pi}", html: "\\int_0^{2\\pi}" },
+                { cmd: "\\int_0^1", html: "\\int_0^1" },
+                { cmd: "\\int_C f\\,ds", html: "\\int_C f\\,ds" },
+                { cmd: "\\int_a^b u\\,dv = [uv]_a^b - \\int_a^b v\\,du", html: "\\int_a^b u\\,dv = [uv]_a^b - \\int_a^b v\\,du" }
             ],
-            "Op. Base": [
-                { cmd: "\\int", html: "\\int" }, { cmd: "\\oint", html: "\\oint" }, { cmd: "\\iint", html: "\\iint" }, { cmd: "\\iiint", html: "\\iiint" },
-                { cmd: "\\sum", html: "\\sum" }, { cmd: "\\prod", html: "\\prod" }, { cmd: "\\bigcup", html: "\\bigcup" }, { cmd: "\\bigcap", html: "\\bigcap" },
-                { cmd: "\\bigvee", html: "\\bigvee" }, { cmd: "\\bigwedge", html: "\\bigwedge" }, { cmd: "\\bigoplus", html: "\\bigoplus" }, { cmd: "\\bigotimes", html: "\\bigotimes" },
-                { cmd: "\\cup", html: "\\cup" }, { cmd: "\\cap", html: "\\cap" }, { cmd: "\\setminus", html: "\\setminus" }, { cmd: "\\sqcup", html: "\\sqcup" },
-                { cmd: "\\wedge", html: "\\wedge" }, { cmd: "\\vee", html: "\\vee" }, { cmd: "\\oplus", html: "\\oplus" }, { cmd: "\\otimes", html: "\\otimes" },
-                { cmd: "\\pm", html: "\\pm" }, { cmd: "\\mp", html: "\\mp" }, { cmd: "\\times", html: "\\times" }, { cmd: "\\div", html: "\\div" }, { cmd: "\\cdot", html: "\\cdot" }
+            // ── DERIVATE ──
+            "Derivate": [
+                { cmd: "\\frac{d}{dx}", html: "\\frac{d}{dx}" },
+                { cmd: "\\frac{dy}{dx}", html: "\\frac{dy}{dx}" },
+                { cmd: "\\frac{d^2y}{dx^2}", html: "\\frac{d^2y}{dx^2}" },
+                { cmd: "\\frac{d^n y}{dx^n}", html: "\\frac{d^n y}{dx^n}" },
+                { cmd: "\\frac{d}{dx}\\left[f(x)\\right]", html: "\\frac{d}{dx}\\left[f(x)\\right]" },
+                { cmd: "\\frac{\\partial}{\\partial x}", html: "\\frac{\\partial}{\\partial x}" },
+                { cmd: "\\frac{\\partial f}{\\partial x}", html: "\\frac{\\partial f}{\\partial x}" },
+                { cmd: "\\frac{\\partial^2 f}{\\partial x^2}", html: "\\frac{\\partial^2 f}{\\partial x^2}" },
+                { cmd: "\\frac{\\partial^2 f}{\\partial x \\partial y}", html: "\\frac{\\partial^2 f}{\\partial x \\partial y}" },
+                { cmd: "\\frac{\\partial^n f}{\\partial x^n}", html: "\\frac{\\partial^n f}{\\partial x^n}" },
+                { cmd: "f'(x)", html: "f'(x)" }, { cmd: "f''(x)", html: "f''(x)" },
+                { cmd: "f^{(n)}(x)", html: "f^{(n)}(x)" },
+                { cmd: "\\dot{x}", html: "\\dot{x}" }, { cmd: "\\ddot{x}", html: "\\ddot{x}" },
+                { cmd: "\\nabla f", html: "\\nabla f" }, { cmd: "\\nabla^2 f", html: "\\nabla^2 f" },
+                { cmd: "\\frac{Df}{Dt}", html: "\\frac{Df}{Dt}" },
+                { cmd: "\\left. \\frac{df}{dx} \\right|_{x=a}", html: "\\left. \\frac{df}{dx} \\right|_{x=a}" }
             ],
-            "Simboli": [
-                { cmd: "\\forall", html: "\\forall" }, { cmd: "\\exists", html: "\\exists" }, { cmd: "\\nexists", html: "\\nexists" }, { cmd: "\\neg", html: "\\neg" }, { cmd: "\\top", html: "\\top" }, { cmd: "\\bot", html: "\\bot" },
-                { cmd: "\\infty", html: "\\infty" }, { cmd: "\\partial", html: "\\partial" }, { cmd: "\\nabla", html: "\\nabla" }, { cmd: "\\Delta", html: "\\Delta" }, { cmd: "\\angle", html: "\\angle" },
-                { cmd: "\\diamond", html: "\\diamond" }, { cmd: "\\triangle", html: "\\triangle" }, { cmd: "\\square", html: "\\square" }, { cmd: "\\blacksquare", html: "\\blacksquare" },
-                { cmd: "\\hbar", html: "\\hbar" }, { cmd: "\\ell", html: "\\ell" }, { cmd: "\\wp", html: "\\wp" }, { cmd: "\\Re", html: "\\Re" }, { cmd: "\\Im", html: "\\Im" }, { cmd: "\\emptyset", html: "\\emptyset" }
+            // ── LIMITI ──
+            "Limiti": [
+                { cmd: "\\lim_{x \\to a}", html: "\\lim_{x \\to a}" },
+                { cmd: "\\lim_{x \\to 0}", html: "\\lim_{x \\to 0}" },
+                { cmd: "\\lim_{x \\to \\infty}", html: "\\lim_{x \\to \\infty}" },
+                { cmd: "\\lim_{x \\to -\\infty}", html: "\\lim_{x \\to -\\infty}" },
+                { cmd: "\\lim_{n \\to \\infty}", html: "\\lim_{n \\to \\infty}" },
+                { cmd: "\\lim_{h \\to 0} \\frac{f(x+h)-f(x)}{h}", html: "\\lim_{h \\to 0} \\frac{f(x+h)-f(x)}{h}" },
+                { cmd: "\\lim_{x \\to a^+}", html: "\\lim_{x \\to a^+}" },
+                { cmd: "\\lim_{x \\to a^-}", html: "\\lim_{x \\to a^-}" },
+                { cmd: "\\limsup_{n \\to \\infty}", html: "\\limsup_{n \\to \\infty}" },
+                { cmd: "\\liminf_{n \\to \\infty}", html: "\\liminf_{n \\to \\infty}" },
+                { cmd: "\\lim_{(x,y) \\to (0,0)}", html: "\\lim_{(x,y) \\to (0,0)}" },
+                { cmd: "\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1", html: "\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1" },
+                { cmd: "\\lim_{n \\to \\infty} \\left(1+\\frac{1}{n}\\right)^n = e", html: "\\lim_{n \\to \\infty} \\left(1+\\frac{1}{n}\\right)^n = e" }
             ],
-            "Analisi": [
-                { cmd: "\\frac{d}{dx}", html: "\\frac{d}{dx}" }, { cmd: "\\frac{\\partial}{\\partial x}", html: "\\frac{\\partial}{\\partial x}" },
-                { cmd: "\\int_{-\\infty}^{\\infty}", html: "\\int_{-\\infty}^{\\infty}" }, { cmd: "\\oint_C", html: "\\oint_C" },
-                { cmd: "\\lim_{x \\to 0}", html: "\\lim_{x \\to 0}" }, { cmd: "\\lim_{n \\to \\infty}", html: "\\lim_{n \\to \\infty}" },
-                { cmd: "\\sum_{i=1}^{n}", html: "\\sum_{i=1}^{n}" }, { cmd: "\\prod_{i=1}^{n}", html: "\\prod_{i=1}^{n}" },
-                { cmd: "\\nabla", html: "\\nabla" }, { cmd: "\\Delta", html: "\\Delta" }, { cmd: "\\infty", html: "\\infty" }
+            // ── SERIE ──
+            "Serie": [
+                { cmd: "\\sum_{n=0}^{\\infty} a_n", html: "\\sum_{n=0}^{\\infty} a_n" },
+                { cmd: "\\sum_{n=1}^{N} a_n", html: "\\sum_{n=1}^{N} a_n" },
+                { cmd: "\\sum_{n=0}^{\\infty} \\frac{x^n}{n!}", html: "\\sum_{n=0}^{\\infty} \\frac{x^n}{n!}" },
+                { cmd: "\\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6}", html: "\\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6}" },
+                { cmd: "\\sum_{n=0}^{\\infty} r^n = \\frac{1}{1-r}", html: "\\sum_{n=0}^{\\infty} r^n = \\frac{1}{1-r}" },
+                { cmd: "f(x) = \\sum_{n=0}^{\\infty} \\frac{f^{(n)}(a)}{n!}(x-a)^n", html: "f(x) = \\sum_{n=0}^{\\infty} \\frac{f^{(n)}(a)}{n!}(x-a)^n" },
+                { cmd: "e^x = \\sum_{n=0}^{\\infty} \\frac{x^n}{n!}", html: "e^x = \\sum_{n=0}^{\\infty} \\frac{x^n}{n!}" },
+                { cmd: "\\sin x = \\sum_{n=0}^{\\infty} \\frac{(-1)^n x^{2n+1}}{(2n+1)!}", html: "\\sin x = \\sum_{n=0}^{\\infty} \\frac{(-1)^n x^{2n+1}}{(2n+1)!}" },
+                { cmd: "\\prod_{i=1}^{n} a_i", html: "\\prod_{i=1}^{n} a_i" },
+                { cmd: "\\sum_{k=0}^{n} \\binom{n}{k} a^k b^{n-k}", html: "\\sum_{k=0}^{n} \\binom{n}{k} a^k b^{n-k}" }
             ],
-            "Algebra": [
+            // ── TRIGONOMETRIA ──
+            "Trigon.": [
+                { cmd: "\\sin(x)", html: "\\sin(x)" }, { cmd: "\\cos(x)", html: "\\cos(x)" },
+                { cmd: "\\tan(x)", html: "\\tan(x)" }, { cmd: "\\cot(x)", html: "\\cot(x)" },
+                { cmd: "\\sec(x)", html: "\\sec(x)" }, { cmd: "\\csc(x)", html: "\\csc(x)" },
+                { cmd: "\\arcsin(x)", html: "\\arcsin(x)" }, { cmd: "\\arccos(x)", html: "\\arccos(x)" },
+                { cmd: "\\arctan(x)", html: "\\arctan(x)" },
+                { cmd: "\\sinh(x)", html: "\\sinh(x)" }, { cmd: "\\cosh(x)", html: "\\cosh(x)" },
+                { cmd: "\\tanh(x)", html: "\\tanh(x)" }, { cmd: "\\coth(x)", html: "\\coth(x)" },
+                { cmd: "\\sin^2 x + \\cos^2 x = 1", html: "\\sin^2 x + \\cos^2 x = 1" },
+                { cmd: "\\sin(A \\pm B) = \\sin A\\cos B \\pm \\cos A\\sin B", html: "\\sin(A \\pm B) = \\sin A\\cos B \\pm \\cos A\\sin B" },
+                { cmd: "\\cos(A \\pm B) = \\cos A\\cos B \\mp \\sin A\\sin B", html: "\\cos(A \\pm B) = \\cos A\\cos B \\mp \\sin A\\sin B" },
+                { cmd: "\\tan(A+B) = \\frac{\\tan A + \\tan B}{1 - \\tan A\\tan B}", html: "\\tan(A+B) = \\frac{\\tan A + \\tan B}{1 - \\tan A\\tan B}" }
+            ],
+            // ── FUNZIONI SPECIALI ──
+            "Funz. Spec.": [
+                { cmd: "\\Gamma(n) = (n-1)!", html: "\\Gamma(n) = (n-1)!" },
+                { cmd: "\\Gamma(z) = \\int_0^{\\infty} t^{z-1} e^{-t}\\,dt", html: "\\Gamma(z) = \\int_0^{\\infty} t^{z-1} e^{-t}\\,dt" },
+                { cmd: "B(x,y) = \\frac{\\Gamma(x)\\Gamma(y)}{\\Gamma(x+y)}", html: "B(x,y) = \\frac{\\Gamma(x)\\Gamma(y)}{\\Gamma(x+y)}" },
+                { cmd: "\\zeta(s) = \\sum_{n=1}^{\\infty} \\frac{1}{n^s}", html: "\\zeta(s) = \\sum_{n=1}^{\\infty} \\frac{1}{n^s}" },
+                { cmd: "\\text{erf}(x) = \\frac{2}{\\sqrt{\\pi}}\\int_0^x e^{-t^2}\\,dt", html: "\\text{erf}(x) = \\frac{2}{\\sqrt{\\pi}}\\int_0^x e^{-t^2}\\,dt" },
+                { cmd: "\\text{erfc}(x) = 1 - \\text{erf}(x)", html: "\\text{erfc}(x) = 1 - \\text{erf}(x)" },
+                { cmd: "J_n(x)", html: "J_n(x)" },
+                { cmd: "P_n(x)", html: "P_n(x)" },
+                { cmd: "H_n(x)", html: "H_n(x)" },
+                { cmd: "\\text{Li}_2(x) = -\\int_0^x \\frac{\\ln(1-t)}{t}\\,dt", html: "\\text{Li}_2(x) = -\\int_0^x \\frac{\\ln(1-t)}{t}\\,dt" },
+                { cmd: "\\psi(x) = \\frac{\\Gamma'(x)}{\\Gamma(x)}", html: "\\psi(x) = \\frac{\\Gamma'(x)}{\\Gamma(x)}" }
+            ],
+            // ── PROBABILITÀ ──
+            "Probabilità": [
+                { cmd: "P(A)", html: "P(A)" },
+                { cmd: "P(A \\mid B)", html: "P(A \\mid B)" },
+                { cmd: "P(A \\cap B) = P(A)P(B\\mid A)", html: "P(A \\cap B) = P(A)P(B\\mid A)" },
+                { cmd: "P(A \\cup B) = P(A)+P(B)-P(A\\cap B)", html: "P(A \\cup B) = P(A)+P(B)-P(A\\cap B)" },
+                { cmd: "\\mathbb{E}[X]", html: "\\mathbb{E}[X]" },
+                { cmd: "\\mathbb{E}[X] = \\sum_x x\\, P(X=x)", html: "\\mathbb{E}[X] = \\sum_x x\\, P(X=x)" },
+                { cmd: "\\operatorname{Var}(X) = \\mathbb{E}[X^2] - (\\mathbb{E}[X])^2", html: "\\operatorname{Var}(X) = \\mathbb{E}[X^2] - (\\mathbb{E}[X])^2" },
+                { cmd: "\\bar{X} = \\frac{1}{n}\\sum_{i=1}^n X_i", html: "\\bar{X} = \\frac{1}{n}\\sum_{i=1}^n X_i" },
+                { cmd: "X \\sim \\mathcal{N}(\\mu, \\sigma^2)", html: "X \\sim \\mathcal{N}(\\mu, \\sigma^2)" },
+                { cmd: "f(x) = \\frac{1}{\\sigma\\sqrt{2\\pi}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}", html: "f(x) = \\frac{1}{\\sigma\\sqrt{2\\pi}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}" },
+                { cmd: "X \\sim \\text{Bin}(n,p)", html: "X \\sim \\text{Bin}(n,p)" },
+                { cmd: "X \\sim \\text{Pois}(\\lambda)", html: "X \\sim \\text{Pois}(\\lambda)" },
+                { cmd: "\\rho_{XY} = \\frac{\\operatorname{Cov}(X,Y)}{\\sigma_X \\sigma_Y}", html: "\\rho_{XY} = \\frac{\\operatorname{Cov}(X,Y)}{\\sigma_X \\sigma_Y}" }
+            ],
+            // ── FISICA ──
+            "Fisica": [
+                { cmd: "\\nabla \\cdot \\mathbf{F}", html: "\\nabla \\cdot \\mathbf{F}" },
+                { cmd: "\\nabla \\times \\mathbf{F}", html: "\\nabla \\times \\mathbf{F}" },
+                { cmd: "\\nabla^2 f", html: "\\nabla^2 f" },
+                { cmd: "\\mathbf{F} = m\\mathbf{a}", html: "\\mathbf{F} = m\\mathbf{a}" },
+                { cmd: "\\mathbf{v} = \\frac{d\\mathbf{r}}{dt}", html: "\\mathbf{v} = \\frac{d\\mathbf{r}}{dt}" },
+                { cmd: "\\mathcal{L} = T - V", html: "\\mathcal{L} = T - V" },
+                { cmd: "\\mathcal{H} = T + V", html: "\\mathcal{H} = T + V" },
+                { cmd: "E = mc^2", html: "E = mc^2" },
+                { cmd: "\\hbar = \\frac{h}{2\\pi}", html: "\\hbar = \\frac{h}{2\\pi}" },
+                { cmd: "\\frac{d}{dt}\\frac{\\partial \\mathcal{L}}{\\partial \\dot{q}} - \\frac{\\partial \\mathcal{L}}{\\partial q} = 0", html: "\\frac{d}{dt}\\frac{\\partial \\mathcal{L}}{\\partial \\dot{q}} - \\frac{\\partial \\mathcal{L}}{\\partial q} = 0" },
+                { cmd: "\\oint \\mathbf{E} \\cdot d\\mathbf{A} = \\frac{Q}{\\varepsilon_0}", html: "\\oint \\mathbf{E} \\cdot d\\mathbf{A} = \\frac{Q}{\\varepsilon_0}" },
+                { cmd: "\\nabla \\times \\mathbf{E} = -\\frac{\\partial \\mathbf{B}}{\\partial t}", html: "\\nabla \\times \\mathbf{E} = -\\frac{\\partial \\mathbf{B}}{\\partial t}" }
+            ],
+            // ── QUANTISTICA ──
+            "Quantistica": [
+                { cmd: "|\\psi\\rangle", html: "|\\psi\\rangle" },
+                { cmd: "\\langle\\psi|", html: "\\langle\\psi|" },
+                { cmd: "\\langle\\phi|\\psi\\rangle", html: "\\langle\\phi|\\psi\\rangle" },
+                { cmd: "\\hat{H}|\\psi\\rangle = E|\\psi\\rangle", html: "\\hat{H}|\\psi\\rangle = E|\\psi\\rangle" },
+                { cmd: "i\\hbar\\frac{\\partial}{\\partial t}|\\psi\\rangle = \\hat{H}|\\psi\\rangle", html: "i\\hbar\\frac{\\partial}{\\partial t}|\\psi\\rangle = \\hat{H}|\\psi\\rangle" },
+                { cmd: "[\\hat{x},\\hat{p}] = i\\hbar", html: "[\\hat{x},\\hat{p}] = i\\hbar" },
+                { cmd: "\\langle\\hat{A}\\rangle = \\langle\\psi|\\hat{A}|\\psi\\rangle", html: "\\langle\\hat{A}\\rangle = \\langle\\psi|\\hat{A}|\\psi\\rangle" },
+                { cmd: "\\Delta x \\Delta p \\geq \\frac{\\hbar}{2}", html: "\\Delta x \\Delta p \\geq \\frac{\\hbar}{2}" }
+            ],
+            // ── EQ. DIFFERENZIALI ──
+            "Eq. Diff.": [
+                { cmd: "y' + p(x)y = q(x)", html: "y' + p(x)y = q(x)" },
+                { cmd: "y'' + py' + qy = 0", html: "y'' + py' + qy = 0" },
+                { cmd: "\\frac{d^2y}{dx^2} + \\omega^2 y = 0", html: "\\frac{d^2y}{dx^2} + \\omega^2 y = 0" },
+                { cmd: "y(x) = C_1 e^{r_1 x} + C_2 e^{r_2 x}", html: "y(x) = C_1 e^{r_1 x} + C_2 e^{r_2 x}" },
+                { cmd: "\\frac{\\partial u}{\\partial t} = k\\frac{\\partial^2 u}{\\partial x^2}", html: "\\frac{\\partial u}{\\partial t} = k\\frac{\\partial^2 u}{\\partial x^2}" },
+                { cmd: "\\nabla^2 u = 0", html: "\\nabla^2 u = 0" },
+                { cmd: "\\frac{\\partial^2 u}{\\partial t^2} = c^2\\nabla^2 u", html: "\\frac{\\partial^2 u}{\\partial t^2} = c^2\\nabla^2 u" },
+                { cmd: "\\begin{cases} \\dot{x} = f(x,y) \\\\ \\dot{y} = g(x,y) \\end{cases}", html: "\\begin{cases} \\dot{x} = f(x,y) \\\\ \\dot{y} = g(x,y) \\end{cases}" }
+            ],
+            // ── ALGEBRA LINEARE ──
+            "Algebra Lin.": [
                 { cmd: "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}", html: "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}" },
                 { cmd: "\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}", html: "\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}" },
-                { cmd: "\\det(A)", html: "\\det(A)" }, { cmd: "\\operatorname{tr}(A)", html: "\\operatorname{tr}(A)" },
-                { cmd: "\\vec{v}", html: "\\vec{v}" }, { cmd: "\\mathbf{v}", html: "\\mathbf{v}" }, { cmd: "\\hat{v}", html: "\\hat{v}" },
-                { cmd: "\\langle u, v \\rangle", html: "\\langle u, v \\rangle" }, { cmd: "\\| u \\|", html: "\\| u \\|" }, { cmd: "\\oplus", html: "\\oplus" }, { cmd: "\\otimes", html: "\\otimes" },
-                { cmd: "\\dim", html: "\\dim" }, { cmd: "\\ker", html: "\\ker" }, { cmd: "\\Im", html: "\\Im" }
+                { cmd: "\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}", html: "\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}" },
+                { cmd: "\\det(A) = ad - bc", html: "\\det(A) = ad - bc" },
+                { cmd: "\\operatorname{tr}(A)", html: "\\operatorname{tr}(A)" },
+                { cmd: "A^{-1}", html: "A^{-1}" }, { cmd: "A^T", html: "A^T" }, { cmd: "A^\\dagger", html: "A^\\dagger" },
+                { cmd: "Av = \\lambda v", html: "Av = \\lambda v" },
+                { cmd: "\\det(A - \\lambda I) = 0", html: "\\det(A - \\lambda I) = 0" },
+                { cmd: "\\ker(A)", html: "\\ker(A)" }, { cmd: "\\operatorname{rank}(A)", html: "\\operatorname{rank}(A)" },
+                { cmd: "\\langle u, v \\rangle", html: "\\langle u, v \\rangle" },
+                { cmd: "\\|u\\|", html: "\\|u\\|" },
+                { cmd: "u \\cdot v = \\|u\\|\\|v\\|\\cos\\theta", html: "u \\cdot v = \\|u\\|\\|v\\|\\cos\\theta" },
+                { cmd: "\\begin{pmatrix} a_{11} & \\cdots & a_{1n} \\\\ \\vdots & \\ddots & \\vdots \\\\ a_{m1} & \\cdots & a_{mn} \\end{pmatrix}", html: "\\begin{pmatrix} a_{11} & \\cdots & a_{1n} \\\\ \\vdots & \\ddots & \\vdots \\\\ a_{m1} & \\cdots & a_{mn} \\end{pmatrix}" }
             ],
-            "Relazioni": [
-                { cmd: "<", html: "<" }, { cmd: ">", html: ">" }, { cmd: "\\le", html: "\\le" }, { cmd: "\\ge", html: "\\ge" }, { cmd: "\\ll", html: "\\ll" }, { cmd: "\\gg", html: "\\gg" }, { cmd: "\\ne", html: "\\ne" },
-                { cmd: "\\leq", html: "\\leq" }, { cmd: "\\geq", html: "\\geq" }, { cmd: "\\neq", html: "\\neq" }, { cmd: "\\approx", html: "\\approx" }, { cmd: "\\equiv", html: "\\equiv" },
-                { cmd: "\\sim", html: "\\sim" }, { cmd: "\\simeq", html: "\\simeq" }, { cmd: "\\cong", html: "\\cong" }, { cmd: "\\propto", html: "\\propto" }, { cmd: "\\doteq", html: "\\doteq" },
-                { cmd: "\\subset", html: "\\subset" }, { cmd: "\\supset", html: "\\supset" }, { cmd: "\\subseteq", html: "\\subseteq" }, { cmd: "\\supseteq", html: "\\supseteq" }, { cmd: "\\in", html: "\\in" },
-                { cmd: "\\notin", html: "\\notin" }, { cmd: "\\ni", html: "\\ni" }, { cmd: "\\prec", html: "\\prec" }, { cmd: "\\succ", html: "\\succ" }, { cmd: "\\preceq", html: "\\preceq" },
-                { cmd: "\\succeq", html: "\\succeq" }, { cmd: "\\parallel", html: "\\parallel" }, { cmd: "\\perp", html: "\\perp" }, { cmd: "\\mid", html: "\\mid" }, { cmd: "\\models", html: "\\models" }
+            // ── ANALISI COMPLESSA ──
+            "Analisi Compl.": [
+                { cmd: "z = a + bi", html: "z = a + bi" },
+                { cmd: "\\bar{z} = a - bi", html: "\\bar{z} = a - bi" },
+                { cmd: "|z| = \\sqrt{a^2+b^2}", html: "|z| = \\sqrt{a^2+b^2}" },
+                { cmd: "e^{i\\theta} = \\cos\\theta + i\\sin\\theta", html: "e^{i\\theta} = \\cos\\theta + i\\sin\\theta" },
+                { cmd: "e^{i\\pi} + 1 = 0", html: "e^{i\\pi} + 1 = 0" },
+                { cmd: "\\operatorname{Re}(z)", html: "\\operatorname{Re}(z)" }, { cmd: "\\operatorname{Im}(z)", html: "\\operatorname{Im}(z)" },
+                { cmd: "\\frac{1}{2\\pi i} \\oint_\\gamma \\frac{f(z)}{z-a}\\,dz = f(a)", html: "\\frac{1}{2\\pi i} \\oint_\\gamma \\frac{f(z)}{z-a}\\,dz = f(a)" },
+                { cmd: "\\text{Res}(f, a)", html: "\\text{Res}(f, a)" },
+                { cmd: "\\sum_{n=-\\infty}^{\\infty} c_n z^n", html: "\\sum_{n=-\\infty}^{\\infty} c_n z^n" }
             ],
-            "Frecce": [
-                { cmd: "\\rightarrow", html: "\\rightarrow" }, { cmd: "\\leftarrow", html: "\\leftarrow" }, { cmd: "\\leftrightarrow", html: "\\leftrightarrow" }, { cmd: "\\uparrow", html: "\\uparrow" },
-                { cmd: "\\downarrow", html: "\\downarrow" }, { cmd: "\\Rightarrow", html: "\\Rightarrow" }, { cmd: "\\Leftarrow", html: "\\Leftarrow" }, { cmd: "\\Leftrightarrow", html: "\\Leftrightarrow" },
-                { cmd: "\\mapsto", html: "\\mapsto" }, { cmd: "\\to", html: "\\to" }, { cmd: "\\implies", html: "\\implies" }, { cmd: "\\iff", html: "\\iff" },
-                { cmd: "\\longrightarrow", html: "\\longrightarrow" }, { cmd: "\\longleftarrow", html: "\\longleftarrow" }, { cmd: "\\Longleftrightarrow", html: "\\Longleftrightarrow" },
-                { cmd: "\\xrightarrow{abc}", html: "\\xrightarrow{abc}" }, { cmd: "\\xleftarrow{abc}", html: "\\xleftarrow{abc}" },
-                { cmd: "\\nwarrow", html: "\\nwarrow" }, { cmd: "\\nearrow", html: "\\nearrow" }, { cmd: "\\swarrow", html: "\\swarrow" }, { cmd: "\\searrow", html: "\\searrow" }
-            ],
+            // ── STRUTTURE ──
             "Strutture": [
-                { cmd: "\\frac{a}{b}", html: "\\frac{a}{b}" }, { cmd: "\\dfrac{a}{b}", html: "\\dfrac{a}{b}" }, { cmd: "\\tfrac{a}{b}", html: "\\tfrac{a}{b}" },
+                { cmd: "\\frac{a}{b}", html: "\\frac{a}{b}" }, { cmd: "\\dfrac{a}{b}", html: "\\dfrac{a}{b}" },
                 { cmd: "\\sqrt{x}", html: "\\sqrt{x}" }, { cmd: "\\sqrt[n]{x}", html: "\\sqrt[n]{x}" },
                 { cmd: "\\binom{n}{k}", html: "\\binom{n}{k}" },
-                { cmd: "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}", html: "\\left( \\begin{smallmatrix} a & b \\\\ c & d \\end{smallmatrix} \\right)" },
-                { cmd: "\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}", html: "\\left[ \\begin{smallmatrix} a & b \\\\ c & d \\end{smallmatrix} \\right]" },
-                { cmd: "\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}", html: "\\lvert \\begin{smallmatrix} a & b \\\\ c & d \\end{smallmatrix} \\rvert" },
-                { cmd: "\\begin{matrix} a & b \\\\ c & d \\end{matrix}", html: "\\begin{smallmatrix} a & b \\\\ c & d \\end{smallmatrix}" },
-                { cmd: "\\begin{cases} x & \\\\ y \\end{cases}", html: "\\begin{cases} x & \\\\ y \\end{cases}" },
-                { cmd: "\\underbrace{abc}_{\\text{}}", html: "\\underbrace{abc}_{\\text{}}" },
-                { cmd: "\\overline{abc}", html: "\\overline{abc}" }, { cmd: "\\underline{abc}", html: "\\underline{abc}" },
-                { cmd: "\\vec{x}", html: "\\vec{x}" }, { cmd: "\\overrightarrow{x}", html: "\\overrightarrow{x}" },
-                { cmd: "\\hat{x}", html: "\\hat{x}" }, { cmd: "\\widehat{abc}", html: "\\widehat{abc}" }, { cmd: "\\tilde{x}", html: "\\tilde{x}" }, { cmd: "\\widetilde{abc}", html: "\\widetilde{abc}" }
+                { cmd: "\\begin{cases} x & \\text{se } x \\geq 0 \\\\ -x & \\text{se } x < 0 \\end{cases}", html: "\\begin{cases} x & \\text{se } x \\geq 0 \\\\ -x & \\text{se } x < 0 \\end{cases}" },
+                { cmd: "\\underbrace{a+b}_{\\text{etich.}}", html: "\\underbrace{a+b}_{\\text{etich.}}" },
+                { cmd: "\\overbrace{a+b}^{\\text{etich.}}", html: "\\overbrace{a+b}^{\\text{etich.}}" },
+                { cmd: "\\overline{AB}", html: "\\overline{AB}" }, { cmd: "\\underline{abc}", html: "\\underline{abc}" },
+                { cmd: "\\widehat{abc}", html: "\\widehat{abc}" }, { cmd: "\\widetilde{abc}", html: "\\widetilde{abc}" },
+                { cmd: "\\overrightarrow{AB}", html: "\\overrightarrow{AB}" }, { cmd: "\\boxed{x}", html: "\\boxed{x}" }
             ],
+            // ── COMBINATORIA ──
+            "Combinatoria": [
+                { cmd: "n!", html: "n!" }, { cmd: "\\binom{n}{k}", html: "\\binom{n}{k}" },
+                { cmd: "P(n,k) = \\frac{n!}{(n-k)!}", html: "P(n,k) = \\frac{n!}{(n-k)!}" },
+                { cmd: "\\sum_{k=0}^{n} \\binom{n}{k} = 2^n", html: "\\sum_{k=0}^{n} \\binom{n}{k} = 2^n" },
+                { cmd: "(a+b)^n = \\sum_{k=0}^{n} \\binom{n}{k} a^k b^{n-k}", html: "(a+b)^n = \\sum_{k=0}^{n} \\binom{n}{k} a^k b^{n-k}" },
+                { cmd: "\\left\\lfloor x \\right\\rfloor", html: "\\left\\lfloor x \\right\\rfloor" },
+                { cmd: "\\left\\lceil x \\right\\rceil", html: "\\left\\lceil x \\right\\rceil" },
+                { cmd: "a \\equiv b \\pmod{n}", html: "a \\equiv b \\pmod{n}" },
+                { cmd: "\\gcd(a,b)", html: "\\gcd(a,b)" },
+                { cmd: "\\phi(n)", html: "\\phi(n)" }, { cmd: "\\mu(n)", html: "\\mu(n)" }
+            ],
+            // ── LOGICA ──
+            "Logica": [
+                { cmd: "\\forall", html: "\\forall" }, { cmd: "\\exists", html: "\\exists" },
+                { cmd: "\\nexists", html: "\\nexists" }, { cmd: "\\neg", html: "\\neg" },
+                { cmd: "\\land", html: "\\land" }, { cmd: "\\lor", html: "\\lor" },
+                { cmd: "\\implies", html: "\\implies" }, { cmd: "\\iff", html: "\\iff" },
+                { cmd: "\\therefore", html: "\\therefore" }, { cmd: "\\because", html: "\\because" },
+                { cmd: "\\top", html: "\\top" }, { cmd: "\\bot", html: "\\bot" },
+                { cmd: "A \\cup B", html: "A \\cup B" }, { cmd: "A \\cap B", html: "A \\cap B" },
+                { cmd: "A \\setminus B", html: "A \\setminus B" }, { cmd: "\\emptyset", html: "\\emptyset" },
+                { cmd: "\\mathcal{P}(A)", html: "\\mathcal{P}(A)" },
+                { cmd: "A \\times B", html: "A \\times B" }, { cmd: "\\aleph_0", html: "\\aleph_0" }
+            ],
+            // ── RELAZIONI ──
+            "Relazioni": [
+                { cmd: "<", html: "<" }, { cmd: ">", html: ">" },
+                { cmd: "\\le", html: "\\le" }, { cmd: "\\ge", html: "\\ge" },
+                { cmd: "\\ll", html: "\\ll" }, { cmd: "\\gg", html: "\\gg" },
+                { cmd: "\\ne", html: "\\ne" }, { cmd: "\\approx", html: "\\approx" },
+                { cmd: "\\equiv", html: "\\equiv" }, { cmd: "\\sim", html: "\\sim" },
+                { cmd: "\\simeq", html: "\\simeq" }, { cmd: "\\cong", html: "\\cong" },
+                { cmd: "\\propto", html: "\\propto" }, { cmd: "\\perp", html: "\\perp" },
+                { cmd: "\\parallel", html: "\\parallel" }, { cmd: "\\mid", html: "\\mid" },
+                { cmd: "\\prec", html: "\\prec" }, { cmd: "\\succ", html: "\\succ" },
+                { cmd: "\\preceq", html: "\\preceq" }, { cmd: "\\succeq", html: "\\succeq" },
+                { cmd: "\\models", html: "\\models" }, { cmd: "\\vdash", html: "\\vdash" },
+                { cmd: "\\subset", html: "\\subset" }, { cmd: "\\supset", html: "\\supset" },
+                { cmd: "\\subseteq", html: "\\subseteq" }, { cmd: "\\in", html: "\\in" }, { cmd: "\\notin", html: "\\notin" }
+            ],
+            // ── FRECCE ──
+            "Frecce": [
+                { cmd: "\\rightarrow", html: "\\rightarrow" }, { cmd: "\\leftarrow", html: "\\leftarrow" },
+                { cmd: "\\leftrightarrow", html: "\\leftrightarrow" },
+                { cmd: "\\Rightarrow", html: "\\Rightarrow" }, { cmd: "\\Leftarrow", html: "\\Leftarrow" },
+                { cmd: "\\Leftrightarrow", html: "\\Leftrightarrow" },
+                { cmd: "\\mapsto", html: "\\mapsto" }, { cmd: "\\to", html: "\\to" },
+                { cmd: "\\longrightarrow", html: "\\longrightarrow" },
+                { cmd: "\\xrightarrow{f}", html: "\\xrightarrow{f}" },
+                { cmd: "\\xrightarrow[a]{b}", html: "\\xrightarrow[a]{b}" },
+                { cmd: "\\hookleftarrow", html: "\\hookleftarrow" }, { cmd: "\\hookrightarrow", html: "\\hookrightarrow" },
+                { cmd: "\\twoheadrightarrow", html: "\\twoheadrightarrow" },
+                { cmd: "\\nearrow", html: "\\nearrow" }, { cmd: "\\nwarrow", html: "\\nwarrow" },
+                { cmd: "\\searrow", html: "\\searrow" }, { cmd: "\\swarrow", html: "\\swarrow" },
+                { cmd: "\\uparrow", html: "\\uparrow" }, { cmd: "\\downarrow", html: "\\downarrow" },
+                { cmd: "\\circlearrowleft", html: "\\circlearrowleft" }, { cmd: "\\circlearrowright", html: "\\circlearrowright" }
+            ],
+            // ── OPERATORI ──
+            "Operatori": [
+                { cmd: "\\pm", html: "\\pm" }, { cmd: "\\mp", html: "\\mp" },
+                { cmd: "\\times", html: "\\times" }, { cmd: "\\div", html: "\\div" },
+                { cmd: "\\cdot", html: "\\cdot" }, { cmd: "\\circ", html: "\\circ" },
+                { cmd: "\\oplus", html: "\\oplus" }, { cmd: "\\otimes", html: "\\otimes" },
+                { cmd: "\\ominus", html: "\\ominus" }, { cmd: "\\oslash", html: "\\oslash" },
+                { cmd: "\\odot", html: "\\odot" }, { cmd: "\\wedge", html: "\\wedge" }, { cmd: "\\vee", html: "\\vee" },
+                { cmd: "\\cap", html: "\\cap" }, { cmd: "\\cup", html: "\\cup" },
+                { cmd: "\\star", html: "\\star" }, { cmd: "\\bullet", html: "\\bullet" },
+                { cmd: "\\bigcup_{i=1}^n", html: "\\bigcup_{i=1}^n" },
+                { cmd: "\\bigcap_{i=1}^n", html: "\\bigcap_{i=1}^n" },
+                { cmd: "\\bigoplus_{i=1}^n", html: "\\bigoplus_{i=1}^n" }
+            ],
+            // ── PARENTESI ──
             "Parentesi": [
-                { cmd: "\\left( \\right)", html: "\\left( \\right)" }, { cmd: "\\left[ \\right]", html: "\\left[ \\right]" }, { cmd: "\\left\\{ \\right\\}", html: "\\left\\{ \\right\\}" },
-                { cmd: "\\langle \\rangle", html: "\\langle \\rangle" }, { cmd: "| |", html: "| |" }, { cmd: "\\| \\|", html: "\\| \\|" }, { cmd: "\\lfloor \\rfloor", html: "\\lfloor \\rfloor" }, { cmd: "\\lceil \\rceil", html: "\\lceil \\rceil" },
-                { cmd: "\\big( \\big)", html: "\\big( \\big)" }, { cmd: "\\Big( \\Big)", html: "\\Big( \\Big)" }, { cmd: "\\bigg( \\bigg)", html: "\\bigg( \\bigg)" }
+                { cmd: "\\left( \\right)", html: "\\left( \\right)" },
+                { cmd: "\\left[ \\right]", html: "\\left[ \\right]" },
+                { cmd: "\\left\\{ \\right\\}", html: "\\left\\{ \\right\\}" },
+                { cmd: "\\left| \\right|", html: "\\left| \\right|" },
+                { cmd: "\\left\\| \\right\\|", html: "\\left\\| \\right\\|" },
+                { cmd: "\\langle \\rangle", html: "\\langle \\rangle" },
+                { cmd: "\\lfloor \\rfloor", html: "\\lfloor \\rfloor" },
+                { cmd: "\\lceil \\rceil", html: "\\lceil \\rceil" },
+                { cmd: "\\big( \\big)", html: "\\big( \\big)" },
+                { cmd: "\\Big( \\Big)", html: "\\Big( \\Big)" },
+                { cmd: "\\bigg( \\bigg)", html: "\\bigg( \\bigg)" },
+                { cmd: "\\Bigg( \\Bigg)", html: "\\Bigg( \\Bigg)" },
+                { cmd: "\\left. \\frac{df}{dx} \\right|_{x=0}", html: "\\left. \\frac{df}{dx} \\right|_{x=0}" }
             ],
-            "Logica & Insiemi": [
-                { cmd: "\\forall", html: "\\forall" }, { cmd: "\\exists", html: "\\exists" }, { cmd: "\\nexists", html: "\\nexists" }, { cmd: "\\therefore", html: "\\therefore" }, { cmd: "\\because", html: "\\because" },
-                { cmd: "\\subset", html: "\\subset" }, { cmd: "\\subseteq", html: "\\subseteq" }, { cmd: "\\not\\subset", html: "\\not\\subset" }, { cmd: "\\in", html: "\\in" }, { cmd: "\\notin", html: "\\notin" },
-                { cmd: "\\cup", html: "\\cup" }, { cmd: "\\cap", html: "\\cap" }, { cmd: "\\setminus", html: "\\setminus" }, { cmd: "\\emptyset", html: "\\emptyset" },
-                { cmd: "\\land", html: "\\land" }, { cmd: "\\lor", html: "\\lor" }, { cmd: "\\neg", html: "\\neg" }, { cmd: "\\implies", html: "\\implies" }, { cmd: "\\iff", html: "\\iff" }
+            // ── INSIEMI NUMERICI ──
+            "Insiemi Num.": [
+                { cmd: "\\mathbb{N}", html: "\\mathbb{N}" }, { cmd: "\\mathbb{Z}", html: "\\mathbb{Z}" },
+                { cmd: "\\mathbb{Q}", html: "\\mathbb{Q}" }, { cmd: "\\mathbb{R}", html: "\\mathbb{R}" },
+                { cmd: "\\mathbb{C}", html: "\\mathbb{C}" }, { cmd: "\\mathbb{H}", html: "\\mathbb{H}" },
+                { cmd: "\\mathbb{R}^n", html: "\\mathbb{R}^n" },
+                { cmd: "\\mathbb{R}^{m \\times n}", html: "\\mathbb{R}^{m \\times n}" },
+                { cmd: "\\mathbb{Z}/n\\mathbb{Z}", html: "\\mathbb{Z}/n\\mathbb{Z}" },
+                { cmd: "\\mathbb{F}_q", html: "\\mathbb{F}_q" },
+                { cmd: "\\mathbb{P}", html: "\\mathbb{P}" }
             ],
-
-            "Stili": [
-                { cmd: "\\mathbb{R}", html: "\\mathbb{R}" }, { cmd: "\\mathbb{N}", html: "\\mathbb{N}" }, { cmd: "\\mathbb{Z}", html: "\\mathbb{Z}" }, { cmd: "\\mathbb{Q}", html: "\\mathbb{Q}" }, { cmd: "\\mathbb{C}", html: "\\mathbb{C}" },
-                { cmd: "\\mathcal{A}", html: "\\mathcal{A}" }, { cmd: "\\mathcal{B}", html: "\\mathcal{B}" }, { cmd: "\\mathcal{C}", html: "\\mathcal{C}" }, { cmd: "\\mathcal{L}", html: "\\mathcal{L}" },
-                { cmd: "\\mathfrak{g}", html: "\\mathfrak{g}" }, { cmd: "\\mathfrak{h}", html: "\\mathfrak{h}" }, { cmd: "\\text{}", html: "\\text{}" }
+            // ── STILI FONT ──
+            "Font": [
+                { cmd: "\\mathbf{v}", html: "\\mathbf{v}" }, { cmd: "\\mathit{x}", html: "\\mathit{x}" },
+                { cmd: "\\mathrm{d}", html: "\\mathrm{d}" }, { cmd: "\\mathsf{A}", html: "\\mathsf{A}" },
+                { cmd: "\\mathtt{x}", html: "\\mathtt{x}" }, { cmd: "\\mathbb{R}", html: "\\mathbb{R}" },
+                { cmd: "\\mathcal{A}", html: "\\mathcal{A}" }, { cmd: "\\mathcal{L}", html: "\\mathcal{L}" },
+                { cmd: "\\mathcal{F}", html: "\\mathcal{F}" }, { cmd: "\\mathcal{H}", html: "\\mathcal{H}" },
+                { cmd: "\\mathfrak{g}", html: "\\mathfrak{g}" }, { cmd: "\\mathfrak{h}", html: "\\mathfrak{h}" },
+                { cmd: "\\text{parola}", html: "\\text{parola}" },
+                { cmd: "\\boldsymbol{\\alpha}", html: "\\boldsymbol{\\alpha}" }
             ],
-            "Punteggiatura": [
-                { cmd: "\\quad", html: "\\quad" }, { cmd: "\\qquad", html: "\\qquad" }, { cmd: "\\,", html: "\\," }, { cmd: "\\;", html: "\\;" }, { cmd: "\\:", html: "\\:" },
-                { cmd: "\\ldots", html: "\\ldots" }, { cmd: "\\cdots", html: "\\cdots" }, { cmd: "\\vdots", html: "\\vdots" }, { cmd: "\\ddots", html: "\\ddots" },
-                { cmd: "\\cdot", html: "\\cdot" }, { cmd: "\\prime", html: "\\prime" }, { cmd: "\\ast", html: "\\ast" }, { cmd: "\\dagger", html: "\\dagger" }, { cmd: "\\ddagger", html: "\\ddagger" }
+            // ── DECORATORI ──
+            "Decoratori": [
+                { cmd: "\\hat{x}", html: "\\hat{x}" }, { cmd: "\\check{x}", html: "\\check{x}" },
+                { cmd: "\\tilde{x}", html: "\\tilde{x}" }, { cmd: "\\acute{x}", html: "\\acute{x}" },
+                { cmd: "\\grave{x}", html: "\\grave{x}" }, { cmd: "\\breve{x}", html: "\\breve{x}" },
+                { cmd: "\\dot{x}", html: "\\dot{x}" }, { cmd: "\\ddot{x}", html: "\\ddot{x}" },
+                { cmd: "\\dddot{x}", html: "\\dddot{x}" }, { cmd: "\\vec{x}", html: "\\vec{x}" },
+                { cmd: "\\bar{x}", html: "\\bar{x}" }, { cmd: "\\widehat{abc}", html: "\\widehat{abc}" },
+                { cmd: "\\widetilde{abc}", html: "\\widetilde{abc}" },
+                { cmd: "\\overrightarrow{AB}", html: "\\overrightarrow{AB}" },
+                { cmd: "\\overline{abc}", html: "\\overline{abc}" }, { cmd: "\\underline{abc}", html: "\\underline{abc}" },
+                { cmd: "\\overleftrightarrow{ABC}", html: "\\overleftrightarrow{ABC}" },
+                { cmd: "\\boxed{x}", html: "\\boxed{x}" }
             ],
-
-            "TikZ/Grafici": [
-                { cmd: "\\begin{tikzpicture}\\draw[thick,->] (0,0) -- (1,0);\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>` }, // Arrow
-                { cmd: "\\begin{tikzpicture}\\draw (0,0) circle (1cm);\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>` }, // Circle
-                { cmd: "\\begin{tikzpicture}\\draw (0,0) rectangle (2,1);\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>` }, // Rect
-                { cmd: "\\begin{tikzpicture}\\draw (0,0) -- (1,1) -- (2,0) -- cycle;\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3L2 21h20L12 3z"/></svg>` }, // Triangle
-                { cmd: "\\begin{tikzpicture}\\draw[help lines] (0,0) grid (2,2);\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M9 3v18"/><path d="M15 3v18"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>` }, // Grid
-                { cmd: "\\begin{tikzpicture}\\node[draw,circle] (A) at (0,0) {A};\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="currentColor">A</text></svg>` }, // Node
-                { cmd: "\\begin{figure}\\centering\\includegraphics[width=0.5\\textwidth]{img}\\caption{...}\\end{figure}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>` }, // Image
-
-                // NEW ITEMS
-                { cmd: "\\begin{tikzpicture}\\draw[<->] (0,2) -- (0,0) -- (2,0);\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M3 21V3"/></svg>` }, // Axes
-                { cmd: "\\begin{tikzpicture}\\draw[domain=0:4] plot (\\x, {sin(\\x r)});\\end{tikzpicture}", html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s4-10 10-10 10 10 10 10"/></svg>` } // Function
+            // ── SPAZIATURA ──
+            "Spaziatura": [
+                { cmd: "\\quad", html: "\\quad" }, { cmd: "\\qquad", html: "\\qquad" },
+                { cmd: "\\,", html: "\\," }, { cmd: "\\;", html: "\\;" },
+                { cmd: "\\:", html: "\\:" }, { cmd: "\\!", html: "\\!" },
+                { cmd: "\\ldots", html: "\\ldots" }, { cmd: "\\cdots", html: "\\cdots" },
+                { cmd: "\\vdots", html: "\\vdots" }, { cmd: "\\ddots", html: "\\ddots" },
+                { cmd: "\\ast", html: "\\ast" }, { cmd: "\\dagger", html: "\\dagger" },
+                { cmd: "\\ddagger", html: "\\ddagger" }, { cmd: "\\prime", html: "\\prime" },
+                { cmd: "^{\\circ}", html: "^{\\circ}" }
             ]
-        };
-
+        }; \r\n
         async function init() {
             initMathToolbar();
             initDiagramGrid();
@@ -1541,6 +1807,27 @@
             }
 
             updatePreview();
+
+            // Global Ctrl+F to open find bar
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                    e.preventDefault();
+                    toggleFindBar();
+                }
+                if (e.key === 'Escape') {
+                    if (findBarVisible) { closeFindBar(); return; }
+                    if (document.body.classList.contains('zen-mode')) {
+                        document.body.classList.remove('zen-mode');
+                    }
+                }
+            });
+
+            // Enter key in find-input to jump to next
+            document.getElementById('find-input')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); highlightFind(); }
+                if (e.key === 'Escape') { closeFindBar(); }
+            });
+
         }
 
         /* --- DIAGRAM LOGIC --- */
@@ -1913,21 +2200,40 @@
             document.getElementById('table-size-label').textContent = `${rows} x ${cols}`;
         }
 
-        function insertTable(rows, cols) {
-            let table = "|";
-            for (let c = 0; c < cols; c++) table += " Col " + (c + 1) + " |";
-            table += "\n|";
-            for (let c = 0; c < cols; c++) table += " --- |";
-            table += "\n";
+        function buildTableMd(rows, cols) {
+            let table = '\n|';
+            for (let c = 0; c < cols; c++) table += ` Intestazione ${c + 1} |`;
+            table += '\n|';
+            for (let c = 0; c < cols; c++) table += ' --- |';
+            table += '\n';
             for (let r = 0; r < rows; r++) {
-                table += "|";
-                for (let c = 0; c < cols; c++) table += "     |";
-                table += "\n";
+                table += '|';
+                for (let c = 0; c < cols; c++) table += '   |';
+                table += '\n';
             }
-
-            insertMarkdown(table, "");
-            toggleTableMenu();
+            return table;
         }
+
+        function insertTable(rows, cols) {
+            const table = buildTableMd(rows, cols);
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const val = field.value;
+            field.value = val.substring(0, start) + table + val.substring(start);
+            // Put cursor inside first data cell
+            const firstCellPos = table.indexOf('\n| ') + 3;
+            field.focus();
+            field.setSelectionRange(start + firstCellPos, start + firstCellPos);
+            handleInput();
+            closeAllMenus();
+        }
+
+        function insertTableFromInputs() {
+            const rows = parseInt(document.getElementById('table-rows-input').value) || 3;
+            const cols = parseInt(document.getElementById('table-cols-input').value) || 3;
+            insertTable(rows, cols);
+        }
+
 
         /* --- FILE MENU FIX --- */
         window.addEventListener('click', (e) => {
@@ -1966,6 +2272,78 @@
                 document.documentElement.setAttribute('data-theme', 'dark');
             }
         } catch (e) { }
+
+        /* ─── FIND / REPLACE ─────────────────────────────────────────────── */
+        let findBarVisible = false;
+        function toggleFindBar() {
+            const bar = document.getElementById('find-bar');
+            findBarVisible = !findBarVisible;
+            bar.style.display = findBarVisible ? 'flex' : 'none';
+            if (findBarVisible) setTimeout(() => document.getElementById('find-input').focus(), 50);
+            else document.getElementById('find-count').textContent = '';
+        }
+        function closeFindBar() {
+            findBarVisible = false;
+            document.getElementById('find-bar').style.display = 'none';
+            document.getElementById('find-count').textContent = '';
+        }
+        function highlightFind() {
+            const query = document.getElementById('find-input').value;
+            const countEl = document.getElementById('find-count');
+            if (!query) { countEl.textContent = ''; return; }
+            const text = document.getElementById('editor').value;
+            const re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            const matches = [...text.matchAll(re)];
+            countEl.textContent = matches.length > 0
+                ? `${matches.length} risultat${matches.length === 1 ? 'o' : 'i'}`
+                : 'Nessun risultato';
+        }
+        function findAndReplace() {
+            const query = document.getElementById('find-input').value;
+            const replace = document.getElementById('replace-input').value;
+            if (!query) return;
+            const field = document.getElementById('editor');
+            const re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            const matches = (field.value.match(re) || []).length;
+            if (matches === 0) { alert('Nessuna occorrenza trovata.'); return; }
+            field.value = field.value.replace(re, replace);
+            handleInput();
+            document.getElementById('find-count').textContent =
+                `${matches} sostituzion${matches === 1 ? 'e' : 'i'} effettuate`;
+        }
+
+        /* ─── TOC GENERATOR ──────────────────────────────────────────────── */
+        function generateTOC() {
+            const field = document.getElementById('editor');
+            const lines = field.value.split('\n');
+            const headings = lines.filter(l => /^#{1,6}\s/.test(l));
+            if (headings.length === 0) { alert('Nessun titolo trovato nel documento.'); return; }
+            let toc = '## Indice\n\n';
+            headings.forEach(h => {
+                const level = h.match(/^(#+)/)[1].length;
+                const text = h.replace(/^#+\s*/, '').trim();
+                const anchor = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+                const indent = '  '.repeat(level - 1);
+                toc += `${indent}- [${text}](#${anchor})\n`;
+            });
+            toc += '\n';
+            const start = field.selectionStart;
+            field.value = field.value.substring(0, start) + toc + field.value.substring(start);
+            field.focus();
+            field.setSelectionRange(start, start + toc.length);
+            handleInput();
+        }
+
+        /* ─── IMPROVED STATS ─────────────────────────────────────────────── */
+        function updateStats() {
+            const t = document.getElementById('editor').value;
+            const chars = t.length;
+            const words = t.split(/\s+/).filter(w => w).length;
+            const lines = t.split('\n').length;
+            const pages = Math.max(1, Math.ceil(words / 500));
+            document.getElementById('status-left').textContent =
+                `Caratteri: ${chars.toLocaleString('it')} | Parole: ${words.toLocaleString('it')} | Righe: ${lines} | ~${pages} pag.`;
+        }
 
         function applyList(prefix) {
             const field = document.getElementById('editor');
@@ -2184,7 +2562,24 @@ ${c}
                 const div = document.createElement('div');
                 div.className = `tab ${tab.id === activeTabId ? 'active' : ''}`;
                 div.onclick = () => switchTab(tab.id);
-                div.innerHTML = `<span>${tab.name}</span><span class="tab-close" onclick="closeTab(event, '${tab.id}')">×</span>`;
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = tab.name;
+                nameSpan.title = 'Doppio click per rinominare';
+                nameSpan.ondblclick = (e) => {
+                    e.stopPropagation();
+                    const newName = prompt('Rinomina scheda:', tab.name);
+                    if (newName && newName.trim()) {
+                        tab.name = newName.trim().substring(0, 30);
+                        saveToStorage();
+                        renderTabs();
+                    }
+                };
+                const closeSpan = document.createElement('span');
+                closeSpan.className = 'tab-close';
+                closeSpan.textContent = '×';
+                closeSpan.onclick = (e) => closeTab(e, tab.id);
+                div.appendChild(nameSpan);
+                div.appendChild(closeSpan);
                 container.appendChild(div);
             });
 
