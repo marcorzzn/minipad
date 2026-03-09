@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Notepad body -->
+  <rect x="6" y="4" width="38" height="48" rx="4" fill="#ffffff" stroke="#cccccc" stroke-width="2"/>
+  <!-- Binding spiral dots on left -->
+  <circle cx="6" cy="14" r="3" fill="#0067c0"/>
+  <circle cx="6" cy="24" r="3" fill="#0067c0"/>
+  <circle cx="6" cy="34" r="3" fill="#0067c0"/>
+  <circle cx="6" cy="44" r="3" fill="#0067c0"/>
+  <!-- Lines of text -->
+  <rect x="14" y="14" width="24" height="2.5" rx="1.2" fill="#555"/>
+  <rect x="14" y="21" width="20" height="2.5" rx="1.2" fill="#555"/>
+  <rect x="14" y="28" width="22" height="2.5" rx="1.2" fill="#555"/>
+  <rect x="14" y="35" width="16" height="2.5" rx="1.2" fill="#aaa"/>
+  <rect x="14" y="42" width="10" height="2.5" rx="1.2" fill="#ccc"/>
+  <!-- Pen / pencil in bottom right -->
+  <rect x="40" y="36" width="20" height="7" rx="3" fill="#0067c0" transform="rotate(-45 50 39)"/>
+  <path d="M56 50 l3-3 2 2 -3 3 z" fill="#ffcc00"/>
+  <path d="M58 52 l-3 3 -1.5-1 z" fill="#333"/>
+</svg>
