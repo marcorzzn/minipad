@@ -14,6 +14,7 @@
     <meta name="author" content="Marco">
     <meta name="google-site-verification" content="V1dmn62hrnxnnXdHHqBkHLo-e3tioJs1SNoBUBllfEU" />
     <meta name="robots" content="index, follow">
+    <link rel="manifest" href="./manifest.json">
 
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website">
@@ -27,6 +28,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
 
     <style>
         /* --- Base Styles & Windows 11 Theme --- */
@@ -809,6 +811,40 @@
         .hidden {
             display: none !important;
         }
+
+        /* --- ZEN MODE --- */
+        body.zen-mode #titlebar,
+        body.zen-mode #toolbar,
+        body.zen-mode #math-toolbar,
+        body.zen-mode #tabs-container,
+        body.zen-mode #statusbar {
+            display: none !important;
+        }
+
+        body.zen-mode #workspace {
+            height: 100vh !important;
+        }
+
+        .zen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 5000;
+        }
+
+        body.zen-mode .zen-btn {
+            display: flex;
+        }
     </style>
 </head>
 
@@ -1015,6 +1051,12 @@
         <!-- Help Button (Aligned rightmost but part of flow? Or separate? User said "close to other buttons") -->
         <!-- We'll keep it as a tool group but maybe push it to the end OR just keep it in line. User requested all aligned left to right. -->
         <div class="tool-group" style="border-right: none;">
+            <button class="format-btn" onclick="toggleZenMode()" title="Zen Mode (Focus)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                        d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+            </button>
             <button class="format-btn" onclick="openHelp()" title="Guida">
                 <strong>?</strong>
             </button>
@@ -1040,6 +1082,14 @@
         <div id="preview-pane">
             <div id="preview-content"></div>
         </div>
+    </div>
+
+    <!-- Zen Mode Exit Button -->
+    <div class="zen-btn" onclick="toggleZenMode()" title="Esci modalità Zen">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-color)" stroke-width="2">
+            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3">
+            </path>
+        </svg>
     </div>
 
     <!-- Status Bar -->
@@ -1288,24 +1338,38 @@
             ]
         };
 
-        function init() {
+        async function init() {
             initMathToolbar();
             initDiagramGrid();
             initTableGrid(); // New
 
-            // PERSISTENCE FIX: Ensure we read from localStorage
-            const savedData = localStorage.getItem('minipad_tabs');
+            // PERSISTENCE FIX: Ensure we read from IndexedDB
+            let savedData = null;
+            try {
+                savedData = await idbKeyval.get('minipad_tabs');
+            } catch (e) {
+                console.warn("Failed to read from IndexedDB, falling back:", e);
+            }
+
+            // Fallback to localStorage if idb is empty but localstorage has data (migration)
+            if (!savedData) {
+                const legacyData = localStorage.getItem('minipad_tabs');
+                if (legacyData && legacyData !== "[]") {
+                    savedData = legacyData;
+                }
+            }
+
             if (savedData && savedData !== "[]") {
                 try {
-                    tabs = JSON.parse(savedData);
+                    tabs = typeof savedData === 'string' ? JSON.parse(savedData) : savedData;
                     // Ensure at least one tab
                     if (tabs.length === 0) throw new Error("No tabs");
                 } catch (e) {
                     // Fallback
-                    createTab("Benvenuto", "# Benvenuto in Minipad\n\nScrivi qui...");
+                    await createTab("Benvenuto", "# Benvenuto in Minipad\n\nScrivi qui...");
                 }
             } else {
-                createTab("Benvenuto", "# Benvenuto in Minipad\n\n## Ripristinato\n\nFunzionalità pronte.");
+                await createTab("Benvenuto", "# Benvenuto in Minipad\n\n## Ripristinato\n\nFunzionalità pronte.");
             }
 
             renderTabs();
@@ -1318,6 +1382,54 @@
 
             document.getElementById('editor').addEventListener('input', handleInput);
             document.getElementById('editor').addEventListener('keydown', handleShortcuts);
+
+            // Image Drag & Drop
+            const editorEl = document.getElementById('editor');
+            editorEl.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            editorEl.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    const file = e.dataTransfer.files[0];
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const base64 = event.target.result;
+                            insertMarkdown(`\n![${file.name}](${base64})\n`, '');
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
+
+            // Sync scroll
+            const editorPane = document.getElementById('editor');
+            const previewPane = document.getElementById('preview-pane');
+            let isSyncingLeft = false;
+            let isSyncingRight = false;
+
+            editorPane.addEventListener('scroll', function () {
+                if (!isSyncingLeft) {
+                    isSyncingRight = true;
+                    // Calculate percentage
+                    const percentage = this.scrollTop / (this.scrollHeight - this.clientHeight);
+                    previewPane.scrollTop = percentage * (previewPane.scrollHeight - previewPane.clientHeight);
+                }
+                isSyncingLeft = false;
+            });
+
+            previewPane.addEventListener('scroll', function () {
+                if (!isSyncingRight) {
+                    isSyncingLeft = true;
+                    const percentage = this.scrollTop / (this.scrollHeight - this.clientHeight);
+                    editorPane.scrollTop = percentage * (editorPane.scrollHeight - editorPane.clientHeight);
+                }
+                isSyncingRight = false;
+            });
+
             updatePreview();
         }
 
@@ -1470,7 +1582,10 @@
         async function updatePreview() {
             const rawMarkdown = document.getElementById('editor').value;
             let html = marked.parse(rawMarkdown);
-            html = DOMPurify.sanitize(html);
+            html = DOMPurify.sanitize(html, {
+                ADD_TAGS: ['svg', 'path', 'circle', 'rect', 'line', 'polyline', 'polygon', 'defs', 'marker', 'text', 'tspan', 'g', 'style'],
+                ADD_ATTR: ['cx', 'cy', 'r', 'x', 'y', 'width', 'height', 'rx', 'ry', 'd', 'fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-linecap', 'stroke-linejoin', 'transform', 'marker-end', 'marker-start', 'text-anchor', 'class', 'style', 'viewBox']
+            });
 
             html = html.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
                 try { return katex.renderToString(math.trim(), { throwOnError: false, displayMode: true }); } catch (e) { return match; }
@@ -1794,10 +1909,10 @@
         /* --- OLD FUNCTIONS REMOVED (Replaced above) --- */
 
         /* --- CORE TABS LOGIC --- */
-        function createTab(name, content) {
+        async function createTab(name, content) {
             const id = Date.now().toString();
             tabs.push({ id, name, content });
-            saveToStorage();
+            await saveToStorage();
             switchTab(id);
         }
         function newTab() { createTab("Nuova Nota", ""); toggleFileMenu(); }
@@ -1854,7 +1969,13 @@
 
             updateStats();
         }
-        function saveToStorage() { localStorage.setItem('minipad_tabs', JSON.stringify(tabs)); }
+        async function saveToStorage() {
+            try {
+                await idbKeyval.set('minipad_tabs', tabs);
+            } catch (e) {
+                console.error("Save failed", e);
+            }
+        }
         function showSavedIndicator() { const el = document.getElementById('save-indicator'); el.classList.add('visible'); setTimeout(() => el.classList.remove('visible'), 2000); }
 
         function toggleView(mode) {
@@ -1865,6 +1986,20 @@
             if (mode === 'split') { eP.classList.remove('hidden'); pP.classList.remove('hidden'); eP.style.width = '50%'; pP.style.width = '50%'; }
             else if (mode === 'editor') { eP.classList.remove('hidden'); pP.classList.add('hidden'); eP.style.width = '100%'; }
             else if (mode === 'preview') { eP.classList.add('hidden'); pP.classList.remove('hidden'); pP.style.width = '100%'; }
+        }
+
+        function toggleZenMode() {
+            document.body.classList.toggle('zen-mode');
+            if (document.body.classList.contains('zen-mode')) {
+                // optional: request fullscreen
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch((e) => { });
+                }
+            } else {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch((e) => { });
+                }
+            }
         }
 
         function openHelp() {
@@ -1878,6 +2013,19 @@
         function toggleFullScreen() { !document.fullscreenElement ? document.documentElement.requestFullscreen() : document.exitFullscreen(); }
 
         init();
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
     </script>
 </body>
 
