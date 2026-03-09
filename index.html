@@ -73,6 +73,19 @@
             overflow: hidden;
         }
 
+        /* --- MERMAID ERROR SILENCING --- */
+        /* Aggressive catch-all for Mermaid 11.x Syntax Error SVG "bomb" overlays */
+        .error-icon,
+        .error-text,
+        svg[id^="mermaid-"] .error-icon,
+        svg[id^="mermaid-"] text[class*="error"],
+        svg[id^="mermaid-"] g[class*="error"],
+        body>div[id^="dmermaid"] {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+
         /* --- TITLE BAR --- */
         #titlebar {
             height: 40px;
@@ -1094,6 +1107,10 @@
                 <div class="dropdown-item" onclick="insertFormulaInline()">$ Formula in linea $</div>
                 <div class="dropdown-item" onclick="insertFormulaBlock()">$$ Blocco centrato $$</div>
             </div>
+            <!-- Pulsante equazione a blocco -->
+            <button class="format-btn" onclick="insertFormulaBlock()" title="Blocco Equazione ($$)">
+                <strong style="font-family: 'Times New Roman', serif; font-size: 14px; line-height:1;">$$</strong>
+            </button>
             <button class="format-btn" onclick="toggleMathBar()" title="Tavolozza Simboli Matematici">
                 <span style="font-family: 'Times New Roman', serif; font-size: 17px; line-height:1;">&pi;▾</span>
             </button>
@@ -2106,20 +2123,26 @@
 
                 try {
                     const { svg } = await mermaid.render(id, code);
-                    if (svg.includes('error-icon') || svg.includes('Syntax error') || svg.includes('syntax error')) {
+                    const lowerSvg = svg.toLowerCase();
+                    if (lowerSvg.includes('error-icon') || lowerSvg.includes('syntax error') || lowerSvg.includes('mermaid version')) {
                         targetElement.style.display = 'none';
-                        return;
+                    } else {
+                        targetElement.style.display = 'block'; // Restore visibility if it was hidden
+                        targetElement.innerHTML = svg;
+                        targetElement.style.border = "none";
+                        targetElement.style.background = "transparent";
+                        targetElement.style.padding = "0";
                     }
-                    targetElement.style.display = 'block'; // Restore visibility if it was hidden
-                    targetElement.innerHTML = svg;
-                    targetElement.style.border = "none";
-                    targetElement.style.background = "transparent";
-                    targetElement.style.padding = "0";
                 } catch (e) {
                     // Silent: hide the broken code block, show nothing
                     targetElement.style.display = 'none';
                 }
             });
+
+            // Cleanup: Mermaid 11.x can leave orphaned temporary error divs at the bottom of the body. Force remove them.
+            setTimeout(() => {
+                document.querySelectorAll('body > div[id^="dmermaid"]').forEach(el => el.style.display = 'none');
+            }, 100);
         }
 
         /* --- MENU TOGGLE HELPERS (fixed positioning to escape overflow) --- */
