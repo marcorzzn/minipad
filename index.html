@@ -61,16 +61,20 @@
             --math-btn-border: #555;
         }
 
+        html,
         body {
+            height: 100%;
             margin: 0;
             padding: 0;
+            overflow: hidden;
+        }
+
+        body {
             font-family: var(--font-ui);
             background-color: var(--bg-color);
             color: var(--text-color);
-            height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
         }
 
         /* --- MERMAID ERROR SILENCING --- */
@@ -666,8 +670,10 @@
         /* --- WORKSPACE --- */
         #workspace {
             display: flex;
-            flex-grow: 1;
-            height: calc(100vh - 130px);
+            flex: 1;
+            min-height: 0;
+            height: 100%;
+            overflow: hidden;
         }
 
         #editor-pane {
@@ -1099,14 +1105,6 @@
 
         <!-- MATH SECTION -->
         <div class="tool-group">
-            <button class="format-btn" onclick="toggleFormulaMenu(event)" title="Inserisci Formula LaTeX">
-                <span
-                    style="font-family: 'Times New Roman', serif; font-style:italic; font-size:15px; line-height:1;">∑x</span>
-            </button>
-            <div class="dropdown-menu" id="formula-menu">
-                <div class="dropdown-item" onclick="insertFormulaInline()">$ Formula in linea $</div>
-                <div class="dropdown-item" onclick="insertFormulaBlock()">$$ Blocco centrato $$</div>
-            </div>
             <!-- Pulsante equazione a blocco -->
             <button class="format-btn" onclick="insertFormulaBlock()" title="Blocco Equazione ($$)">
                 <strong style="font-family: 'Times New Roman', serif; font-size: 14px; line-height:1;">$$</strong>
@@ -2139,9 +2137,10 @@
                 }
             });
 
-            // Cleanup: Mermaid 11.x can leave orphaned temporary error divs at the bottom of the body. Force remove them.
+            // Cleanup: Mermaid 11.x can leave orphaned temporary error divs at the bottom of the body. 
+            // We must completely REMOVE them from the DOM to avoid phantom whitespace at the bottom.
             setTimeout(() => {
-                document.querySelectorAll('body > div[id^="dmermaid"]').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('body > div[id^="dmermaid"]').forEach(el => el.remove());
             }, 100);
         }
 
@@ -2227,10 +2226,10 @@
                 field.selectionStart = start;
                 field.selectionEnd = start + newText.length;
             } else {
-                newText = borderStr + borderStr;
+                newText = borderStr + "  " + borderStr;
                 field.value = val.substring(0, start) + newText + val.substring(end);
-                field.selectionStart = start + offset;
-                field.selectionEnd = start + offset;
+                field.selectionStart = start + offset + 1;
+                field.selectionEnd = start + offset + 1;
             }
             field.focus();
             handleInput();
