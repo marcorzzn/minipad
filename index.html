@@ -225,7 +225,6 @@
             align-items: center;
             min-height: 38px;
         }
-        }
 
         /* Dropdowns generic styles */
         .dropdown-menu {
@@ -2510,10 +2509,9 @@
         /* --- MENU TOGGLE HELPERS (fixed positioning to escape overflow) --- */
         function positionDropdown(menuId, btnEl) {
             const menu = document.getElementById(menuId);
-            if (!menu) return;
-            const rect = btnEl ? btnEl.getBoundingClientRect() : { bottom: 40, left: 8 };
-            menu.style.top = (rect.bottom + 2) + 'px';
-            menu.style.left = rect.left + 'px';
+            if (!menu || !btnEl) return;
+            menu.style.top = (btnEl.offsetTop + btnEl.offsetHeight + 4) + 'px';
+            menu.style.left = btnEl.offsetLeft + 'px';
         }
 
         function toggleFileMenu(e) {
