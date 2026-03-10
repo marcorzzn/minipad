@@ -111,20 +111,21 @@
             --font-ui: 'Courier New', Courier, monospace;
         }
 
-        html {
-            height: 100%;
-        }
-
+        html,
         body {
             height: 100%;
             margin: 0;
             padding: 0;
             overflow: hidden;
+        }
+
+        body {
             font-family: var(--font-ui);
             background-color: var(--bg-color);
             color: var(--text-color);
             display: flex;
             flex-direction: column;
+            height: 100dvh;
         }
 
         #main-container {
@@ -267,21 +268,21 @@
         }
 
 
-        /* Dropdowns generic styles */
+        /* Dropdowns: position fixed so they escape toolbar overflow:auto clipping */
         .dropdown-menu {
-            position: absolute;
+            position: fixed;
             background: var(--bg-color);
             border: 1px solid var(--border-color);
-            box-shadow: var(--shadow);
-            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            border-radius: 6px;
             width: 200px;
             display: none;
             flex-direction: column;
             padding: 4px;
-            z-index: 2000;
+            z-index: 9000;
             opacity: 0;
-            transform: translateY(-5px);
-            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform: translateY(-4px);
+            transition: opacity 0.15s ease, transform 0.15s ease;
             pointer-events: none;
         }
 
@@ -322,31 +323,7 @@
             color: var(--accent-color);
         }
 
-        .window-controls {
-            display: flex;
-            height: 100%;
-        }
 
-        .control-btn {
-            width: 46px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            background: transparent;
-            color: var(--text-color);
-            cursor: pointer;
-        }
-
-        .control-btn:hover {
-            background-color: var(--hover-color);
-        }
-
-        .close-btn:hover {
-            background-color: #e81123;
-            color: white;
-        }
 
         /* --- MAIN TOOLBAR --- */
         #toolbar {
@@ -2547,12 +2524,13 @@
             }, 100);
         }
 
-        /* --- MENU TOGGLE HELPERS (fixed positioning to escape overflow) --- */
+        /* --- MENU TOGGLE HELPERS (position:fixed dropdowns need viewport coords) --- */
         function positionDropdown(menuId, btnEl) {
             const menu = document.getElementById(menuId);
             if (!menu || !btnEl) return;
-            menu.style.top = (btnEl.offsetTop + btnEl.offsetHeight + 4) + 'px';
-            menu.style.left = btnEl.offsetLeft + 'px';
+            const rect = btnEl.getBoundingClientRect();
+            menu.style.top = (rect.bottom + 2) + 'px';
+            menu.style.left = Math.min(rect.left, window.innerWidth - 210) + 'px';
         }
 
         function toggleFileMenu(e) {
