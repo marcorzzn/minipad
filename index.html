@@ -111,29 +111,31 @@
             --font-ui: 'Courier New', Courier, monospace;
         }
 
-        html,
-        body {
+        html {
             height: 100%;
-            margin: 0;
-            padding: 0;
             overflow: hidden;
         }
 
         body {
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
             font-family: var(--font-ui);
             background-color: var(--bg-color);
             color: var(--text-color);
             display: flex;
             flex-direction: column;
-            height: 100dvh;
         }
 
         #main-container {
             display: flex;
-            flex: 1;
+            flex: 1 1 100%;
+            /* Force fill */
             min-height: 0;
-            /* Fixes whitespace overflow issues in flexbox */
             overflow: hidden;
+            width: 100%;
         }
 
         /* --- SIDEBAR EXPLORER --- */
@@ -282,15 +284,13 @@
             z-index: 9000;
             opacity: 0;
             transform: translateY(-4px);
-            transition: opacity 0.15s ease, transform 0.15s ease;
-            pointer-events: none;
+            transition: opacity 0.1s ease, transform 0.1s ease;
         }
 
         .dropdown-menu.show {
             display: flex;
             opacity: 1;
             transform: translateY(0);
-            pointer-events: auto;
         }
 
         .dropdown-item {
@@ -336,13 +336,8 @@
             overflow-x: auto;
             flex-wrap: nowrap;
             position: relative;
-            scrollbar-width: none;
-            /* Firefox hide scrollbar */
-        }
-
-        #toolbar::-webkit-scrollbar {
-            display: none;
-            /* Chrome hide scrollbar */
+            flex-shrink: 0;
+            scrollbar-width: thin;
         }
 
         .tool-group {
@@ -354,6 +349,7 @@
             height: 28px;
             position: relative;
             flex-shrink: 0;
+            flex-wrap: wrap;
         }
 
         /* Last group shouldn't have border */
@@ -764,16 +760,16 @@
         #workspace-wrapper {
             display: flex;
             flex-direction: column;
-            flex: 1;
-            overflow: hidden;
+            flex: 1 1 100%;
+            height: 100%;
             position: relative;
         }
 
         #workspace {
             display: flex;
-            flex: 1;
-            min-height: 0;
+            flex: 1 1 100%;
             height: 100%;
+            min-height: 0;
             overflow: hidden;
             position: relative;
         }
@@ -1174,46 +1170,14 @@
                     <line x1="3" y1="18" x2="21" y2="18"></line>
                 </svg>
             </button>
-            <button class="menu-btn" id="file-btn" onclick="toggleFileMenu()">
+            <button class="menu-btn" id="file-btn" onclick="toggleFileMenu(event)">
                 <span style="margin-right:4px;">File</span>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M6 9l6 6 6-6" />
                 </svg>
             </button>
 
-            <!-- File Dropdown -->
-            <div class="dropdown-menu" id="file-menu">
-                <div class="dropdown-item" onclick="newNote()">Nuovo</div>
-                <div class="dropdown-item" onclick="document.getElementById('hidden-file-input').click()">Apri file
-                    locale...</div>
-                <input type="file" id="hidden-file-input" style="display:none" onchange="importFile(event)"
-                    accept=".md,.txt,.tex,.html">
-                <div class="dropdown-item" onclick="promptExport('md')">Salva con nome...</div>
 
-                <!-- Backup Tools -->
-                <div class="dropdown-divider"></div>
-                <div class="dropdown-item" onclick="exportBackup()"><strong style="color:var(--accent-color)">✓ Esporta
-                        Backup (.json)</strong></div>
-                <div class="dropdown-item" onclick="document.getElementById('hidden-backup-input').click()"><strong
-                        style="color:var(--accent-color)">↑ Importa Backup</strong></div>
-                <input type="file" id="hidden-backup-input" style="display:none" onchange="importBackup(event)"
-                    accept=".json">
-
-                <!-- PWA Install Button -->
-                <div class="dropdown-divider" id="install-divider" style="display:none;"></div>
-                <div class="dropdown-item" id="install-btn"
-                    style="display:none; color:var(--text-color); font-weight:bold;" onclick="installPWA()">
-                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='4' width='20' height='24' rx='2' fill='%23fff' stroke='%23000' stroke-width='2'/%3E%3Crect x='10' y='10' width='12' height='2' rx='1' fill='%23000'/%3E%3Crect x='10' y='15' width='9' height='2' rx='1' fill='%23000'/%3E%3Crect x='10' y='20' width='10' height='2' rx='1' fill='%23000'/%3E%3C/svg%3E"
-                        style="width:16px; height:16px; margin-right:6px; vertical-align:middle; filter: invert(0);">
-                    minipad
-                </div>
-
-                <div class="dropdown-divider"></div>
-                <div class="dropdown-item" onclick="exportPDF()">Esporta PDF</div>
-                <div class="dropdown-item" onclick="exportHTML()">Esporta HTML</div>
-                <div class="dropdown-item" onclick="exportMD()">Esporta Markdown (.md)</div>
-                <div class="dropdown-item" onclick="exportTEX()">Esporta LaTeX (.tex)</div>
-            </div>
 
             <button class="icon-btn-title" onclick="saveNow()" title="Salva Ora" style="margin-left: 2px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
@@ -1351,49 +1315,21 @@
             </button>
             <button class="format-btn" onclick="insertMarkdown('\n```\n', '\n```\n')" title="Blocco di Codice (```)"
                 style="font-size:10px; letter-spacing:-1px;">&lt;/&gt;</button>
-        </div>
 
-        <!-- Diagrams -->
-        <div class="tool-group">
-            <button class="format-btn" onclick="openDiagramModal()" title="Grafici e Diagrammi">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M8 12h8" />
-                    <path d="M12 8v8" />
-                </svg>
-            </button>
-        </div>
+            <!-- Separator -->
+            <div style="width:1px; height:20px; background:var(--border-color); margin:0 4px;"></div>
 
-        <!-- Tables -->
-        <div class="tool-group">
-            <button class="format-btn" onclick="toggleTableMenu(event)" title="Inserisci Tabella">
+            <!-- Tables -->
+            <button id="table-menu-btn" class="format-btn" onclick="toggleTableMenu(event)" title="Inserisci Tabella">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <path d="M3 9h18" />
-                    <path d="M9 21V9" />
+                    <line x1="3" y1="9" x2="21" y2="9" />
+                    <line x1="3" y1="15" x2="21" y2="15" />
+                    <line x1="9" y1="3" x2="9" y2="21" />
+                    <line x1="15" y1="3" x2="15" y2="21" />
                 </svg>
                 <span style="font-size:10px; margin-left:2px;">Tab</span>
             </button>
-            <div class="dropdown-menu" id="table-menu"
-                style="width:230px; padding:10px; flex-direction:column; gap:6px;">
-                <div style="font-size:11px; font-weight:600; color:var(--accent-color);">Inserisci Tabella</div>
-                <div style="font-size:10px; color:#888;">Selezione rapida (max 8x8):</div>
-                <div id="table-grid" style="display:grid; grid-template-columns:repeat(8, 14px); gap:2px;"></div>
-                <div id="table-size-label" style="text-align:center; font-size:10px; color:#888;">0 x 0</div>
-                <hr style="border:none; border-top:1px solid var(--border-color); margin:4px 0;">
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <label style="font-size:11px;">Righe:</label>
-                    <input type="number" id="table-rows-input" value="3" min="1" max="50"
-                        style="width:50px; padding:2px 4px; border:1px solid var(--border-color); border-radius:3px; background:var(--bg-color); color:var(--text-color); font-size:12px;">
-                    <label style="font-size:11px;">Col:</label>
-                    <input type="number" id="table-cols-input" value="3" min="1" max="20"
-                        style="width:50px; padding:2px 4px; border:1px solid var(--border-color); border-radius:3px; background:var(--bg-color); color:var(--text-color); font-size:12px;">
-                </div>
-                <button onclick="insertTableFromInputs()"
-                    style="background:var(--accent-color);color:white;border:none;border-radius:4px;padding:6px 12px;cursor:pointer;font-size:12px;width:100%;margin-top:2px;">
-                    Inserisci Tabella ↵
-                </button>
-            </div>
         </div>
 
         <!-- Help Button (Aligned rightmost but part of flow? Or separate? User said "close to other buttons") -->
@@ -1454,9 +1390,32 @@
         </div>
     </div>
 
+    <!-- FILE DROPDOWN MENU -->
+    <div id="file-menu" class="dropdown-menu">
+        <div class="dropdown-item" onclick="newNote(); closeAllMenus();">📄 Nuova Nota</div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" onclick="exportMarkdown(); closeAllMenus();">⬇ Esporta .md</div>
+        <div class="dropdown-item" onclick="document.getElementById('import-file').click(); closeAllMenus();">⬆ Importa
+            File</div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" onclick="exportBackup(); closeAllMenus();">💾 Backup JSON</div>
+        <div class="dropdown-item" onclick="document.getElementById('import-backup').click(); closeAllMenus();">📥
+            Ripristina Backup</div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" onclick="window.print(); closeAllMenus();">🖨 Stampa / Esporta PDF</div>
+    </div>
+
+    <!-- TABLE DROPDOWN MENU -->
+    <div id="table-menu" class="dropdown-menu">
+        <div class="dropdown-item" onclick="insertTable(2,2); closeAllMenus();">2×2 Tabella</div>
+        <div class="dropdown-item" onclick="insertTable(3,3); closeAllMenus();">3×3 Tabella</div>
+        <div class="dropdown-item" onclick="insertTable(4,4); closeAllMenus();">4×4 Tabella</div>
+        <div class="dropdown-item" onclick="insertTable(3,5); closeAllMenus();">3×5 Tabella</div>
+    </div>
+
     <!-- FIND/REPLACE BAR -->
     <div id="find-bar"
-        style="display:none; background:var(--toolbar-bg); border-bottom:1px solid var(--border-color); padding:6px 12px; display:none; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px;">
+        style="display:none; background:var(--toolbar-bg); border-bottom:1px solid var(--border-color); padding:6px 12px; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px;">
         <label style="font-weight:600;">Cerca:</label>
         <input type="text" id="find-input" placeholder="Testo da cercare..." oninput="highlightFind()"
             style="padding:3px 7px; border:1px solid var(--border-color); border-radius:3px; background:var(--bg-color); color:var(--text-color); min-width:160px;">
@@ -2528,44 +2487,47 @@
         function positionDropdown(menuId, btnEl) {
             const menu = document.getElementById(menuId);
             if (!menu || !btnEl) return;
+            // Force display block first to get accurate rects if needed, though they are fixed
             const rect = btnEl.getBoundingClientRect();
             menu.style.top = (rect.bottom + 2) + 'px';
             menu.style.left = Math.min(rect.left, window.innerWidth - 210) + 'px';
+            menu.classList.add('show');
         }
 
         function toggleFileMenu(e) {
+            if (e) e.stopPropagation();
             const btn = document.getElementById('file-btn');
             const menu = document.getElementById('file-menu');
+            if (!menu) return;
             const isShowing = menu.classList.contains('show');
             closeAllMenus();
-            if (!isShowing) { positionDropdown('file-menu', btn); menu.classList.add('show'); }
+            if (!isShowing) positionDropdown('file-menu', btn);
         }
 
         function toggleFormulaMenu(e) {
-            const btn = e && e.currentTarget ? e.currentTarget : document.querySelector('[onclick*="toggleFormulaMenu"]');
-            const menu = document.getElementById('formula-menu');
-            const isShowing = menu.classList.contains('show');
-            closeAllMenus();
-            if (!isShowing) { positionDropdown('formula-menu', btn); menu.classList.add('show'); }
+            // Disabled: formula menu has been replaced by the Math Toolbar.
+            console.log("toggleFormulaMenu disabled in latest version.");
         }
 
         function toggleTableMenu(e) {
+            if (e) e.stopPropagation();
             const btn = e && e.currentTarget ? e.currentTarget : document.querySelector('[onclick*="toggleTableMenu"]');
             const menu = document.getElementById('table-menu');
+            if (!menu) return;
             const isShowing = menu.classList.contains('show');
             closeAllMenus();
-            if (!isShowing) { positionDropdown('table-menu', btn); menu.classList.add('show'); }
+            if (!isShowing) positionDropdown('table-menu', btn);
         }
 
         function closeAllMenus() {
-            ['file-menu', 'formula-menu', 'table-menu'].forEach(id => {
+            ['file-menu', 'table-menu'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.remove('show');
             });
         }
 
         function closeOtherMenus(exceptId) {
-            ['file-menu', 'formula-menu', 'table-menu'].forEach(id => {
+            ['file-menu', 'table-menu'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el && id !== exceptId) el.classList.remove('show');
             });
@@ -2617,12 +2579,10 @@
 
         function insertFormulaInline() {
             insertSpecialFormula('$', 1);
-            toggleFormulaMenu();
         }
 
         function insertFormulaBlock() {
             insertSpecialFormula('$$', 2);
-            toggleFormulaMenu();
         }
 
         /* --- FONT & COLOR with Span --- */
@@ -2717,9 +2677,10 @@
 
         /* --- FILE MENU FIX --- */
         window.addEventListener('click', (e) => {
-            if (e.target.closest('.menu-btn') || e.target.closest('#file-btn')) return;
-            if (e.target.closest('.format-btn')) return; // toolbar buttons handled separately
-            if (!e.target.closest('.dropdown-menu')) {
+            // Don't close if clicking inside a dropdown menu or on a designated menu toggle button
+            const insideMenu = e.target.closest('.dropdown-menu');
+            const isMenuToggle = e.target.closest('#file-btn') || e.target.closest('#table-menu-btn');
+            if (!insideMenu && !isMenuToggle) {
                 closeAllMenus();
             }
         });
@@ -3493,11 +3454,8 @@ ${c}
         // PWA Install Logic
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent Chrome from automatically showing the prompt
             e.preventDefault();
-            // Stash the event so it can be triggered later.
             deferredPrompt = e;
-            // Update UI to notify the user they can add to home screen
             const installBtn = document.getElementById('install-btn');
             const installDiv = document.getElementById('install-divider');
             if (installBtn && installDiv) {
@@ -3508,12 +3466,9 @@ ${c}
 
         function installPWA() {
             if (!deferredPrompt) return;
-            // Show the install prompt
             deferredPrompt.prompt();
-            // Wait for the user to respond to the prompt
             deferredPrompt.userChoice.then((choiceResult) => {
                 if (choiceResult.outcome === 'accepted') {
-                    console.log('User accepted the A2HS prompt');
                     const installBtn = document.getElementById('install-btn');
                     const installDiv = document.getElementById('install-divider');
                     if (installBtn) installBtn.style.display = 'none';
@@ -3521,6 +3476,72 @@ ${c}
                 }
                 deferredPrompt = null;
             });
+        }
+
+        /* --- FILE MENU ACTIONS --- */
+        function newNote() {
+            if (confirm('Creare una nuova nota? Il contenuto attuale verrà perso se non salvato.')) {
+                const editor = document.getElementById('editor');
+                if (editor) editor.value = '';
+                updatePreview();
+                updateStatus();
+            }
+        }
+
+        function exportMarkdown() {
+            const editor = document.getElementById('editor');
+            const content = editor ? editor.value : '';
+            const blob = new Blob([content], { type: 'text/markdown' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'nota.md';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function exportBackup() {
+            // Export all notes from IndexedDB as JSON
+            getAllNotesForBackup().then(notes => {
+                const data = JSON.stringify({ notes, exportedAt: new Date().toISOString() }, null, 2);
+                const blob = new Blob([data], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'minipad_backup.json';
+                a.click();
+                URL.revokeObjectURL(a.href);
+            }).catch(() => {
+                // Fallback: export current editor only
+                exportMarkdown();
+            });
+        }
+
+        function getAllNotesForBackup() {
+            return new Promise((resolve, reject) => {
+                if (!db) { reject('No DB'); return; }
+                const tx = db.transaction('tabs', 'readonly');
+                const store = tx.objectStore('tabs');
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        /* --- TABLE INSERT --- */
+        function insertTable(rows, cols) {
+            const editor = document.getElementById('editor');
+            if (!editor) return;
+            // Build a markdown table
+            const headerRow = '| ' + Array(cols).fill('Intestazione').join(' | ') + ' |';
+            const separatorRow = '| ' + Array(cols).fill('---').join(' | ') + ' |';
+            const dataRows = Array(rows - 1).fill(null).map(() =>
+                '| ' + Array(cols).fill('     ').join(' | ') + ' |'
+            );
+            const table = '\n' + [headerRow, separatorRow, ...dataRows].join('\n') + '\n';
+            const start = editor.selectionStart;
+            editor.value = editor.value.substring(0, start) + table + editor.value.substring(editor.selectionEnd);
+            editor.selectionStart = editor.selectionEnd = start + table.length;
+            editor.focus();
+            updatePreview();
         }
     </script>
 </body>
