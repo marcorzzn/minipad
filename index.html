@@ -63,6 +63,29 @@
             --math-btn-border: #555;
         }
 
+        [data-theme="sepia"] {
+            --bg-color: #f4ecd8;
+            --sidebar-bg: #eAddc5;
+            --text-color: #433422;
+            --accent-color: #d16b27;
+            --border-color: #d8c8b8;
+            --hover-color: rgba(67, 52, 34, 0.05);
+            --math-btn-bg: #eAddc5;
+            --math-btn-border: #c8b8a8;
+        }
+
+        [data-theme="hacker"] {
+            --bg-color: #0d1117;
+            --sidebar-bg: #010409;
+            --text-color: #00ff00;
+            --accent-color: #39d353;
+            --border-color: #30363d;
+            --hover-color: rgba(0, 255, 0, 0.1);
+            --math-btn-bg: #161b22;
+            --math-btn-border: #21262d;
+            --font-ui: 'Courier New', Courier, monospace;
+        }
+
         html,
         body {
             height: 100%;
@@ -77,6 +100,80 @@
             color: var(--text-color);
             display: flex;
             flex-direction: column;
+        }
+
+        #main-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 40px);
+            /* Adjust based on titlebar */
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR EXPLORER --- */
+        #sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.2s ease;
+            overflow: hidden;
+        }
+
+        #sidebar.collapsed {
+            width: 0;
+            border-right: none;
+        }
+
+        .sidebar-header {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 5px;
+            flex-direction: column;
+        }
+
+        .sidebar-search {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 12px;
+            box-sizing: border-box;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            padding: 8px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--hover-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-item:hover {
+            background-color: var(--hover-color);
+        }
+
+        .sidebar-item.active {
+            background-color: var(--hover-color);
+            border-left: 3px solid var(--accent-color);
+            padding-left: 9px;
+            font-weight: bold;
+        }
+
+        .sidebar-item-date {
+            font-size: 10px;
+            color: #888;
         }
 
         /* --- MERMAID ERROR SILENCING --- */
@@ -670,12 +767,21 @@
         }
 
         /* --- WORKSPACE --- */
+        #workspace-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
         #workspace {
             display: flex;
             flex: 1;
             min-height: 0;
             height: 100%;
             overflow: hidden;
+            position: relative;
         }
 
         #editor-pane {
@@ -946,6 +1052,97 @@
         body.zen-mode .zen-btn {
             display: flex;
         }
+
+        /* --- PRINT CSS OPTIMIZATION FOR NATIVE PDF --- */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                margin: 0;
+                padding: 0;
+                display: block;
+                overflow: visible;
+            }
+
+            #titlebar,
+            #sidebar,
+            #toolbar,
+            #statusbar,
+            .dropdown-menu,
+            .modal,
+            .zen-btn,
+            #editor-pane,
+            .tab-bar,
+            .resize-handle {
+                display: none !important;
+            }
+
+            #main-container,
+            #workspace-wrapper,
+            #workspace {
+                height: auto !important;
+                overflow: visible !important;
+                display: block !important;
+            }
+
+            #preview-pane {
+                width: 100% !important;
+                padding: 0 !important;
+                background: white !important;
+                border: none !important;
+                overflow: visible !important;
+                box-shadow: none !important;
+            }
+
+            #preview-content {
+                padding: 2cm !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                font-size: 12pt;
+            }
+
+            /* Page breaks */
+            h1,
+            h2 {
+                page-break-before: auto;
+                page-break-after: avoid;
+            }
+
+            pre,
+            blockquote,
+            img,
+            table {
+                page-break-inside: avoid;
+            }
+
+            a {
+                text-decoration: none !important;
+                color: black !important;
+            }
+        }
+
+        /* --- MOBILE RESPONSIVENESS AND SIDEBAR --- */
+        @media (max-width: 768px) {
+            #sidebar {
+                position: absolute;
+                z-index: 1000;
+                height: 100%;
+                left: 0;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+                transition: left 0.3s ease;
+            }
+
+            #sidebar.collapsed {
+                left: -250px;
+                width: 250px;
+                /* retain width to slide out rather than shrink */
+                border-right: 1px solid var(--border-color);
+                box-shadow: none;
+            }
+
+            /* When sidebar is active on mobile, hide the editor completely to avoid scrolling issues or just overlay it. Overlay is fine since z-index 1000 */
+        }
     </style>
 </head>
 
@@ -965,6 +1162,13 @@
     <!-- Title Bar -->
     <header id="titlebar">
         <div class="drag-region">
+            <button class="menu-btn" onclick="toggleSidebar()" title="Toggle Sidebar" style="margin-right: 8px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
             <button class="menu-btn" id="file-btn" onclick="toggleFileMenu()">
                 <span style="margin-right:4px;">File</span>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -974,12 +1178,34 @@
 
             <!-- File Dropdown -->
             <div class="dropdown-menu" id="file-menu">
-                <div class="dropdown-item" onclick="newTab()">Nuovo</div>
-                <div class="dropdown-item" onclick="document.getElementById('hidden-file-input').click()">Apri...</div>
+                <div class="dropdown-item" onclick="newNote()">Nuovo</div>
+                <div class="dropdown-item" onclick="document.getElementById('hidden-file-input').click()">Apri file
+                    locale...</div>
                 <input type="file" id="hidden-file-input" style="display:none" onchange="importFile(event)"
                     accept=".md,.txt,.tex,.html">
                 <div class="dropdown-item" onclick="promptExport('md')">Salva con nome...</div>
-                <!-- Defaults to MD (Source) -->
+
+                <!-- Backup Tools -->
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="exportBackup()"><strong style="color:var(--accent-color)">✓ Esporta
+                        Backup (.json)</strong></div>
+                <div class="dropdown-item" onclick="document.getElementById('hidden-backup-input').click()"><strong
+                        style="color:var(--accent-color)">↑ Importa Backup</strong></div>
+                <input type="file" id="hidden-backup-input" style="display:none" onchange="importBackup(event)"
+                    accept=".json">
+
+                <!-- PWA Install Button -->
+                <div class="dropdown-divider" id="install-divider" style="display:none;"></div>
+                <div class="dropdown-item" id="install-btn"
+                    style="display:none; color:var(--accent-color); font-weight:bold;" onclick="installPWA()">
+                    <svg style="width:14px; height:14px; margin-right:6px; vertical-align:middle;" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>Installa Minipad
+                </div>
+
                 <div class="dropdown-divider"></div>
                 <div class="dropdown-item" onclick="exportPDF()">Esporta PDF</div>
                 <div class="dropdown-item" onclick="exportHTML()">Esporta HTML</div>
@@ -1256,32 +1482,53 @@
         </div>
     </div>
 
-    <!-- Tabs -->
-    <div id="tabs-container"></div>
+    <!-- MAIN CONTAINER -->
+    <div id="main-container">
 
-    <!-- Workspace -->
-    <div id="workspace">
-        <div id="editor-pane">
-            <textarea id="editor" spellcheck="false" placeholder="Scrivi qui... Usa $$ ... $$ per formule."></textarea>
-        </div>
-        <div id="preview-pane">
-            <div id="preview-content"></div>
-        </div>
-    </div>
+        <!-- SIDEBAR -->
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <div style="font-weight:bold; font-size:14px;">Esplora Note</div>
+                <input type="text" id="sidebar-search" class="sidebar-search" placeholder="Cerca nota..."
+                    oninput="renderSidebar()">
+            </div>
+            <div class="sidebar-content" id="sidebar-list">
+                <!-- Notes will be injected here -->
+            </div>
+        </aside>
 
-    <!-- Zen Mode Exit Button -->
-    <div class="zen-btn" onclick="toggleZenMode()" title="Esci modalità Zen">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-color)" stroke-width="2">
-            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3">
-            </path>
-        </svg>
-    </div>
+        <!-- WORKSPACE WRAPPER -->
+        <div id="workspace-wrapper">
+            <!-- Tabs -->
+            <div id="tabs-container" style="display:none;"></div> <!-- Tabs logic handled differently now or hidden -->
 
-    <!-- Status Bar -->
-    <div id="statusbar">
-        <span id="status-left">Pronto</span>
-        <span id="status-right">Minipad Ready</span>
-    </div>
+            <!-- Workspace -->
+            <div id="workspace">
+                <div id="editor-pane">
+                    <textarea id="editor" spellcheck="false"
+                        placeholder="Scrivi qui... Usa $$ ... $$ per formule."></textarea>
+                </div>
+                <div id="preview-pane">
+                    <div id="preview-content"></div>
+                </div>
+            </div>
+
+            <!-- Zen Mode Exit Button -->
+            <div class="zen-btn" onclick="toggleZenMode()" title="Esci modalità Zen">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-color)" stroke-width="2">
+                    <path
+                        d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3">
+                    </path>
+                </svg>
+            </div>
+
+            <!-- Status Bar -->
+            <div id="statusbar">
+                <span id="status-left">Pronto</span>
+                <span id="status-right">Minipad Ready</span>
+            </div>
+        </div> <!-- End workspace-wrapper -->
+    </div> <!-- End main-container -->
 
     <!-- Help Modal -->
     <div id="help-modal" class="modal">
@@ -1432,7 +1679,7 @@
             document.getElementById('lang-label').textContent = currentLang.toUpperCase();
             try { localStorage.setItem('minipad_lang', currentLang); } catch (e) { }
             applyLanguage();
-            renderTabs(); // Redraw UI tabs
+            renderSidebar(); // Redraw UI tabs
         }
 
         function applyLanguage() {
@@ -1902,18 +2149,18 @@
                     if (tabs.length === 0) throw new Error("No tabs");
                 } catch (e) {
                     // Fallback
-                    await createTab(getStr('new_tab_name'), "# " + getStr('new_tab_name') + "\n\n" + getStr('placeholder'));
+                    await createNote(getStr('new_tab_name'), "# " + getStr('new_tab_name') + "\n\n" + getStr('placeholder'));
                 }
             } else {
-                await createTab(getStr('new_tab_name'), "# " + getStr('new_tab_name') + "\n\n" + getStr('placeholder'));
+                await createNote(getStr('new_tab_name'), "# " + getStr('new_tab_name') + "\n\n" + getStr('placeholder'));
             }
 
-            renderTabs();
+            renderSidebar();
 
             // Restore active tab
             if (tabs.length > 0) {
                 const lastActive = tabs[tabs.length - 1].id; // Default to last
-                switchTab(lastActive);
+                switchNote(lastActive);
             }
 
             document.getElementById('editor').addEventListener('input', handleInput);
@@ -2492,10 +2739,11 @@
             savedSelection = { start: field.selectionStart, end: field.selectionEnd };
         }
 
-        // Restore saved dark mode
+        // Restore saved theme
         try {
-            if (localStorage.getItem('minipad_theme') === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
+            const savedTheme = localStorage.getItem('minipad_theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-theme', savedTheme);
             }
         } catch (e) { }
 
@@ -2670,6 +2918,50 @@ ${c}
             URL.revokeObjectURL(url);
         }
 
+        /* --- BACKUP LOGIC --- */
+        function exportBackup() {
+            const dataStr = JSON.stringify(tabs, null, 2);
+            const dateStr = new Date().toISOString().split('T')[0];
+            downloadFile(`minipad_backup_${dateStr}.json`, dataStr, "application/json");
+            toggleFileMenu();
+        }
+
+        async function importBackup(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const text = await file.text();
+            try {
+                const importedTabs = JSON.parse(text);
+                if (Array.isArray(importedTabs) && importedTabs.length > 0) {
+                    if (confirm("Questo unirà le note salvate in questo browser con quelle del backup. Continuare?")) {
+                        // Merge logic: Add imported notes avoiding exact ID duplicates or generating new IDs
+                        importedTabs.forEach(t => {
+                            const existing = tabs.find(localTab => localTab.id === t.id);
+                            if (existing) {
+                                // If id conflict but different name/content, append as new
+                                if (existing.content !== t.content) {
+                                    t.id = t.id + "_imported";
+                                    t.name = t.name + " (Backup)";
+                                    tabs.push(t);
+                                }
+                            } else {
+                                tabs.push(t);
+                            }
+                        });
+                        await saveToStorage();
+                        renderSidebar();
+                        alert("Backup importato con successo!");
+                    }
+                } else {
+                    alert("File di backup non valido o vuoto.");
+                }
+            } catch (err) {
+                alert("Errore nella lettura del file JSON di backup.");
+            }
+            e.target.value = ''; // reset
+            toggleFileMenu();
+        }
+
         function exportPDF() { promptExport('pdf'); toggleFileMenu(); }
         function exportHTML() { promptExport('html'); toggleFileMenu(); }
         function exportMD() { promptExport('md'); toggleFileMenu(); }
@@ -2765,31 +3057,76 @@ ${c}
 
         /* --- OLD FUNCTIONS REMOVED (Replaced above) --- */
 
-        /* --- CORE TABS LOGIC --- */
-        async function createTab(name, content) {
-            const id = Date.now().toString();
-            tabs.push({ id, name, content });
-            await saveToStorage();
-            switchTab(id);
+        /* --- CORE NOTES LOGIC (SIDEBAR) --- */
+        let sidebarVisible = window.innerWidth > 768;
+
+        // Auto-collapse on load for mobile
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!sidebarVisible) document.getElementById('sidebar').classList.add('collapsed');
+        });
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebarVisible = !sidebarVisible;
+            if (sidebarVisible) {
+                sidebar.classList.remove('collapsed');
+            } else {
+                sidebar.classList.add('collapsed');
+            }
         }
-        function newTab() { createTab(getStr('new_tab_name'), ""); toggleFileMenu(); }
-        function switchTab(id) {
+
+        async function createNote(name, content) {
+            const id = Date.now().toString();
+            const dateStr = new Date().toLocaleString(currentLang === 'it' ? 'it-IT' : 'en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+            tabs.push({ id, name, content, updatedAt: dateStr });
+            await saveToStorage();
+            switchNote(id);
+        }
+
+        function newNote() {
+            createNote(getStr('new_tab_name'), "");
+            toggleFileMenu();
+        }
+
+        function switchNote(id) {
             activeTabId = id;
             const tab = tabs.find(t => t.id === id);
             if (tab) document.getElementById('editor').value = tab.content;
-            renderTabs();
+            renderSidebar();
             updatePreview();
             updateStats();
         }
-        function renderTabs() {
-            const container = document.getElementById('tabs-container');
-            container.innerHTML = '';
-            tabs.forEach(tab => {
+
+        function renderSidebar() {
+            const list = document.getElementById('sidebar-list');
+            const query = document.getElementById('sidebar-search').value.toLowerCase();
+            list.innerHTML = '';
+
+            // Sort by most recent if possible, though currently keeping array order is fine
+            // We'll iterate backwards to show newest first
+            const sortedTabs = [...tabs].reverse();
+
+            sortedTabs.forEach(tab => {
+                // Filter by search query
+                if (query && !tab.name.toLowerCase().includes(query) && !tab.content.toLowerCase().includes(query)) {
+                    return;
+                }
+
                 const div = document.createElement('div');
-                div.className = `tab ${tab.id === activeTabId ? 'active' : ''}`;
-                div.onclick = () => switchTab(tab.id);
+                div.className = `sidebar-item ${tab.id === activeTabId ? 'active' : ''}`;
+                div.onclick = () => switchNote(tab.id);
+
+                const leftDiv = document.createElement('div');
+                leftDiv.style.display = 'flex';
+                leftDiv.style.flexDirection = 'column';
+                leftDiv.style.flex = '1';
+                leftDiv.style.overflow = 'hidden';
+
                 const nameSpan = document.createElement('span');
                 nameSpan.textContent = tab.name;
+                nameSpan.style.whiteSpace = 'nowrap';
+                nameSpan.style.overflow = 'hidden';
+                nameSpan.style.textOverflow = 'ellipsis';
                 nameSpan.title = getStr('tab_rename_prompt');
                 nameSpan.ondblclick = (e) => {
                     e.stopPropagation();
@@ -2797,35 +3134,46 @@ ${c}
                     if (newName && newName.trim()) {
                         tab.name = newName.trim().substring(0, 30);
                         saveToStorage();
-                        renderTabs();
+                        renderSidebar();
                     }
                 };
-                const closeSpan = document.createElement('span');
-                closeSpan.className = 'tab-close';
-                closeSpan.textContent = '×';
-                closeSpan.onclick = (e) => closeTab(e, tab.id);
-                div.appendChild(nameSpan);
-                div.appendChild(closeSpan);
-                container.appendChild(div);
-            });
 
-            // NEW BTN
-            const newBtn = document.createElement('div');
-            newBtn.className = 'tab new-tab-btn';
-            newBtn.innerHTML = '+';
-            newBtn.title = getStr('new_tab_name');
-            newBtn.style.padding = "0 10px";
-            newBtn.style.fontWeight = "bold";
-            newBtn.onclick = (e) => { e.stopPropagation(); createTab(getStr('new_tab_name'), ""); };
-            container.appendChild(newBtn);
+                const dateSpan = document.createElement('span');
+                dateSpan.className = 'sidebar-item-date';
+                dateSpan.textContent = tab.updatedAt || 'Ora';
+
+                leftDiv.appendChild(nameSpan);
+                leftDiv.appendChild(dateSpan);
+
+                const closeBtn = document.createElement('div');
+                closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+                closeBtn.style.opacity = '0.5';
+                closeBtn.style.cursor = 'pointer';
+                closeBtn.style.marginLeft = '8px';
+                closeBtn.onmouseenter = () => closeBtn.style.color = '#e81123';
+                closeBtn.onmouseleave = () => closeBtn.style.color = '';
+                closeBtn.onclick = (e) => deleteNote(e, tab.id);
+
+                div.appendChild(leftDiv);
+                div.appendChild(closeBtn);
+                list.appendChild(div);
+            });
         }
-        function closeTab(e, id) {
+
+        function deleteNote(e, id) {
             e.stopPropagation();
-            if (tabs.length === 1) { if (!confirm(getStr('tab_close_confirm'))) return; tabs[0].content = ""; tabs[0].name = getStr('tab_untitled'); switchTab(tabs[0].id); return; }
+            if (tabs.length === 1) {
+                if (!confirm(getStr('tab_close_confirm'))) return;
+                tabs[0].content = "";
+                tabs[0].name = getStr('tab_untitled');
+                switchNote(tabs[0].id);
+                return;
+            }
+            if (!confirm("Eliminare definitivamente questa nota?")) return;
             tabs = tabs.filter(t => t.id !== id);
             saveToStorage();
-            if (activeTabId === id) switchTab(tabs[tabs.length - 1].id);
-            else renderTabs();
+            if (activeTabId === id) switchNote(tabs[tabs.length - 1].id);
+            else renderSidebar();
         }
         function handleInput() {
             const tab = tabs.find(t => t.id === activeTabId);
@@ -2834,6 +3182,7 @@ ${c}
                 const lines = tab.content.split('\n');
                 for (let line of lines) if (line.trim().startsWith('#')) { tab.name = line.replace(/#/g, '').trim().substring(0, 20); break; }
                 if (!tab.name || tab.name === "") tab.name = lines[0].substring(0, 15) || getStr('tab_untitled');
+                tab.updatedAt = new Date().toLocaleString(currentLang === 'it' ? 'it-IT' : 'en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
             }
             clearTimeout(autoSaveTimeout);
             autoSaveTimeout = setTimeout(() => { saveToStorage(); showSavedIndicator(); }, 1000);
@@ -2875,10 +3224,20 @@ ${c}
             if (activeBtn) activeBtn.style.background = 'var(--hover-color)';
         }
 
+        const availableThemes = ['', 'dark', 'sepia', 'hacker'];
         function toggleDarkMode() {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
-            try { localStorage.setItem('minipad_theme', isDark ? 'light' : 'dark'); } catch (e) { }
+            let current = document.documentElement.getAttribute('data-theme') || '';
+            let nextIndex = (availableThemes.indexOf(current) + 1) % availableThemes.length;
+            let nextTheme = availableThemes[nextIndex];
+            document.documentElement.setAttribute('data-theme', nextTheme);
+            try { localStorage.setItem('minipad_theme', nextTheme); } catch (e) { }
+
+            // Show toast
+            const el = document.getElementById('save-indicator');
+            const original = el.textContent;
+            el.textContent = `Tema: ${nextTheme === '' ? 'Light' : nextTheme.charAt(0).toUpperCase() + nextTheme.slice(1)}`;
+            el.classList.add('visible');
+            setTimeout(() => { el.classList.remove('visible'); el.textContent = original; }, 1500);
         }
 
         function insertLink() {
@@ -3061,6 +3420,39 @@ ${c}
                     .catch(registrationError => {
                         console.log('SW registration failed: ', registrationError);
                     });
+            });
+        }
+
+        // PWA Install Logic
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Update UI to notify the user they can add to home screen
+            const installBtn = document.getElementById('install-btn');
+            const installDiv = document.getElementById('install-divider');
+            if (installBtn && installDiv) {
+                installBtn.style.display = 'block';
+                installDiv.style.display = 'block';
+            }
+        });
+
+        function installPWA() {
+            if (!deferredPrompt) return;
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the A2HS prompt');
+                    const installBtn = document.getElementById('install-btn');
+                    const installDiv = document.getElementById('install-divider');
+                    if (installBtn) installBtn.style.display = 'none';
+                    if (installDiv) installDiv.style.display = 'none';
+                }
+                deferredPrompt = null;
             });
         }
     </script>
