@@ -344,7 +344,6 @@
 
 
 
-        /* --- MAIN TOOLBAR --- */
         #toolbar {
             display: flex;
             align-items: center;
@@ -352,11 +351,10 @@
             border-bottom: 1px solid var(--border-color);
             background: var(--bg-color);
             gap: 4px;
-            overflow-x: auto;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
+            /* Changed to wrap so it fits entirely on screen */
             position: relative;
             flex-shrink: 0;
-            scrollbar-width: thin;
         }
 
         .tool-group {
@@ -1396,7 +1394,8 @@
 
     <!-- FILE DROPDOWN MENU -->
     <div id="file-menu" class="dropdown-menu">
-        <div class="dropdown-item" onclick="newTab(); closeAllMenus();">📄 Nuova Scheda</div>
+        <div class="dropdown-item" onclick="newNote(); closeAllMenus();">📄 Nuova Scheda</div>
+        <div class="dropdown-item" onclick="saveNow(); closeAllMenus();">💾 Salva (Ctrl+S)</div>
         <div class="dropdown-divider"></div>
         <div class="dropdown-item" onclick="exportMarkdown(); closeAllMenus();">⬇ Esporta .md</div>
         <div class="dropdown-item" onclick="exportHTML();">⬇ Esporta .html</div>
@@ -1454,7 +1453,7 @@
             <div class="sidebar-header">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="font-weight:bold; font-size:13px; color:var(--text-color);">Schede aperte</div>
-                    <button class="format-btn" onclick="newTab()" title="Nuova Scheda"
+                    <button class="format-btn" onclick="newNote()" title="Nuova Scheda"
                         style="padding:2px; height:24px; min-width:24px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
@@ -2183,17 +2182,7 @@
                 isSyncingRight = false;
             });
 
-            // Mobile Keyboard visualViewport Fix
-            if (window.visualViewport) {
-                window.visualViewport.addEventListener('resize', () => {
-                    const workspace = document.getElementById('workspace');
-                    if (window.innerWidth <= 768) {
-                        workspace.style.height = (window.visualViewport.height - 110) + 'px';
-                    } else {
-                        workspace.style.height = ''; // Reset to CSS default
-                    }
-                });
-            }
+            // Relying exclusively on 100dvh for mobile keyboard handling.
 
             updatePreview();
 
@@ -2845,7 +2834,19 @@
 
             if (type === 'md') downloadFile(name + ".md", t.content, "text/markdown");
             if (type === 'txt') downloadFile(name + ".txt", t.content, "text/plain");
-            if (type === 'tex') downloadFile(name + ".tex", t.content, "text/plain");
+            if (type === 'tex') {
+                const texStr = t.content
+                    .replace(/^# (.+)$/gm, '\\section{$1}')
+                    .replace(/^## (.+)$/gm, '\\subsection{$1}')
+                    .replace(/^### (.+)$/gm, '\\subsubsection{$1}')
+                    .replace(/\*\*(.+?)\*\*/g, '\\textbf{$1}')
+                    .replace(/\*(.+?)\*/g, '\\textit{$1}')
+                    .replace(/`(.+?)`/g, '\\texttt{$1}')
+                    .replace(/\$\$(.+?)\$\$/gs, '\\[\n$1\n\\]')
+                    .replace(/\$(.+?)\$/g, '$$$1$$');
+                const fullTex = `\\documentclass{article}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amsmath, amssymb}\n\\begin{document}\n\n${texStr}\n\n\\end{document}`;
+                downloadFile(name + ".tex", fullTex, "text/plain");
+            }
             if (type === 'html') {
                 const c = document.getElementById('preview-content').innerHTML;
                 const html = `<!DOCTYPE html>
@@ -3075,8 +3076,10 @@ ${c}
         }
 
         function renderSidebar() {
-            const list = document.getElementById('sidebar-list');
-            const query = document.getElementById('sidebar-search').value.toLowerCase();
+            const list = document.getElementById('tabs-list'); // Changed from sidebar-list to tabs-list
+            const searchEl = document.getElementById('sidebar-search');
+            const query = searchEl ? searchEl.value.toLowerCase() : '';
+            if (!list) return;
             list.innerHTML = '';
 
             // Sort by most recent if possible, though currently keeping array order is fine
@@ -3530,144 +3533,7 @@ ${c}
             });
         }
 
-        /* =====================================================
-           TABS SIDEBAR ADAPTER
-           Wraps existing createNote / switchNote / deleteNote
-           ===================================================== */
-        function newTab() {
-            // Use the existing createNote function with a default empty note
-            const name = 'Nota ' + (tabs.length + 1);
-            createNote(name, '').then(() => {
-                renderTabsList();
-            });
-        }
 
-        function switchTab(tabId) {
-            switchNote(tabId);
-            // renderTabsList() will be called after switchNote updates the editor
-            setTimeout(renderTabsList, 50);
-        }
-
-        function closeTab(tabId, event) {
-            if (event) event.stopPropagation();
-            if (tabs.length <= 1) {
-                // Clear the only tab instead of deleting it
-                document.getElementById('editor').value = '';
-                if (typeof updatePreview === 'function') updatePreview();
-                return;
-            }
-            deleteNote(tabId).then(() => renderTabsList());
-        }
-
-        function renderTabsList() {
-            const list = document.getElementById('tabs-list');
-            if (!list || !tabs) return;
-            const activeId = tabs.length > 0 ? tabs[tabs.length - 1]?.id : null;
-            // Find which tab is currently active in editor
-            const editorContent = document.getElementById('editor')?.value;
-            list.innerHTML = '';
-            tabs.forEach((tab) => {
-                const item = document.createElement('div');
-                // Determine active based on content match or last switch
-                const isActive = tab === tabs.find(t => t.content === editorContent) ||
-                    tab.id === window._activeTabId;
-                item.className = 'sidebar-item' + (isActive ? ' active' : '');
-                item.onclick = () => switchTab(tab.id);
-
-                const nameEl = document.createElement('span');
-                nameEl.textContent = tab.name || tab.title || 'Nota';
-                nameEl.style.cssText = 'flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
-
-                const closeBtn = document.createElement('button');
-                closeBtn.className = 'sidebar-item-close';
-                closeBtn.innerHTML = '&times;';
-                closeBtn.title = 'Chiudi scheda';
-                closeBtn.onclick = (e) => closeTab(tab.id, e);
-
-                item.appendChild(nameEl);
-                item.appendChild(closeBtn);
-                list.appendChild(item);
-            });
-        }
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            if (!sidebar) return;
-            sidebar.classList.toggle('collapsed');
-        }
-
-        /* =====================================================
-           EXPORT FORMATS
-           ===================================================== */
-        function exportHTML() {
-            const editor = document.getElementById('editor');
-            const md = editor ? editor.value : '';
-            // Use marked if available, otherwise wrap in <pre>
-            let html = '';
-            if (typeof marked !== 'undefined') {
-                html = `<!DOCTYPE html>
-<html lang="it">
-<head><meta charset="UTF-8"><title>Minipad Export</title>
-<style>body{font-family:system-ui,sans-serif;max-width:800px;margin:2em auto;line-height:1.6;padding:0 1em}
-pre{background:#f4f4f4;padding:1em;border-radius:4px;overflow:auto}
-blockquote{border-left:4px solid #ccc;margin:0;padding-left:1em;color:#555}
-table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px}th{background:#f0f0f0}
-</style></head>
-<body>${marked.parse(md)}</body>
-</html>`;
-            } else {
-                html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><pre>${md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre></body></html>`;
-            }
-            const blob = new Blob([html], { type: 'text/html' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = (tabs[activeTabIndex]?.title || 'nota').replace(/\s+/g, '_') + '.html';
-            a.click();
-            URL.revokeObjectURL(a.href);
-            closeAllMenus?.();
-        }
-
-        function exportTXT() {
-            const editor = document.getElementById('editor');
-            const content = editor ? editor.value : '';
-            const blob = new Blob([content], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = (tabs[activeTabIndex]?.title || 'nota').replace(/\s+/g, '_') + '.txt';
-            a.click();
-            URL.revokeObjectURL(a.href);
-            closeAllMenus?.();
-        }
-
-        function exportTeX() {
-            const editor = document.getElementById('editor');
-            const md = editor ? editor.value : '';
-            // Basic Markdown → LaTeX conversion
-            let tex = md
-                .replace(/^# (.+)$/gm, '\\section{$1}')
-                .replace(/^## (.+)$/gm, '\\subsection{$1}')
-                .replace(/^### (.+)$/gm, '\\subsubsection{$1}')
-                .replace(/\*\*(.+?)\*\*/g, '\\textbf{$1}')
-                .replace(/\*(.+?)\*/g, '\\textit{$1}')
-                .replace(/`(.+?)`/g, '\\texttt{$1}')
-                .replace(/\$\$(.+?)\$\$/gs, '\\[\n$1\n\\]')
-                .replace(/\$(.+?)\$/g, '$$$1$$');
-            const full = `\\documentclass{article}
-\\usepackage[utf8]{inputenc}
-\\usepackage{amsmath, amssymb}
-\\begin{document}
-
-${tex}
-
-\\end{document}`;
-            const blob = new Blob([full], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = (tabs[activeTabIndex]?.title || 'nota').replace(/\s+/g, '_') + '.tex';
-            a.click();
-            URL.revokeObjectURL(a.href);
-            closeAllMenus?.();
-        }
     </script>
 </body>
 
