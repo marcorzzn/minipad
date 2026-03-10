@@ -41,6 +41,7 @@
         /* --- Base Styles & Windows 11 Theme --- */
         :root {
             --bg-color: #ffffff;
+            --toolbar-bg: #f9f9f9;
             --sidebar-bg: #f3f3f3;
             --text-color: #202020;
             --accent-color: #0067c0;
@@ -54,6 +55,7 @@
 
         body.dark-mode {
             --bg-color: #202020;
+            --toolbar-bg: #252525;
             --sidebar-bg: #2d2d2d;
             --text-color: #ffffff;
             --accent-color: #4cc2ff;
@@ -109,15 +111,15 @@
             --font-ui: 'Courier New', Courier, monospace;
         }
 
-        html,
+        html {
+            height: 100%;
+        }
+
         body {
             height: 100%;
             margin: 0;
             padding: 0;
             overflow: hidden;
-        }
-
-        body {
             font-family: var(--font-ui);
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -212,19 +214,58 @@
             visibility: hidden !important;
         }
 
-        /* --- TOOLBAR --- */
-        #toolbar {
+        /* --- MENU BUTTONS (File, Hamburger) in toolbar --- */
+        .menu-btn {
             display: flex;
-            flex-wrap: wrap;
-            background-color: var(--toolbar-bg);
-            border-bottom: 1px solid var(--border-color);
-            padding: 4px 8px;
-            gap: 4px;
-            user-select: none;
-            overflow-x: auto;
             align-items: center;
-            min-height: 38px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-color);
+            height: 26px;
+            gap: 4px;
+            transition: background 0.15s ease;
+            white-space: nowrap;
         }
+
+        .menu-btn:hover {
+            background-color: var(--hover-color);
+            border-color: var(--border-color);
+        }
+
+        .menu-btn svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        .icon-btn-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            border-radius: 3px;
+            padding: 3px;
+            cursor: pointer;
+            color: var(--text-color);
+            width: 28px;
+            height: 26px;
+            transition: background 0.15s ease;
+        }
+
+        .icon-btn-title:hover {
+            background-color: var(--hover-color);
+        }
+
+        .icon-btn-title svg {
+            width: 14px;
+            height: 14px;
+        }
+
 
         /* Dropdowns generic styles */
         .dropdown-menu {
