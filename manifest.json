@@ -1,6 +1,6 @@
 {
-  "name": "Minipad",
-  "short_name": "Minipad",
+  "name": "minipad",
+  "short_name": "minipad",
   "description": "Editor Markdown e LaTeX gratuito online con anteprima live, grafici Mermaid, supporto matematico avanzato.",
   "start_url": "./index.html",
   "display": "standalone",

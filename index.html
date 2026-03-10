@@ -4,11 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minipad</title>
+    <title>minipad</title>
 
     <!-- SEO & Meta Tags -->
     <meta name="description"
-        content="Minipad: Editor Markdown e LaTeX gratuito online con anteprima live, grafici Mermaid, supporto matematico avanzato e strumenti di disegno.">
+        content="minipad: Editor Markdown e LaTeX gratuito online | Free online Markdown & LaTeX editor with live preview, mermaid charts and math tools.">
+    <meta property="og:site_name" content="minipad">
+    <meta property="og:title" content="minipad">
     <meta name="keywords"
         content="markdown editor, latex editor, online text editor, mermaid charts, math formulas, writing tool, minipad, graph plotter">
     <meta name="author" content="Marco">
@@ -17,9 +19,9 @@
     <link rel="manifest" href="./manifest.json">
     <!-- Favicon: minimal notepad icon -->
     <link rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='2' width='18' height='24' rx='2' fill='%23fff' stroke='%23333' stroke-width='2'/%3E%3Crect x='7' y='7' width='12' height='1.5' rx='0.7' fill='%23555'/%3E%3Crect x='7' y='11' width='10' height='1.5' rx='0.7' fill='%23555'/%3E%3Crect x='7' y='15' width='8' height='1.5' rx='0.7' fill='%23555'/%3E%3Crect x='7' y='19' width='6' height='1.5' rx='0.7' fill='%23aaa'/%3E%3Crect x='18' y='18' width='10' height='12' rx='2' fill='%230066cc'/%3E%3Cpath d='M21 24 l2-5 5 2 z' fill='%23fff' opacity='0.8'/%3E%3C/svg%3E">
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='4' width='20' height='24' rx='2' fill='%23fff' stroke='%23000' stroke-width='2'/%3E%3Crect x='10' y='10' width='12' height='2' rx='1' fill='%23000'/%3E%3Crect x='10' y='15' width='9' height='2' rx='1' fill='%23000'/%3E%3Crect x='10' y='20' width='10' height='2' rx='1' fill='%23000'/%3E%3C/svg%3E">
     <link rel="apple-touch-icon"
-        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='2' width='18' height='24' rx='2' fill='%23fff' stroke='%23333' stroke-width='2'/%3E%3Crect x='7' y='7' width='12' height='1.5' rx='0.7' fill='%23555'/%3E%3Crect x='7' y='11' width='10' height='1.5' rx='0.7' fill='%23555'/%3E%3Crect x='7' y='15' width='8' height='1.5' rx='0.7' fill='%23555'/%3E%3Crect x='7' y='19' width='6' height='1.5' rx='0.7' fill='%23aaa'/%3E%3Crect x='18' y='18' width='10' height='12' rx='2' fill='%230066cc'/%3E%3Cpath d='M21 24 l2-5 5 2 z' fill='%23fff' opacity='0.8'/%3E%3C/svg%3E">
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='4' width='20' height='24' rx='2' fill='%23fff' stroke='%23000' stroke-width='2'/%3E%3Crect x='10' y='10' width='12' height='2' rx='1' fill='%23000'/%3E%3Crect x='10' y='15' width='9' height='2' rx='1' fill='%23000'/%3E%3Crect x='10' y='20' width='10' height='2' rx='1' fill='%23000'/%3E%3C/svg%3E">
 
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website">
@@ -1036,8 +1038,6 @@
                 style="font-size:11px;">x²</button>
             <button class="format-btn" onclick="insertMarkdown('<sub>', '</sub>')" title="Pedice"
                 style="font-size:11px;">x₂</button>
-            <button class="format-btn" onclick="insertMarkdown('`', '`')" title="Codice Inline"
-                style="font-size:10px; letter-spacing:-1px;">&lt;/&gt;</button>
         </div>
 
         <!-- Colors -->
@@ -1201,6 +1201,21 @@
                     <rect x="11" y="3" width="10" height="18" rx="1" />
                 </svg>
             </button>
+            <!-- Help, Find, TOC -->
+            <button class="format-btn" onclick="openHelp()" title="Guida" id="btn-guida"><strong>?</strong></button>
+            <button class="format-btn" onclick="toggleFindBar()" title="Cerca (Ctrl+F)" style="font-size:10px;"
+                id="btn-find">🔍</button>
+            <button class="format-btn" onclick="generateTOC()" title="Genera Indice (TOC)" style="font-size:10px;"
+                id="btn-toc">📑</button>
+
+            <!-- Separator -->
+            <div style="width:1px; height:20px; background:var(--border-color); margin:0 4px;"></div>
+
+            <!-- System Toggles (Lang, Theme, Focus) -->
+            <button class="format-btn" onclick="toggleLanguage()" title="Lingua / Language" id="lang-toggle-btn"
+                style="padding: 0 4px;">
+                <strong style="font-size:12px; color:var(--text-color);" id="lang-label">IT</strong>
+            </button>
             <!-- Dark mode -->
             <button class="format-btn" onclick="toggleDarkMode()" title="Tema Chiaro/Scuro" id="dark-toggle-btn">
                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -1213,11 +1228,6 @@
                         d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                 </svg>
             </button>
-            <button class="format-btn" onclick="openHelp()" title="Guida"><strong>?</strong></button>
-            <button class="format-btn" onclick="toggleFindBar()" title="Cerca (Ctrl+F)"
-                style="font-size:10px;">🔍</button>
-            <button class="format-btn" onclick="generateTOC()" title="Genera Indice (TOC)"
-                style="font-size:10px;">📑</button>
         </div>
     </div>
 
@@ -1277,98 +1287,207 @@
     <div id="help-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeHelp()">&times;</span>
-            <h2>Guida Completa</h2>
-            <h3>Markdown</h3>
-            <table>
-                <tr>
-                    <th>Sintassi</th>
-                    <th>Risultato</th>
-                </tr>
-                <tr>
-                    <td><code>**Grassetto**</code></td>
-                    <td><strong>Grassetto</strong></td>
-                </tr>
-                <tr>
-                    <td><code>*Corsivo*</code></td>
-                    <td><em>Corsivo</em></td>
-                </tr>
-                <tr>
-                    <td><code>~~Barrato~~</code></td>
-                    <td><s>Barrato</s></td>
-                </tr>
-                <tr>
-                    <td><code># Titolo 1</code></td>
-                    <td>
-                        <h1>Titolo 1</h1>
-                    </td>
-                </tr>
-                <tr>
-                    <td><code>- Elemento lista</code></td>
-                    <td>
-                        <ul>
-                            <li>Elemento lista</li>
-                        </ul>
-                    </td>
-                </tr>
-                <tr>
-                    <td><code>[Testo](url)</code></td>
-                    <td>Link</td>
-                </tr>
-                <tr>
-                    <td><code>![alt](url)</code></td>
-                    <td>Immagine</td>
-                </tr>
-            </table>
-            <br>
-            <h3>LaTeX</h3>
-            <p>Usa <code>$...$</code> per formule in linea o <code>$$...$$</code> per formule a tutto schermo.</p>
-            <table>
-                <tr>
-                    <th>Comando</th>
-                    <th>Simbolo</th>
-                </tr>
-                <tr>
-                    <td><code>\\frac{a}{b}</code></td>
-                    <td>Frazione $\frac{a}{b}$</td>
-                </tr>
-                <tr>
-                    <td><code>\\int_{a}^{b}</code></td>
-                    <td>Integrale con limiti $\int_{a}^{b}$</td>
-                </tr>
-                <tr>
-                    <td><code>\\sum_{i=1}^{n}</code></td>
-                    <td>Somma $\sum_{i=1}^{n}$</td>
-                </tr>
-                <tr>
-                    <td><code>\\sqrt{x}</code></td>
-                    <td>Radice $\sqrt{x}$</td>
-                </tr>
-                <tr>
-                    <td><code>\\alpha</code>, <code>\\beta</code></td>
-                    <td>Greco $\alpha, \beta$</td>
-                </tr>
-                <tr>
-                    <td><code>\\mathbb{R}</code></td>
-                    <td>Ins. Numeri $\mathbb{R}$</td>
-                </tr>
-                <tr>
-                    <td><code>\\vec{x}</code></td>
-                    <td>Vettore $\vec{x}$</td>
-                </tr>
-            </table>
-            <br>
-            <h3>Diagrammi (Mermaid)</h3>
-            <p>Usa il pulsante grafico per inserire schemi. Ecco un esempio di codice generato:</p>
-            <pre><code>graph TD;
-    A[Start] --> B{Is OK?};
-    B -- Yes --> C[End];
-    B -- No --> D[Error];</code></pre>
+            <div id="help-it">
+                <h2>Guida a Minipad</h2>
+                <p><strong>Minipad</strong> è un editor pensato per la massima produttività. Tutti i dati rimangono nel
+                    tuo browser in locale.</p>
+                <h3>Appunti e Comandi Base</h3>
+                <ul>
+                    <li><strong>Markdown</strong>: Usa la barra in alto o scrivi direttamente
+                        <code>**grassetto**</code>, <code>*corsivo*</code>, <code># Titolo</code>.
+                    </li>
+                    <li><strong>Tabelle</strong>: Fai clic sul tasto <strong>Tab</strong> per inserire rapidamente
+                        tabelle ridimensionabili.</li>
+                    <li><strong>Zen Mode</strong>: Nascondi l'interfaccia e concentrati solo sul testo.</li>
+                    <li><strong>AI & Formule (Pasting)</strong>: Incolla testi generati da intelligenze artificiali
+                        (come ChatGPT, Gemini, Claude). Minipad individua e renderizza in automatico le espressioni
+                        matematiche esportate dalle AI con <code>\[ ... \]</code>, <code>\( ... \)</code>,
+                        <code>$$ ... $$</code> e <code>$ ... $</code> per farti vedere subito la formula corretta!
+                    </li>
+                </ul>
+                <h3>Scorciatoie da Tastiera</h3>
+                <ul>
+                    <li><code>Ctrl+S</code>: Salva il documento nel browser</li>
+                    <li><code>Ctrl+B</code> / <code>Ctrl+I</code>: Grassetto / Corsivo</li>
+                    <li><code>Ctrl+K</code>: Inserisci Link</li>
+                    <li><code>Ctrl+F</code>: Cerca e Sostituisci all'interno dell'editor</li>
+                </ul>
+                <h3>Matematica (LaTeX) e Diagrammi</h3>
+                <p>Inserisci calcoli o formule avvolgendoli con <code>$</code> (nella riga) o <code>$$</code> (come
+                    blocco isolato). Puoi usare il menu completo <strong>π▾</strong> per esplorare centinaia di modelli
+                    rapidi!</p>
+                <p>Hai bisogno di schemi? Clicca sull'icona diagramma per aggiungere Mappe Mentali, Diagrammi di Flusso
+                    o di Sequenza generati istantaneamente.</p>
+            </div>
+            <div id="help-en" style="display:none;">
+                <h2>Minipad Full Guide</h2>
+                <p><strong>Minipad</strong> is a text editor designed for maximum productivity. All data stays secure in
+                    your browser locally.</p>
+                <h3>Basic Notes and Commands</h3>
+                <ul>
+                    <li><strong>Markdown</strong>: Use the formatting toolbar or write directly using
+                        <code>**bold**</code>, <code>*italic*</code>, and <code># Title</code>.
+                    </li>
+                    <li><strong>Tables</strong>: Click the <strong>Tab</strong> button to quickly generate resizable
+                        tables.</li>
+                    <li><strong>Zen Mode</strong>: Hide the UI instantly and immerse yourself in writing.</li>
+                    <li><strong>AI & Math Tools (Pasting)</strong>: Seamlessly paste answers from AI tools (like
+                        ChatGPT, Gemini, Claude). Minipad automatically intercepts and renders math notation using
+                        <code>\[ ... \]</code>, <code>\( ... \)</code>, <code>$$ ... $$</code>, and <code>$ ... $</code>
+                        so you never read messy code!
+                    </li>
+                </ul>
+                <h3>Keyboard Shortcuts</h3>
+                <ul>
+                    <li><code>Ctrl+S</code>: Save document strictly locally</li>
+                    <li><code>Ctrl+B</code> / <code>Ctrl+I</code>: Bold / Italic</li>
+                    <li><code>Ctrl+K</code>: Insert Link URL</li>
+                    <li><code>Ctrl+F</code>: Native Find and Replace menu</li>
+                </ul>
+                <h3>Math (LaTeX) and Diagrams</h3>
+                <p>Insert complex formulas by wrapping them in <code>$</code> (inline) or <code>$$</code> (block).
+                    Explore the <strong>π▾</strong> menu for hundreds of quick LaTeX snippets!</p>
+                <p>Need flowcharts? Press the chart icon to instantly append robust Mindmaps, Sequence, or Flow charts
+                    directly into your markdown workspace.</p>
+            </div>
         </div>
     </div>
 
     <script>
         marked.setOptions({ gfm: true, breaks: true, headerIds: true });
         mermaid.initialize({ startOnLoad: false, theme: 'default' });
+
+        let currentLang = 'it';
+        const i18n = {
+            'it': {
+                'file': 'File',
+                'new': 'Nuovo',
+                'open': 'Apri...',
+                'save_as': 'Salva con nome...',
+                'export_pdf': 'Esporta PDF',
+                'export_html': 'Esporta HTML',
+                'export_md': 'Esporta Markdown (.md)',
+                'export_tex': 'Esporta LaTeX (.tex)',
+                'save_title': 'Salva Ora',
+                'saved_indicator': 'Salvato',
+                'find_label': 'Cerca:',
+                'replace_label': 'Sostituisci:',
+                'btn_replace': 'Sostituisci tutto',
+                'find_placeholder': 'Testo da cercare...',
+                'replace_placeholder': 'Sostituisci con...',
+                'diagram_title': 'Inserisci Diagramma',
+                'tooltip_bold': 'Grassetto (Ctrl+B)',
+                'tooltip_italic': 'Corsivo (Ctrl+I)',
+                'tooltip_underline': 'Sottolineato',
+                'tooltip_strikethrough': 'Barrato',
+                'status_ready': 'Pronto',
+                'placeholder': 'Scrivi qui... Usa $$ ... $$ per formule.',
+                'new_tab_name': 'Nuova Nota',
+                'tab_rename_prompt': 'Rinomina scheda:',
+                'tab_untitled': 'Senza nome',
+                'tab_close_confirm': "Chiudere l'ultima scheda?",
+                'btn_guida': 'Guida',
+                'btn_find': 'Cerca (Ctrl+F)',
+                'btn_toc': 'Genera Indice (TOC)'
+            },
+            'en': {
+                'file': 'File',
+                'new': 'New',
+                'open': 'Open...',
+                'save_as': 'Save as...',
+                'export_pdf': 'Export PDF',
+                'export_html': 'Export HTML',
+                'export_md': 'Export Markdown (.md)',
+                'export_tex': 'Export LaTeX (.tex)',
+                'save_title': 'Save Now',
+                'saved_indicator': 'Saved',
+                'find_label': 'Find:',
+                'replace_label': 'Replace:',
+                'btn_replace': 'Replace All',
+                'find_placeholder': 'Search text...',
+                'replace_placeholder': 'Replace with...',
+                'diagram_title': 'Insert Diagram',
+                'tooltip_bold': 'Bold (Ctrl+B)',
+                'tooltip_italic': 'Italic (Ctrl+I)',
+                'tooltip_underline': 'Underline',
+                'tooltip_strikethrough': 'Strikethrough',
+                'status_ready': 'Ready',
+                'placeholder': 'Type here... Use $$ ... $$ for math.',
+                'new_tab_name': 'New Note',
+                'tab_rename_prompt': 'Rename tab:',
+                'tab_untitled': 'Untitled',
+                'tab_close_confirm': "Close the last tab?",
+                'btn_guida': 'Help',
+                'btn_find': 'Find (Ctrl+F)',
+                'btn_toc': 'Generate TOC'
+            }
+        };
+
+        function getStr(key) {
+            return i18n[currentLang][key] || key;
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'it' ? 'en' : 'it';
+            document.getElementById('lang-label').textContent = currentLang.toUpperCase();
+            try { localStorage.setItem('minipad_lang', currentLang); } catch (e) { }
+            applyLanguage();
+            renderTabs(); // Redraw UI tabs
+        }
+
+        function applyLanguage() {
+            // Dropdowns
+            const fileMenu = document.getElementById('file-menu').children;
+            if (fileMenu.length > 5) {
+                fileMenu[0].textContent = getStr('new');
+                fileMenu[1].textContent = getStr('open');
+                fileMenu[3].textContent = getStr('save_as');
+                fileMenu[5].textContent = getStr('export_pdf');
+                fileMenu[6].textContent = getStr('export_html');
+                fileMenu[7].textContent = getStr('export_md');
+                fileMenu[8].textContent = getStr('export_tex');
+            }
+
+            // UI elements
+            const bFile = document.getElementById('file-btn').querySelector('span');
+            if (bFile) bFile.textContent = getStr('file');
+
+            const diagTitle = document.querySelector('#diagram-modal h2');
+            if (diagTitle) diagTitle.childNodes[0].nodeValue = getStr('diagram_title');
+
+            const sInd = document.getElementById('save-indicator');
+            if (sInd && sInd.textContent === i18n['it']['saved_indicator'] || sInd.textContent === i18n['en']['saved_indicator']) sInd.textContent = getStr('saved_indicator');
+
+            const btnGuida = document.getElementById('btn-guida');
+            if (btnGuida) btnGuida.title = getStr('btn_guida');
+            const btnFind = document.getElementById('btn-find');
+            if (btnFind) btnFind.title = getStr('btn_find');
+            const btnToc = document.getElementById('btn-toc');
+            if (btnToc) btnToc.title = getStr('btn_toc');
+
+            document.getElementById('editor').placeholder = getStr('placeholder');
+
+            // Find bar
+            document.getElementById('find-label').textContent = getStr('find_label');
+            document.getElementById('replace-label').textContent = getStr('replace_label');
+            document.getElementById('find-input').placeholder = getStr('find_placeholder');
+            document.getElementById('replace-input').placeholder = getStr('replace_placeholder');
+            document.getElementById('replace-btn').textContent = getStr('btn_replace');
+            const sLeft = document.getElementById('status-left');
+            if (sLeft.textContent === i18n['it']['status_ready'] || sLeft.textContent === i18n['en']['status_ready']) sLeft.textContent = getStr('status_ready');
+
+            const helpIt = document.getElementById('help-it');
+            const helpEn = document.getElementById('help-en');
+            if (helpIt && helpEn) {
+                if (currentLang === 'it') {
+                    helpIt.style.display = 'block';
+                    helpEn.style.display = 'none';
+                } else {
+                    helpIt.style.display = 'none';
+                    helpEn.style.display = 'block';
+                }
+            }
+        }
 
         let tabs = [];
         let activeTabId = null;
@@ -1753,6 +1872,13 @@
             initDiagramGrid();
             initTableGrid(); // New
 
+            try {
+                const savedLang = localStorage.getItem('minipad_lang');
+                if (savedLang === 'en' || savedLang === 'it') currentLang = savedLang;
+            } catch (e) { }
+            document.getElementById('lang-label').textContent = currentLang.toUpperCase();
+            applyLanguage();
+
             // PERSISTENCE FIX: Ensure we read from IndexedDB
             let savedData = null;
             try {
@@ -1776,10 +1902,10 @@
                     if (tabs.length === 0) throw new Error("No tabs");
                 } catch (e) {
                     // Fallback
-                    await createTab("Benvenuto", "# Benvenuto in Minipad\n\nScrivi qui...");
+                    await createTab(getStr('new_tab_name'), "# " + getStr('new_tab_name') + "\n\n" + getStr('placeholder'));
                 }
             } else {
-                await createTab("Benvenuto", "# Benvenuto in Minipad\n\n## Ripristinato\n\nFunzionalità pronte.");
+                await createTab(getStr('new_tab_name'), "# " + getStr('new_tab_name') + "\n\n" + getStr('placeholder'));
             }
 
             renderTabs();
@@ -2646,7 +2772,7 @@ ${c}
             await saveToStorage();
             switchTab(id);
         }
-        function newTab() { createTab("Nuova Nota", ""); toggleFileMenu(); }
+        function newTab() { createTab(getStr('new_tab_name'), ""); toggleFileMenu(); }
         function switchTab(id) {
             activeTabId = id;
             const tab = tabs.find(t => t.id === id);
@@ -2664,10 +2790,10 @@ ${c}
                 div.onclick = () => switchTab(tab.id);
                 const nameSpan = document.createElement('span');
                 nameSpan.textContent = tab.name;
-                nameSpan.title = 'Doppio click per rinominare';
+                nameSpan.title = getStr('tab_rename_prompt');
                 nameSpan.ondblclick = (e) => {
                     e.stopPropagation();
-                    const newName = prompt('Rinomina scheda:', tab.name);
+                    const newName = prompt(getStr('tab_rename_prompt'), tab.name);
                     if (newName && newName.trim()) {
                         tab.name = newName.trim().substring(0, 30);
                         saveToStorage();
@@ -2687,15 +2813,15 @@ ${c}
             const newBtn = document.createElement('div');
             newBtn.className = 'tab new-tab-btn';
             newBtn.innerHTML = '+';
-            newBtn.title = "Nuova Scheda";
+            newBtn.title = getStr('new_tab_name');
             newBtn.style.padding = "0 10px";
             newBtn.style.fontWeight = "bold";
-            newBtn.onclick = (e) => { e.stopPropagation(); createTab("Nuova Scheda", ""); };
+            newBtn.onclick = (e) => { e.stopPropagation(); createTab(getStr('new_tab_name'), ""); };
             container.appendChild(newBtn);
         }
         function closeTab(e, id) {
             e.stopPropagation();
-            if (tabs.length === 1) { if (!confirm("Chiudere l'ultima scheda?")) return; tabs[0].content = ""; tabs[0].name = "Senza nome"; switchTab(tabs[0].id); return; }
+            if (tabs.length === 1) { if (!confirm(getStr('tab_close_confirm'))) return; tabs[0].content = ""; tabs[0].name = getStr('tab_untitled'); switchTab(tabs[0].id); return; }
             tabs = tabs.filter(t => t.id !== id);
             saveToStorage();
             if (activeTabId === id) switchTab(tabs[tabs.length - 1].id);
@@ -2707,7 +2833,7 @@ ${c}
                 tab.content = document.getElementById('editor').value;
                 const lines = tab.content.split('\n');
                 for (let line of lines) if (line.trim().startsWith('#')) { tab.name = line.replace(/#/g, '').trim().substring(0, 20); break; }
-                if (!tab.name || tab.name === "") tab.name = lines[0].substring(0, 15) || "Senza nome";
+                if (!tab.name || tab.name === "") tab.name = lines[0].substring(0, 15) || getStr('tab_untitled');
             }
             clearTimeout(autoSaveTimeout);
             autoSaveTimeout = setTimeout(() => { saveToStorage(); showSavedIndicator(); }, 1000);
