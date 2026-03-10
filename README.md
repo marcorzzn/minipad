@@ -1,45 +1,43 @@
-# minipad 📝 / minipad 📝 (EN)
+# minipad 📝
+**minipad** è un editor di testo avanzato, gratuito e leggerissimo che gira interamente in locale nel tuo browser. Combina la semplicità di un blocco note con la potenza di **Markdown**, **LaTeX** e **Mermaid** per creare documenti ricchi, appunti matematici e diagrammi istantanei.
 
-**minipad** è un editor di testo avanzato che gira interamente nel browser. Combina la semplicità di un blocco note con la potenza di **Markdown**, **LaTeX** e **Mermaid** per creare documenti ricchi, appunti matematici e diagrammi in tempo reale.
+*🇬🇧 **minipad** is an advanced, free, and feather-light text editor that runs entirely locally within your browser. It combines the simplicity of a notepad with the power of Markdown, LaTeX, and Mermaid to create rich documents, math notes, and diagrams on the fly.*
 
-*🇬🇧 **minipad** is an advanced text editor that runs entirely within your browser. It combines the simplicity of a notepad with the power of Markdown, LaTeX, and Mermaid to create rich documents, math notes, and diagrams in real-time.*
+🔗 **[Prova la Demo Online / Try the Live Demo](https://tuo-username.github.io/minipad)** <!-- Sostituisci questo link al rilascio -->
 
-🔗 **[Prova la Demo Online / Try the Live Demo](https://tuo-username.github.io/minipad)** <!-- Sostituisci questo link una volta pubblicato -->
-
-![Anteprima Minipad](https://via.placeholder.com/800x400?text=Screenshot+Minipad) <!-- Puoi caricare uno screenshot qui -->
+![Anteprima Minipad](https://via.placeholder.com/800x400?text=Screenshot+Minipad)
 
 ## ✨ Funzionalità Principali / Main Features
 
-- 🌍 **Supporto Bilingue (IT/EN)**: Cambia lingua al volo con l'apposito pulsante in alto a destra. *(Bilingual Support: Switch language on the fly).*
-- 🔒 **100% Locale & Privacy-First**: Tutto funziona nel tuo browser. Nessun dato viene inviato a server esterni. *(Local & Privacy first: everything works in your browser without external servers).*
-- 📝 **Editor Markdown**: Formattazione veloce con anteprima live. *(Markdown Editor with live preview).*
-- 🧮 **Matematica Avanzata**: Supporto completo a **LaTeX** (formule, matrici, simboli) grazie a KaTeX, e pulsanti rapidi inserimento. *(Advanced Math with LaTeX support using KaTeX).*
-- 🤖 **Incolla dalle Intelligenze Artificiali**: Minipad formatta automaticamente il codice e le formule matematiche `\[ ... \]` incollate da ChatGPT, Gemini e Claude. *(AI Pasting: Minipad seamlessly reads LLM math blocks and auto-compiles them without syntax errors).*
-- 📊 **Diagrammi Integrati**: Crea grafici di flusso, diagrammi di sequenza e mentali usando la sintassi **Mermaid**. *(Built-in Mermaid Diagrams: create flowcharts, sequence and mindmaps).*
-- 🛠️ **Strumenti Visivi**: Toolbar intuitiva per inserire simboli, tabelle dinamiche espandibili, colori del testo e di sfondo e gestione indice automatica. *(Visual tools: intuitive toolbar for symbols, dynamic tables, text colors and auto TOC).*
-- 💾 **Export Multiplo**: Salva i tuoi documenti in **PDF**, **HTML**, **Markdown** o **LaTeX**. *(Multiple Export formats).*
-- 🔄 **Salvataggio & Tab Multipli**: I tuoi tab vengono salvati automaticamente nel browser tramite IndexedDB e persistono per non perdere nulla. *(Autosave & Multi-tabs: notes are saved via IndexedDB).*
-- 🧘 **Zen Mode / Dark Mode**: Concentrati completamente scrivendo con le viste dedicate (solo editor, anteprima o zen). *(Zen & Dark mode styles for max focus).*
+- 🌍 **Supporto Bilingue (IT/EN)**: Cambia lingua dell'interfaccia al volo con l'apposito pulsante in alto a destra. *(Bilingual Support: Switch UI language instantly on the fly).*
+- 🔒 **100% Locale & Privacy-First**: Minipad è completamente "serverless". Nessun dato viene mai inviato a server esterni; tutto funziona e si salva nel tuo browser offline. *(Local & Privacy first: serverless app, everything works and saves offline in your browser).*
+- 🤖 **Incolla Perfetto dalle AI (Copia & Incolla)**: Incolla risposte e testi generati dalle Intelligenze Artificiali (es. ChatGPT, Gemini, Claude). Minipad riconosce e renderizza automaticamente le espressioni matematiche esportate nei formati `\[ \]` e `\( \)`, mostrandoti subito la formula corretta senza farti impazzire tra sintassi rotte! *(AI Seamless Pasting: easily paste ChatGPT/Gemini/Claude answers and Minipad will automatically render mathematical expressions exported as `\[ \]` or `\( \)`).*
+- 📝 **Editor Markdown Completo**: Formattazione veloce, tabelle avanzate ed evidenziazione, affiancati a un'anteprima in tempo reale ultra veloce. *(Full Markdown Editor with live parsing and advanced tables).*
+- 🧮 **Matematica Avanzata e Simboli (LaTeX)**: Supporto nativo integrato a KaTeX. Usa i blocchi `$$ ... $$` o seleziona dal vasto menu a discesa per digitare matrici, frazioni ed equazioni senza sforzo. *(Advanced Math with LaTeX support using KaTeX).*
+- 📊 **Diagrammi Integrati**: Crea grafici di flusso, diagrammi di sequenza e mentali usando istantaneamente la sintassi testuale **Mermaid**. *(Built-in Mermaid Diagrams: create flowcharts, sequence and mindmaps from text).*
+- 💾 **Gestione File & Backup**: Puoi importare o esportare liberamente i file Markdown (.md), LaTeX (.tex) e HTML. Inoltre c'è un potente sistema di Backup/Ripristino per non perdere mai le tue sessioni su dispositivi diversi. *(File Management & Backup: export PDF, MD, HTML, TEX, and use the full JSON backup/restore tool).*
+- 🔄 **Salvataggio & Esplora Note**: Nessuna scheda persa! Puoi passare da una nota all'altra dalla pratica barra laterale (Sidebar). Il salvataggio dei tuoi documenti è automatico fin dal primo carattere (tramite IndexedDB). *(Autosave & Note Explorer: switch notes seamlessly from the sidebar).*
+- 🧘 **Interfaccia Zen & Temi Scuri**: Scegli tra la comoda Visualizzazione Divisa (Editor/Preview), oppure concentrati con la "Modalità Zen" a Schermo Intero. Disponibili i temi: Chiaro, Scuro, Sepia e Hacker. *(Zen Interface & Dark Themes: choose split view or Full-Screen Zen mode. Available themes: Default, Dark, Sepia, Hacker).*
 
 ## 🚀 Come Usarlo / How to Use
 
-Non serve installare nulla! *(No installation required!)*
+Non serve installare nulla, ma può essere installata come libreria desktop (PWA)! *(No installation required, but it works as an installable PWA!)*
 
-1.  Scarica il file `index.html`. *(Download the `index.html` file).*
-2.  Aprilo con qualsiasi browser moderno. *(Open it in any modern browser).*
-3.  Inizia a scrivere! *(Start writing!)*
+1.  Scarica il pacchetto e apri il file `index.html`. *(Download the package and open `index.html`).*
+2.  Oppure naviga all'indirizzo online e clicca su "Installa Minipad" dal menu **File** per averlo fisso sul dispositivo. *(Or navigate online and click "Install Minipad" from the File menu to have it on your device).*
+3.  Inizia a scrivere liberamente. *(Start writing freely).*
 
 ## 🛠️ Tecnologie Utilizzate / Stack
 
-Minipad è costruito con tecnologie web standard (HTML5, CSS3, Vanilla JS) e sfrutta potenti librerie open-source:
+Minipad è costruito con standard web ottimizzati all'osso e zero framework ingombranti (Solo HTML5, puro CSS, Vanilla JS), appoggiandosi a solide librerie open-source:
 
-*   [Marked.js](https://marked.js.org/) - Parsing Markdown
-*   [KaTeX](https://katex.org/) - Rendering formule matematiche
-*   [Mermaid.js](https://mermaid.js.org/) - Generazione diagrammi e grafici
-*   [DOMPurify](https://github.com/cure53/DOMPurify) - Sanitizzazione HTML per la sicurezza
+*   [Marked.js](https://marked.js.org/) - Parsing ultraveloce del Markdown
+*   [KaTeX](https://katex.org/) - Rendering iperveloce per le formule matematiche
+*   [Mermaid.js](https://mermaid.js.org/) - Generazione visuale di diagrammi e grafici logici 
+*   [DOMPurify](https://github.com/cure53/DOMPurify) - Sanitizzazione affidabile dell'HTML 
 *   [idb-keyval](https://github.com/jakearchibald/idb-keyval) - Salvataggio locale persistente / Persistent Local Storage
 
 ## 📄 Licenza / License
 
-Questo progetto è distribuito sotto licenza **MIT**. Sentiti libero di usarlo, modificarlo e condividerlo. *(MIT License).*
+Questo progetto è distribuito sotto licenza **MIT**. Sentiti libero di usarlo, studiarlo, modificarlo e condividerlo! *(MIT License).*
 Vedi il file [LICENSE](LICENSE) per maggiori dettagli.

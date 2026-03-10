@@ -3170,6 +3170,34 @@ ${c}
             if (activeTabId === id) switchNote(tabs[tabs.length - 1].id);
             else renderSidebar();
         }
+
+        // --- AI PASTE INTERCEPTOR ---
+        document.getElementById('editor').addEventListener('paste', function (e) {
+            let pasteText = (e.clipboardData || window.clipboardData).getData('text');
+
+            // Check if it contains typical AI math blocks \[ ... \] or \( ... \)
+            if (pasteText.includes('\\[') || pasteText.includes('\\(')) {
+                e.preventDefault();
+                // Replace block math \[ ... \] with $$ ... $$
+                pasteText = pasteText.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
+                // Replace inline math \( ... \) with $ ... $
+                pasteText = pasteText.replace(/\\\((.*?)\\\)/g, '$$$1$$');
+
+                const start = this.selectionStart;
+                const val = this.value;
+                this.value = val.substring(0, start) + pasteText + val.substring(this.selectionEnd);
+                this.selectionStart = this.selectionEnd = start + pasteText.length;
+                handleInput();
+
+                const indicator = document.getElementById('save-indicator');
+                const orig = indicator.getAttribute('data-original') || 'Salvato';
+                indicator.textContent = "AI Mod";
+                indicator.style.opacity = '1';
+                clearTimeout(window.saveIndicatorTimeout);
+                window.saveIndicatorTimeout = setTimeout(() => { indicator.style.opacity = '0'; setTimeout(() => indicator.textContent = orig, 300); }, 1500);
+            }
+        });
+
         function handleInput() {
             const tab = tabs.find(t => t.id === activeTabId);
             if (tab) {
