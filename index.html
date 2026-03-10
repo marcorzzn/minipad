@@ -1469,7 +1469,7 @@
     </div>
 
     <script>
-        marked.setOptions({ gfm: true, breaks: true, headerIds: true });
+        // marked.setOptions is removed because it causes errors in newer marked.js versions.
         mermaid.initialize({ startOnLoad: false, theme: 'default' });
 
         let currentLang = 'it';
@@ -2310,7 +2310,7 @@
             });
 
             // 3. Parse Markdown
-            let html = marked.parse(rawMarkdown);
+            let html = marked.parse(rawMarkdown, { gfm: true, breaks: true });
 
             // 4. Sanitize HTML
             html = DOMPurify.sanitize(html, {
@@ -3373,4 +3373,5 @@ ${c}
     </script>
 </body>
 
-</html><script>window.onerror = function(msg, url, line, col, error) { console.error("GLOBAL ERROR:", msg, line, col); fetch("http://localhost:5555/err?msg=" + encodeURIComponent(msg) + "&line=" + line); };</script>
+</html>
+<script>window.onerror = function (msg, url, line, col, error) { console.error("GLOBAL ERROR:", msg, line, col); fetch("http://localhost:5555/err?msg=" + encodeURIComponent(msg) + "&line=" + line); };</script>
