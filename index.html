@@ -52,7 +52,7 @@
             --shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
-        [data-theme="dark"] {
+        body.dark-mode {
             --bg-color: #202020;
             --sidebar-bg: #2d2d2d;
             --text-color: #ffffff;
@@ -63,7 +63,7 @@
             --math-btn-border: #555;
         }
 
-        [data-theme="sepia"] {
+        body[data-theme="sepia"] {
             --bg-color: #f4ecd8;
             --sidebar-bg: #eAddc5;
             --text-color: #433422;
@@ -74,7 +74,30 @@
             --math-btn-border: #c8b8a8;
         }
 
-        [data-theme="hacker"] {
+        body.dark-mode[data-theme="sepia"] {
+            --bg-color: #433422;
+            --sidebar-bg: #322618;
+            --text-color: #eAddc5;
+            --accent-color: #e38240;
+            --border-color: #554433;
+            --hover-color: rgba(234, 221, 197, 0.05);
+            --math-btn-bg: #443322;
+            --math-btn-border: #665544;
+        }
+
+        body[data-theme="hacker"] {
+            --bg-color: #f0fff0;
+            --sidebar-bg: #e0ffe0;
+            --text-color: #005500;
+            --accent-color: #008800;
+            --border-color: #c0ebc0;
+            --hover-color: rgba(0, 85, 0, 0.05);
+            --math-btn-bg: #e0ffe0;
+            --math-btn-border: #99d699;
+            --font-ui: 'Courier New', Courier, monospace;
+        }
+
+        body.dark-mode[data-theme="hacker"] {
             --bg-color: #0d1117;
             --sidebar-bg: #010409;
             --text-color: #00ff00;
@@ -105,8 +128,8 @@
         #main-container {
             display: flex;
             flex: 1;
-            height: calc(100vh - 40px);
-            /* Adjust based on titlebar */
+            min-height: 0;
+            /* Fixes whitespace overflow issues in flexbox */
             overflow: hidden;
         }
 
@@ -189,65 +212,19 @@
             visibility: hidden !important;
         }
 
-        /* --- TITLE BAR --- */
-        #titlebar {
-            height: 40px;
-            background: var(--bg-color);
+        /* --- TOOLBAR --- */
+        #toolbar {
             display: flex;
-            align-items: center;
-            padding: 0 12px 0 0;
+            flex-wrap: wrap;
+            background-color: var(--toolbar-bg);
             border-bottom: 1px solid var(--border-color);
-            font-size: 13px;
-            justify-content: space-between;
-            user-select: none;
-        }
-
-        .drag-region {
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            padding-left: 8px;
-            height: 100%;
-        }
-
-        .menu-btn {
-            background: transparent;
-            border: 1px solid transparent;
-            color: var(--text-color);
             padding: 4px 8px;
-            font-size: 13px;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
+            gap: 4px;
+            user-select: none;
+            overflow-x: auto;
             align-items: center;
-            height: 32px;
+            min-height: 38px;
         }
-
-        .menu-btn:hover {
-            background-color: var(--hover-color);
-        }
-
-        .icon-btn-title {
-            width: 32px;
-            height: 32px;
-            border: none;
-            background: transparent;
-            color: var(--text-color);
-            cursor: pointer;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .icon-btn-title:hover {
-            background-color: var(--hover-color);
-        }
-
-        .icon-btn-title svg {
-            width: 16px;
-            height: 16px;
-            stroke-width: 2;
         }
 
         /* Dropdowns generic styles */
@@ -871,14 +848,24 @@
         /* --- STATUS BAR --- */
         #statusbar {
             height: 22px;
-            background: var(--accent-color);
-            color: white;
+            background: #202020;
+            color: #ffffff;
             display: flex;
             align-items: center;
             padding: 0 15px;
             font-size: 11px;
             justify-content: space-between;
             opacity: 0.9;
+        }
+
+        body[data-theme="sepia"] #statusbar {
+            background: var(--accent-color);
+            color: #fff;
+        }
+
+        body[data-theme="hacker"] #statusbar {
+            background: var(--accent-color);
+            color: var(--bg-color);
         }
 
         /* --- GUIDA MODAL --- */
@@ -1020,10 +1007,8 @@
         }
 
         /* --- ZEN MODE --- */
-        body.zen-mode #titlebar,
         body.zen-mode #toolbar,
         body.zen-mode #math-toolbar,
-        body.zen-mode #tabs-container,
         body.zen-mode #statusbar {
             display: none !important;
         }
@@ -1159,11 +1144,14 @@
         </div>
     </div>
 
-    <!-- Title Bar -->
-    <header id="titlebar">
-        <div class="drag-region">
-            <button class="menu-btn" onclick="toggleSidebar()" title="Toggle Sidebar" style="margin-right: 8px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <!-- Formatting Toolbar (Merged File + Formatting) -->
+    <div id="toolbar">
+
+        <!-- File & Sidebar Group -->
+        <div class="tool-group" style="padding-left: 4px;">
+            <button class="menu-btn" onclick="toggleSidebar()" title="Esplora Note"
+                style="margin-right: 4px; padding: 4px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
                     <line x1="3" y1="6" x2="21" y2="6"></line>
                     <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -1197,13 +1185,10 @@
                 <!-- PWA Install Button -->
                 <div class="dropdown-divider" id="install-divider" style="display:none;"></div>
                 <div class="dropdown-item" id="install-btn"
-                    style="display:none; color:var(--accent-color); font-weight:bold;" onclick="installPWA()">
-                    <svg style="width:14px; height:14px; margin-right:6px; vertical-align:middle;" viewBox="0 0 24 24"
-                        fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>Installa Minipad
+                    style="display:none; color:var(--text-color); font-weight:bold;" onclick="installPWA()">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='4' width='20' height='24' rx='2' fill='%23fff' stroke='%23000' stroke-width='2'/%3E%3Crect x='10' y='10' width='12' height='2' rx='1' fill='%23000'/%3E%3Crect x='10' y='15' width='9' height='2' rx='1' fill='%23000'/%3E%3Crect x='10' y='20' width='10' height='2' rx='1' fill='%23000'/%3E%3C/svg%3E"
+                        style="width:16px; height:16px; margin-right:6px; vertical-align:middle; filter: invert(0);">
+                    minipad
                 </div>
 
                 <div class="dropdown-divider"></div>
@@ -1213,7 +1198,7 @@
                 <div class="dropdown-item" onclick="exportTEX()">Esporta LaTeX (.tex)</div>
             </div>
 
-            <button class="icon-btn-title" onclick="saveNow()" title="Salva Ora">
+            <button class="icon-btn-title" onclick="saveNow()" title="Salva Ora" style="margin-left: 2px;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
                     stroke-linejoin="round">
                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -1222,21 +1207,9 @@
                 </svg>
             </button>
 
-            <span id="save-indicator">Salvato</span>
+            <span id="save-indicator"
+                style="font-size: 11px; margin-left: 6px; opacity: 0; transition: opacity 0.3s;">Salvato</span>
         </div>
-
-        <!-- Window Controls -->
-        <div class="window-controls">
-            <div class="control-btn" onclick="toggleFullScreen()" title="Schermo Intero">
-                <svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                </svg>
-            </div>
-        </div>
-    </header>
-
-    <!-- Formatting Toolbar -->
-    <div id="toolbar">
         <!-- Fonts -->
         <div class="tool-group">
             <select class="tool-select" id="font-family" onchange="changeFont()">
@@ -1442,13 +1415,20 @@
                 style="padding: 0 4px;">
                 <strong style="font-size:12px; color:var(--text-color);" id="lang-label">IT</strong>
             </button>
-            <!-- Dark mode -->
-            <button class="format-btn" onclick="toggleDarkMode()" title="Tema Chiaro/Scuro" id="dark-toggle-btn">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 3a9 9 0 0 0 0 18c5 0 9-4 9-9a9 9 0 0 0-9-9zm0 2v14a7 7 0 0 1 0-14z" />
+            <!-- Dark mode toggle -->
+            <button class="format-btn" onclick="toggleDarkMode()" title="Modalità Scura" id="dark-toggle-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                 </svg>
             </button>
-            <button class="format-btn" onclick="toggleZenMode()" title="Zen Mode (Focus)">
+            <!-- Theme cycle -->
+            <button class="format-btn" onclick="cycleTheme()" title="Cambia Colori (Tema)" id="theme-toggle-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                        d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                </svg>
+            </button>
+            <button class="format-btn" onclick="toggleZenMode()" title="Schermo Intero (Zen)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path
                         d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
@@ -1486,11 +1466,21 @@
     <div id="main-container">
 
         <!-- SIDEBAR -->
-        <aside id="sidebar">
+        <aside id="sidebar" class="collapsed">
             <div class="sidebar-header">
-                <div style="font-weight:bold; font-size:14px;">Esplora Note</div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-weight:bold; font-size:14px;">Esplora Note</div>
+                    <button class="format-btn" onclick="newNote()" title="Nuova Nota"
+                        style="padding:2px; height:24px; min-width:24px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
                 <input type="text" id="sidebar-search" class="sidebar-search" placeholder="Cerca nota..."
-                    oninput="renderSidebar()">
+                    oninput="renderSidebar()" style="margin-top:6px;">
             </div>
             <div class="sidebar-content" id="sidebar-list">
                 <!-- Notes will be injected here -->
@@ -2743,7 +2733,10 @@
         try {
             const savedTheme = localStorage.getItem('minipad_theme');
             if (savedTheme) {
-                document.documentElement.setAttribute('data-theme', savedTheme);
+                document.body.setAttribute('data-theme', savedTheme);
+            }
+            if (localStorage.getItem('minipad_dark_mode') === 'true') {
+                document.body.classList.add('dark-mode');
             }
         } catch (e) { }
 
@@ -3058,11 +3051,13 @@ ${c}
         /* --- OLD FUNCTIONS REMOVED (Replaced above) --- */
 
         /* --- CORE NOTES LOGIC (SIDEBAR) --- */
-        let sidebarVisible = window.innerWidth > 768;
+        let sidebarVisible = false;
 
-        // Auto-collapse on load for mobile
+        // Auto-collapse on load
         window.addEventListener('DOMContentLoaded', () => {
-            if (!sidebarVisible) document.getElementById('sidebar').classList.add('collapsed');
+            if (!sidebarVisible && !document.getElementById('sidebar').classList.contains('collapsed')) {
+                document.getElementById('sidebar').classList.add('collapsed');
+            }
         });
 
         function toggleSidebar() {
@@ -3199,7 +3194,12 @@ ${c}
                 console.error("Save failed", e);
             }
         }
-        function showSavedIndicator() { const el = document.getElementById('save-indicator'); el.classList.add('visible'); setTimeout(() => el.classList.remove('visible'), 2000); }
+        function showSavedIndicator() {
+            const el = document.getElementById('save-indicator');
+            el.style.opacity = '1';
+            clearTimeout(window.saveIndicatorTimeout);
+            window.saveIndicatorTimeout = setTimeout(() => el.style.opacity = '0', 2000);
+        }
 
         function toggleView(mode) {
             const eP = document.getElementById('editor-pane');
@@ -3224,20 +3224,33 @@ ${c}
             if (activeBtn) activeBtn.style.background = 'var(--hover-color)';
         }
 
-        const availableThemes = ['', 'dark', 'sepia', 'hacker'];
+        const baseThemes = ['', 'sepia', 'hacker'];
         function toggleDarkMode() {
-            let current = document.documentElement.getAttribute('data-theme') || '';
-            let nextIndex = (availableThemes.indexOf(current) + 1) % availableThemes.length;
-            let nextTheme = availableThemes[nextIndex];
-            document.documentElement.setAttribute('data-theme', nextTheme);
-            try { localStorage.setItem('minipad_theme', nextTheme); } catch (e) { }
+            const isDark = document.body.classList.toggle('dark-mode');
+            try { localStorage.setItem('minipad_dark_mode', isDark); } catch (e) { }
+            showToast(`Modalità: ${isDark ? 'Scura' : 'Chiara'}`);
+        }
 
-            // Show toast
+        function cycleTheme() {
+            let current = document.body.getAttribute('data-theme') || '';
+            let nextIndex = (baseThemes.indexOf(current) + 1) % baseThemes.length;
+            let nextTheme = baseThemes[nextIndex];
+            document.body.setAttribute('data-theme', nextTheme);
+            try { localStorage.setItem('minipad_theme', nextTheme); } catch (e) { }
+            showToast(`Tema: ${nextTheme === '' ? 'Default' : nextTheme.charAt(0).toUpperCase() + nextTheme.slice(1)}`);
+        }
+
+        function showToast(msg) {
             const el = document.getElementById('save-indicator');
-            const original = el.textContent;
-            el.textContent = `Tema: ${nextTheme === '' ? 'Light' : nextTheme.charAt(0).toUpperCase() + nextTheme.slice(1)}`;
-            el.classList.add('visible');
-            setTimeout(() => { el.classList.remove('visible'); el.textContent = original; }, 1500);
+            const original = el.getAttribute('data-original') || 'Salvato';
+            if (!el.hasAttribute('data-original')) el.setAttribute('data-original', original);
+            el.textContent = msg;
+            el.style.opacity = '1';
+            clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => {
+                el.style.opacity = '0';
+                setTimeout(() => el.textContent = original, 300);
+            }, 1500);
         }
 
         function insertLink() {
@@ -3270,9 +3283,18 @@ ${c}
             const isZen = document.body.classList.toggle('zen-mode');
             if (isZen) {
                 document.documentElement.requestFullscreen().catch(() => { });
+            } else {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(() => { });
+                }
             }
-            // Do NOT exit fullscreen on zen-mode exit
         }
+
+        document.addEventListener("fullscreenchange", () => {
+            if (!document.fullscreenElement) {
+                document.body.classList.remove('zen-mode');
+            }
+        });
 
         function openHelp() {
             const m = document.getElementById('help-modal');
