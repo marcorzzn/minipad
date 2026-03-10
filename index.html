@@ -357,10 +357,19 @@
             border-bottom: 1px solid var(--border-color);
             background: var(--bg-color);
             gap: 4px;
-            flex-wrap: wrap;
-            /* Changed to wrap so it fits entirely on screen */
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scrollbar-width: none;
+            /* Firefox */
+            -ms-overflow-style: none;
+            /* IE/Edge */
             position: relative;
             flex-shrink: 0;
+        }
+
+        #toolbar::-webkit-scrollbar {
+            display: none;
+            /* Chrome/Safari */
         }
 
         .tool-group {
@@ -372,7 +381,7 @@
             height: 28px;
             position: relative;
             flex-shrink: 0;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
         }
 
         /* Last group shouldn't have border */
