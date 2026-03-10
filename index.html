@@ -131,11 +131,9 @@
 
         #main-container {
             display: flex;
-            flex: 1 1 100%;
-            /* Force fill */
+            flex: 1 1 0;
             min-height: 0;
             overflow: hidden;
-            width: 100%;
         }
 
         /* --- SIDEBAR EXPLORER --- */
@@ -202,6 +200,27 @@
         .sidebar-item-date {
             font-size: 10px;
             color: #888;
+        }
+
+        .sidebar-item-close {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #999;
+            font-size: 14px;
+            line-height: 1;
+            padding: 0 2px;
+            border-radius: 3px;
+        }
+
+        .sidebar-item:hover .sidebar-item-close {
+            display: inline-block;
+        }
+
+        .sidebar-item-close:hover {
+            background: rgba(200, 50, 50, 0.15);
+            color: #e00;
         }
 
         /* --- MERMAID ERROR SILENCING --- */
@@ -760,15 +779,14 @@
         #workspace-wrapper {
             display: flex;
             flex-direction: column;
-            flex: 1 1 100%;
-            height: 100%;
+            flex: 1 1 0;
+            min-height: 0;
             position: relative;
         }
 
         #workspace {
             display: flex;
-            flex: 1 1 100%;
-            height: 100%;
+            flex: 1 1 0;
             min-height: 0;
             overflow: hidden;
             position: relative;
@@ -1176,20 +1194,6 @@
                     <path d="M6 9l6 6 6-6" />
                 </svg>
             </button>
-
-
-
-            <button class="icon-btn-title" onclick="saveNow()" title="Salva Ora" style="margin-left: 2px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                    <polyline points="7 3 7 8 15 8"></polyline>
-                </svg>
-            </button>
-
-            <span id="save-indicator"
-                style="font-size: 11px; margin-left: 6px; opacity: 0; transition: opacity 0.3s;">Salvato</span>
         </div>
         <!-- Fonts -->
         <div class="tool-group">
@@ -1392,9 +1396,13 @@
 
     <!-- FILE DROPDOWN MENU -->
     <div id="file-menu" class="dropdown-menu">
-        <div class="dropdown-item" onclick="newNote(); closeAllMenus();">📄 Nuova Nota</div>
+        <div class="dropdown-item" onclick="newTab(); closeAllMenus();">📄 Nuova Scheda</div>
         <div class="dropdown-divider"></div>
         <div class="dropdown-item" onclick="exportMarkdown(); closeAllMenus();">⬇ Esporta .md</div>
+        <div class="dropdown-item" onclick="exportHTML();">⬇ Esporta .html</div>
+        <div class="dropdown-item" onclick="exportTXT();">⬇ Esporta .txt</div>
+        <div class="dropdown-item" onclick="exportTeX();">⬇ Esporta .tex (LaTeX)</div>
+        <div class="dropdown-divider"></div>
         <div class="dropdown-item" onclick="document.getElementById('import-file').click(); closeAllMenus();">⬆ Importa
             File</div>
         <div class="dropdown-divider"></div>
@@ -1441,12 +1449,12 @@
     <!-- MAIN CONTAINER -->
     <div id="main-container">
 
-        <!-- SIDEBAR -->
+        <!-- TABS SIDEBAR -->
         <aside id="sidebar" class="collapsed">
             <div class="sidebar-header">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-weight:bold; font-size:14px;">Esplora Note</div>
-                    <button class="format-btn" onclick="newNote()" title="Nuova Nota"
+                    <div style="font-weight:bold; font-size:13px; color:var(--text-color);">Schede aperte</div>
+                    <button class="format-btn" onclick="newTab()" title="Nuova Scheda"
                         style="padding:2px; height:24px; min-width:24px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
@@ -1455,18 +1463,14 @@
                         </svg>
                     </button>
                 </div>
-                <input type="text" id="sidebar-search" class="sidebar-search" placeholder="Cerca nota..."
-                    oninput="renderSidebar()" style="margin-top:6px;">
             </div>
-            <div class="sidebar-content" id="sidebar-list">
-                <!-- Notes will be injected here -->
+            <div class="sidebar-content" id="tabs-list">
+                <!-- Tab items injected by JS -->
             </div>
         </aside>
 
         <!-- WORKSPACE WRAPPER -->
         <div id="workspace-wrapper">
-            <!-- Tabs -->
-            <div id="tabs-container" style="display:none;"></div> <!-- Tabs logic handled differently now or hidden -->
 
             <!-- Workspace -->
             <div id="workspace">
@@ -3526,22 +3530,143 @@ ${c}
             });
         }
 
-        /* --- TABLE INSERT --- */
-        function insertTable(rows, cols) {
+        /* =====================================================
+           TABS SIDEBAR ADAPTER
+           Wraps existing createNote / switchNote / deleteNote
+           ===================================================== */
+        function newTab() {
+            // Use the existing createNote function with a default empty note
+            const name = 'Nota ' + (tabs.length + 1);
+            createNote(name, '').then(() => {
+                renderTabsList();
+            });
+        }
+
+        function switchTab(tabId) {
+            switchNote(tabId);
+            // renderTabsList() will be called after switchNote updates the editor
+            setTimeout(renderTabsList, 50);
+        }
+
+        function closeTab(tabId, event) {
+            if (event) event.stopPropagation();
+            if (tabs.length <= 1) {
+                // Clear the only tab instead of deleting it
+                document.getElementById('editor').value = '';
+                if (typeof updatePreview === 'function') updatePreview();
+                return;
+            }
+            deleteNote(tabId).then(() => renderTabsList());
+        }
+
+        function renderTabsList() {
+            const list = document.getElementById('tabs-list');
+            if (!list || !tabs) return;
+            const activeId = tabs.length > 0 ? tabs[tabs.length - 1]?.id : null;
+            // Find which tab is currently active in editor
+            const editorContent = document.getElementById('editor')?.value;
+            list.innerHTML = '';
+            tabs.forEach((tab) => {
+                const item = document.createElement('div');
+                // Determine active based on content match or last switch
+                const isActive = tab === tabs.find(t => t.content === editorContent) ||
+                    tab.id === window._activeTabId;
+                item.className = 'sidebar-item' + (isActive ? ' active' : '');
+                item.onclick = () => switchTab(tab.id);
+
+                const nameEl = document.createElement('span');
+                nameEl.textContent = tab.name || tab.title || 'Nota';
+                nameEl.style.cssText = 'flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'sidebar-item-close';
+                closeBtn.innerHTML = '&times;';
+                closeBtn.title = 'Chiudi scheda';
+                closeBtn.onclick = (e) => closeTab(tab.id, e);
+
+                item.appendChild(nameEl);
+                item.appendChild(closeBtn);
+                list.appendChild(item);
+            });
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+            sidebar.classList.toggle('collapsed');
+        }
+
+        /* =====================================================
+           EXPORT FORMATS
+           ===================================================== */
+        function exportHTML() {
             const editor = document.getElementById('editor');
-            if (!editor) return;
-            // Build a markdown table
-            const headerRow = '| ' + Array(cols).fill('Intestazione').join(' | ') + ' |';
-            const separatorRow = '| ' + Array(cols).fill('---').join(' | ') + ' |';
-            const dataRows = Array(rows - 1).fill(null).map(() =>
-                '| ' + Array(cols).fill('     ').join(' | ') + ' |'
-            );
-            const table = '\n' + [headerRow, separatorRow, ...dataRows].join('\n') + '\n';
-            const start = editor.selectionStart;
-            editor.value = editor.value.substring(0, start) + table + editor.value.substring(editor.selectionEnd);
-            editor.selectionStart = editor.selectionEnd = start + table.length;
-            editor.focus();
-            updatePreview();
+            const md = editor ? editor.value : '';
+            // Use marked if available, otherwise wrap in <pre>
+            let html = '';
+            if (typeof marked !== 'undefined') {
+                html = `<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="UTF-8"><title>Minipad Export</title>
+<style>body{font-family:system-ui,sans-serif;max-width:800px;margin:2em auto;line-height:1.6;padding:0 1em}
+pre{background:#f4f4f4;padding:1em;border-radius:4px;overflow:auto}
+blockquote{border-left:4px solid #ccc;margin:0;padding-left:1em;color:#555}
+table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px}th{background:#f0f0f0}
+</style></head>
+<body>${marked.parse(md)}</body>
+</html>`;
+            } else {
+                html = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><pre>${md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre></body></html>`;
+            }
+            const blob = new Blob([html], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = (tabs[activeTabIndex]?.title || 'nota').replace(/\s+/g, '_') + '.html';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            closeAllMenus?.();
+        }
+
+        function exportTXT() {
+            const editor = document.getElementById('editor');
+            const content = editor ? editor.value : '';
+            const blob = new Blob([content], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = (tabs[activeTabIndex]?.title || 'nota').replace(/\s+/g, '_') + '.txt';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            closeAllMenus?.();
+        }
+
+        function exportTeX() {
+            const editor = document.getElementById('editor');
+            const md = editor ? editor.value : '';
+            // Basic Markdown → LaTeX conversion
+            let tex = md
+                .replace(/^# (.+)$/gm, '\\section{$1}')
+                .replace(/^## (.+)$/gm, '\\subsection{$1}')
+                .replace(/^### (.+)$/gm, '\\subsubsection{$1}')
+                .replace(/\*\*(.+?)\*\*/g, '\\textbf{$1}')
+                .replace(/\*(.+?)\*/g, '\\textit{$1}')
+                .replace(/`(.+?)`/g, '\\texttt{$1}')
+                .replace(/\$\$(.+?)\$\$/gs, '\\[\n$1\n\\]')
+                .replace(/\$(.+?)\$/g, '$$$1$$');
+            const full = `\\documentclass{article}
+\\usepackage[utf8]{inputenc}
+\\usepackage{amsmath, amssymb}
+\\begin{document}
+
+${tex}
+
+\\end{document}`;
+            const blob = new Blob([full], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = (tabs[activeTabIndex]?.title || 'nota').replace(/\s+/g, '_') + '.tex';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            closeAllMenus?.();
         }
     </script>
 </body>
