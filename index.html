@@ -125,8 +125,14 @@
             font-family: var(--font-ui);
             background-color: var(--bg-color);
             color: var(--text-color);
+        }
+
+        #app-root {
             display: flex;
             flex-direction: column;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
         }
 
         #main-container {
@@ -897,66 +903,6 @@
             color: var(--bg-color);
         }
 
-        /* --- GUIDA MODAL --- */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: var(--bg-color);
-            padding: 20px;
-            border-radius: 8px;
-            width: 700px;
-            max-width: 90%;
-            max-height: 85vh;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            font-size: 13px;
-        }
-
-        .modal h2 {
-            margin-top: 0;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-        }
-
-        .modal table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        .modal th,
-        .modal td {
-            border: 1px solid var(--border-color);
-            padding: 8px;
-            text-align: left;
-            vertical-align: top;
-        }
-
-        .modal code {
-            background: rgba(0, 0, 0, 0.05);
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-
-        .close-modal {
-            float: right;
-            cursor: pointer;
-            font-size: 24px;
-            font-weight: bold;
-            line-height: 20px;
-        }
-
         /* Print */
         @media print {
 
@@ -1067,75 +1013,6 @@
             display: flex;
         }
 
-        /* --- PRINT CSS OPTIMIZATION FOR NATIVE PDF --- */
-        @media print {
-            body {
-                background: white !important;
-                color: black !important;
-                margin: 0;
-                padding: 0;
-                display: block;
-                overflow: visible;
-            }
-
-            #titlebar,
-            #sidebar,
-            #toolbar,
-            #statusbar,
-            .dropdown-menu,
-            .modal,
-            .zen-btn,
-            #editor-pane,
-            .tab-bar,
-            .resize-handle {
-                display: none !important;
-            }
-
-            #main-container,
-            #workspace-wrapper,
-            #workspace {
-                height: auto !important;
-                overflow: visible !important;
-                display: block !important;
-            }
-
-            #preview-pane {
-                width: 100% !important;
-                padding: 0 !important;
-                background: white !important;
-                border: none !important;
-                overflow: visible !important;
-                box-shadow: none !important;
-            }
-
-            #preview-content {
-                padding: 2cm !important;
-                max-width: 100% !important;
-                margin: 0 !important;
-                box-shadow: none !important;
-                font-size: 12pt;
-            }
-
-            /* Page breaks */
-            h1,
-            h2 {
-                page-break-before: auto;
-                page-break-after: avoid;
-            }
-
-            pre,
-            blockquote,
-            img,
-            table {
-                page-break-inside: avoid;
-            }
-
-            a {
-                text-decoration: none !important;
-                color: black !important;
-            }
-        }
-
         /* --- MOBILE RESPONSIVENESS AND SIDEBAR --- */
         @media (max-width: 768px) {
             #sidebar {
@@ -1173,331 +1050,338 @@
         </div>
     </div>
 
-    <!-- Formatting Toolbar (Merged File + Formatting) -->
-    <div id="toolbar">
+    <div id="app-root">
+        <!-- Formatting Toolbar (Merged File + Formatting) -->
+        <div id="toolbar">
 
-        <!-- File & Sidebar Group -->
-        <div class="tool-group" style="padding-left: 4px;">
-            <button class="menu-btn" onclick="toggleSidebar()" title="Esplora Note"
-                style="margin-right: 4px; padding: 4px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-            </button>
-            <button class="menu-btn" id="file-btn" onclick="toggleFileMenu(event)">
-                <span style="margin-right:4px;">File</span>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M6 9l6 6 6-6" />
-                </svg>
-            </button>
+            <!-- File & Sidebar Group -->
+            <div class="tool-group" style="padding-left: 4px;">
+                <button class="menu-btn" onclick="toggleSidebar()" title="Esplora Note"
+                    style="margin-right: 4px; padding: 4px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <button class="menu-btn" id="file-btn" onclick="toggleFileMenu(event)">
+                    <span style="margin-right:4px;">File</span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6" />
+                    </svg>
+                </button>
+            </div>
+            <!-- Fonts -->
+            <div class="tool-group">
+                <select class="tool-select" id="font-family" onchange="changeFont()">
+                    <option value="'Segoe UI', sans-serif" selected>Segoe UI</option>
+                    <option value="'Arial', sans-serif">Arial</option>
+                    <option value="'Verdana', sans-serif">Verdana</option>
+                    <option value="'Georgia', serif">Georgia</option>
+                    <option value="'Consolas', monospace">Consolas</option>
+                    <option value="'Courier New', monospace">Courier New</option>
+                    <option value="'Roboto', sans-serif">Roboto</option>
+                    <option value="'Monaco', monospace">Monaco</option>
+                </select>
+                <input type="number" id="font-size" class="number-input" value="14" min="8" max="72"
+                    onchange="changeFontSize()">
+            </div>
+
+            <!-- Basic Format -->
+            <div class="tool-group">
+                <button class="format-btn" onclick="insertMarkdown('**', '**')"
+                    title="Grassetto (Ctrl+B)"><strong>B</strong></button>
+                <button class="format-btn" onclick="insertMarkdown('*', '*')"
+                    title="Corsivo (Ctrl+I)"><em>I</em></button>
+                <button class="format-btn" onclick="insertMarkdown('<u>', '</u>')"
+                    title="Sottolineato"><u>U</u></button>
+                <button class="format-btn" onclick="insertMarkdown('~~', '~~')" title="Barrato"><s>S</s></button>
+                <button class="format-btn" onclick="insertMarkdown('<sup>', '</sup>')" title="Apice"
+                    style="font-size:11px;">x²</button>
+                <button class="format-btn" onclick="insertMarkdown('<sub>', '</sub>')" title="Pedice"
+                    style="font-size:11px;">x₂</button>
+            </div>
+
+            <!-- Colors -->
+            <div class="tool-group" onmousedown="saveSelection()">
+                <button class="format-btn" onclick="document.getElementById('text-color-picker').click()"
+                    title="Colore Testo">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 20h16" />
+                        <path d="M12 4l-6 13h12L12 4z" />
+                        <path d="M12 15h0" stroke-width="4" stroke="var(--accent-color)" />
+                    </svg>
+                </button>
+                <input type="color" id="text-color-picker" style="display:none"
+                    onchange="insertColor('color', this.value)" value="#000000">
+
+                <button class="format-btn" onclick="document.getElementById('bg-color-picker').click()"
+                    title="Evidenziatore">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15.24 6.36l-3.53-3.53a2 2 0 0 0-2.83 0l-7.79 7.79a2 2 0 0 0 0 2.83L6.36 18.76" />
+                        <path d="M12.41 9.19l3.54 3.54" />
+                        <path d="M14 18h6v2h-6z" />
+                        <path d="M9.19 12.41l-2.43 2.43" />
+                    </svg>
+                </button>
+                <input type="color" id="bg-color-picker" style="display:none"
+                    onchange="insertColor('background-color', this.value)" value="#ffff00">
+            </div>
+
+            <!-- Headings Flat -->
+            <div class="tool-group">
+                <button class="format-btn" onclick="applyHeading(1)" title="Titolo H1"><strong
+                        style="font-size:14px">H1</strong></button>
+                <button class="format-btn" onclick="applyHeading(2)" title="Titolo H2"><strong
+                        style="font-size:13px">H2</strong></button>
+                <button class="format-btn" onclick="applyHeading(3)" title="Titolo H3"><strong
+                        style="font-size:12px">H3</strong></button>
+                <button class="format-btn" onclick="applyHeading(0)" title="Paragrafo Normale"
+                    style="font-size:11px;">¶</button>
+            </div>
+
+            <!-- Lists Flat -->
+            <div class="tool-group">
+                <button class="format-btn" onclick="applyList('- ')" title="Elenco Puntato (•)">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;">
+                        <circle cx="5" cy="6" r="2" />
+                        <circle cx="5" cy="12" r="2" />
+                        <circle cx="5" cy="18" r="2" />
+                        <line x1="11" y1="6" x2="22" y2="6" stroke="currentColor" stroke-width="2.5" />
+                        <line x1="11" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2.5" />
+                        <line x1="11" y1="18" x2="22" y2="18" stroke="currentColor" stroke-width="2.5" />
+                    </svg>
+                    <span style="font-size:9px;margin-left:1px;">•—</span>
+                </button>
+                <button class="format-btn" onclick="applyList('1. ')" title="Elenco Numerato (1. 2. 3.)"
+                    style="font-size:10px; letter-spacing:-0.5px;">1.<br>2.</button>
+                <button class="format-btn" onclick="applyList('- [ ] ')" title="Checklist (☐)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        style="width:14px;height:14px;">
+                        <rect x="3" y="3" width="18" height="18" rx="3" />
+                        <path d="M7 12l4 4 6-6" />
+                    </svg>
+                    <span style="font-size:9px;margin-left:1px;">☐</span>
+                </button>
+            </div>
+
+            <!-- MATH SECTION -->
+            <div class="tool-group">
+                <!-- Pulsante equazione a blocco -->
+                <button class="format-btn" onclick="insertFormulaBlock()" title="Blocco Equazione ($$)">
+                    <strong style="font-family: 'Times New Roman', serif; font-size: 14px; line-height:1;">$$</strong>
+                </button>
+                <button class="format-btn" onclick="toggleMathBar()" title="Tavolozza Simboli Matematici">
+                    <span style="font-family: 'Times New Roman', serif; font-size: 17px; line-height:1;">&pi;▾</span>
+                </button>
+            </div>
+
+            <!-- Extra Markdown -->
+            <div class="tool-group">
+                <button class="format-btn" onclick="insertMarkdown('> ', '')" title="Citazione Blockquote">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;">
+                        <path
+                            d="M3 21v-5a4 4 0 0 1 4-4h1V8a4 4 0 0 1 4-4h1v6h-1a2 2 0 0 0-2 2v5H3zm10 0v-5a4 4 0 0 1 4-4h1V8a4 4 0 0 0-1-3V3h1a4 4 0 0 1 4 4v4h-1a2 2 0 0 0-2 2v5h-6z" />
+                    </svg>
+                    <span style="font-size:9px;margin-left:1px;">❝</span>
+                </button>
+                <button class="format-btn" onclick="insertHR()" title="Separatore Orizzontale (---)"
+                    style="font-size:10px;">─ HR</button>
+                <button class="format-btn" onclick="insertLink()" title="Inserisci Link (Ctrl+K)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="width:14px;height:14px;">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                    <span style="font-size:9px;margin-left:1px;">URL</span>
+                </button>
+                <button class="format-btn" onclick="insertMarkdown('\n```\n', '\n```\n')" title="Blocco di Codice (```)"
+                    style="font-size:10px; letter-spacing:-1px;">&lt;/&gt;</button>
+
+                <!-- Separator -->
+                <div style="width:1px; height:20px; background:var(--border-color); margin:0 4px;"></div>
+
+                <!-- Tables -->
+                <button id="table-menu-btn" class="format-btn" onclick="toggleTableMenu(event)"
+                    title="Inserisci Tabella">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <line x1="3" y1="9" x2="21" y2="9" />
+                        <line x1="3" y1="15" x2="21" y2="15" />
+                        <line x1="9" y1="3" x2="9" y2="21" />
+                        <line x1="15" y1="3" x2="15" y2="21" />
+                    </svg>
+                    <span style="font-size:10px; margin-left:2px;">Tab</span>
+                </button>
+            </div>
+
+            <!-- Help Button (Aligned rightmost but part of flow? Or separate? User said "close to other buttons") -->
+            <!-- We'll keep it as a tool group but maybe push it to the end OR just keep it in line. User requested all aligned left to right. -->
+            <!-- Help & View Controls -->
+            <div class="tool-group" style="border-right: none;">
+                <!-- View toggles -->
+                <button class="format-btn" onclick="toggleView('editor')" title="Solo Editor" id="view-editor-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="10" height="18" rx="1" />
+                    </svg>
+                </button>
+                <button class="format-btn" onclick="toggleView('split')" title="Vista Divisa" id="view-split-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="1" />
+                        <line x1="12" y1="3" x2="12" y2="21" />
+                    </svg>
+                </button>
+                <button class="format-btn" onclick="toggleView('preview')" title="Solo Anteprima" id="view-preview-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="11" y="3" width="10" height="18" rx="1" />
+                    </svg>
+                </button>
+                <!-- Help, Find, TOC -->
+                <button class="format-btn" onclick="openHelp()" title="Guida" id="btn-guida"><strong>?</strong></button>
+                <button class="format-btn" onclick="toggleFindBar()" title="Cerca (Ctrl+F)" style="font-size:10px;"
+                    id="btn-find">🔍</button>
+                <button class="format-btn" onclick="generateTOC()" title="Genera Indice (TOC)" style="font-size:10px;"
+                    id="btn-toc">📑</button>
+
+                <!-- Separator -->
+                <div style="width:1px; height:20px; background:var(--border-color); margin:0 4px;"></div>
+
+                <!-- System Toggles (Lang, Theme, Focus) -->
+                <button class="format-btn" onclick="toggleLanguage()" title="Lingua / Language" id="lang-toggle-btn"
+                    style="padding: 0 4px;">
+                    <strong style="font-size:12px; color:var(--text-color);" id="lang-label">IT</strong>
+                </button>
+                <!-- Dark mode toggle -->
+                <button class="format-btn" onclick="toggleDarkMode()" title="Modalità Scura" id="dark-toggle-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <!-- Theme cycle -->
+                <button class="format-btn" onclick="cycleTheme()" title="Cambia Colori (Tema)" id="theme-toggle-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                    </svg>
+                </button>
+                <button class="format-btn" onclick="toggleZenMode()" title="Schermo Intero (Zen)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                    </svg>
+                </button>
+            </div>
         </div>
-        <!-- Fonts -->
-        <div class="tool-group">
-            <select class="tool-select" id="font-family" onchange="changeFont()">
-                <option value="'Segoe UI', sans-serif" selected>Segoe UI</option>
-                <option value="'Arial', sans-serif">Arial</option>
-                <option value="'Verdana', sans-serif">Verdana</option>
-                <option value="'Georgia', serif">Georgia</option>
-                <option value="'Consolas', monospace">Consolas</option>
-                <option value="'Courier New', monospace">Courier New</option>
-                <option value="'Roboto', sans-serif">Roboto</option>
-                <option value="'Monaco', monospace">Monaco</option>
-            </select>
-            <input type="number" id="font-size" class="number-input" value="14" min="8" max="72"
-                onchange="changeFontSize()">
+
+        <!-- FILE DROPDOWN MENU -->
+        <div id="file-menu" class="dropdown-menu">
+            <div class="dropdown-item" onclick="newNote(); closeAllMenus();">📄 Nuova Scheda</div>
+            <div class="dropdown-item" onclick="saveNow(); closeAllMenus();">💾 Salva (Ctrl+S)</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" onclick="exportMarkdown(); closeAllMenus();">⬇ Esporta .md</div>
+            <div class="dropdown-item" onclick="exportHTML();">⬇ Esporta .html</div>
+            <div class="dropdown-item" onclick="exportTXT();">⬇ Esporta .txt</div>
+            <div class="dropdown-item" onclick="exportTeX();">⬇ Esporta .tex (LaTeX)</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" onclick="document.getElementById('import-file').click(); closeAllMenus();">⬆
+                Importa
+                File</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" onclick="exportBackup(); closeAllMenus();">💾 Backup JSON</div>
+            <div class="dropdown-item" onclick="document.getElementById('import-backup').click(); closeAllMenus();">📥
+                Ripristina Backup</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" onclick="window.print(); closeAllMenus();">🖨 Stampa / Esporta PDF</div>
         </div>
 
-        <!-- Basic Format -->
-        <div class="tool-group">
-            <button class="format-btn" onclick="insertMarkdown('**', '**')"
-                title="Grassetto (Ctrl+B)"><strong>B</strong></button>
-            <button class="format-btn" onclick="insertMarkdown('*', '*')" title="Corsivo (Ctrl+I)"><em>I</em></button>
-            <button class="format-btn" onclick="insertMarkdown('<u>', '</u>')" title="Sottolineato"><u>U</u></button>
-            <button class="format-btn" onclick="insertMarkdown('~~', '~~')" title="Barrato"><s>S</s></button>
-            <button class="format-btn" onclick="insertMarkdown('<sup>', '</sup>')" title="Apice"
-                style="font-size:11px;">x²</button>
-            <button class="format-btn" onclick="insertMarkdown('<sub>', '</sub>')" title="Pedice"
-                style="font-size:11px;">x₂</button>
+        <!-- TABLE DROPDOWN MENU -->
+        <div id="table-menu" class="dropdown-menu">
+            <div class="dropdown-item" onclick="insertTable(2,2); closeAllMenus();">2×2 Tabella</div>
+            <div class="dropdown-item" onclick="insertTable(3,3); closeAllMenus();">3×3 Tabella</div>
+            <div class="dropdown-item" onclick="insertTable(4,4); closeAllMenus();">4×4 Tabella</div>
+            <div class="dropdown-item" onclick="insertTable(3,5); closeAllMenus();">3×5 Tabella</div>
         </div>
 
-        <!-- Colors -->
-        <div class="tool-group" onmousedown="saveSelection()">
-            <button class="format-btn" onclick="document.getElementById('text-color-picker').click()"
-                title="Colore Testo">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 20h16" />
-                    <path d="M12 4l-6 13h12L12 4z" />
-                    <path d="M12 15h0" stroke-width="4" stroke="var(--accent-color)" />
-                </svg>
-            </button>
-            <input type="color" id="text-color-picker" style="display:none" onchange="insertColor('color', this.value)"
-                value="#000000">
-
-            <button class="format-btn" onclick="document.getElementById('bg-color-picker').click()"
-                title="Evidenziatore">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M15.24 6.36l-3.53-3.53a2 2 0 0 0-2.83 0l-7.79 7.79a2 2 0 0 0 0 2.83L6.36 18.76" />
-                    <path d="M12.41 9.19l3.54 3.54" />
-                    <path d="M14 18h6v2h-6z" />
-                    <path d="M9.19 12.41l-2.43 2.43" />
-                </svg>
-            </button>
-            <input type="color" id="bg-color-picker" style="display:none"
-                onchange="insertColor('background-color', this.value)" value="#ffff00">
+        <!-- FIND/REPLACE BAR -->
+        <div id="find-bar"
+            style="display:none; background:var(--toolbar-bg); border-bottom:1px solid var(--border-color); padding:6px 12px; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px;">
+            <label style="font-weight:600;">Cerca:</label>
+            <input type="text" id="find-input" placeholder="Testo da cercare..." oninput="highlightFind()"
+                style="padding:3px 7px; border:1px solid var(--border-color); border-radius:3px; background:var(--bg-color); color:var(--text-color); min-width:160px;">
+            <label>Sostituisci:</label>
+            <input type="text" id="replace-input" placeholder="Sostituisci con..."
+                style="padding:3px 7px; border:1px solid var(--border-color); border-radius:3px; background:var(--bg-color); color:var(--text-color); min-width:140px;">
+            <button onclick="findAndReplace()"
+                style="padding:3px 10px; background:var(--accent-color); color:white; border:none; border-radius:3px; cursor:pointer; font-size:11px;">Sostituisci
+                tutto</button>
+            <span id="find-count" style="color:#888; font-size:11px;"></span>
+            <button onclick="closeFindBar()"
+                style="margin-left:auto; background:none; border:none; cursor:pointer; font-size:16px; color:#888;">&times;</button>
         </div>
 
-        <!-- Headings Flat -->
-        <div class="tool-group">
-            <button class="format-btn" onclick="applyHeading(1)" title="Titolo H1"><strong
-                    style="font-size:14px">H1</strong></button>
-            <button class="format-btn" onclick="applyHeading(2)" title="Titolo H2"><strong
-                    style="font-size:13px">H2</strong></button>
-            <button class="format-btn" onclick="applyHeading(3)" title="Titolo H3"><strong
-                    style="font-size:12px">H3</strong></button>
-            <button class="format-btn" onclick="applyHeading(0)" title="Paragrafo Normale"
-                style="font-size:11px;">¶</button>
+        <!-- MATH TOOLBAR -->
+        <div id="math-toolbar">
+            <div class="math-tabs" id="math-tabs-container"></div>
+            <div class="math-content">
+                <div class="math-grid" id="math-grid"></div>
+            </div>
         </div>
 
-        <!-- Lists Flat -->
-        <div class="tool-group">
-            <button class="format-btn" onclick="applyList('- ')" title="Elenco Puntato (•)">
-                <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;">
-                    <circle cx="5" cy="6" r="2" />
-                    <circle cx="5" cy="12" r="2" />
-                    <circle cx="5" cy="18" r="2" />
-                    <line x1="11" y1="6" x2="22" y2="6" stroke="currentColor" stroke-width="2.5" />
-                    <line x1="11" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2.5" />
-                    <line x1="11" y1="18" x2="22" y2="18" stroke="currentColor" stroke-width="2.5" />
-                </svg>
-                <span style="font-size:9px;margin-left:1px;">•—</span>
-            </button>
-            <button class="format-btn" onclick="applyList('1. ')" title="Elenco Numerato (1. 2. 3.)"
-                style="font-size:10px; letter-spacing:-0.5px;">1.<br>2.</button>
-            <button class="format-btn" onclick="applyList('- [ ] ')" title="Checklist (☐)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                    style="width:14px;height:14px;">
-                    <rect x="3" y="3" width="18" height="18" rx="3" />
-                    <path d="M7 12l4 4 6-6" />
-                </svg>
-                <span style="font-size:9px;margin-left:1px;">☐</span>
-            </button>
-        </div>
+        <!-- MAIN CONTAINER -->
+        <div id="main-container">
 
-        <!-- MATH SECTION -->
-        <div class="tool-group">
-            <!-- Pulsante equazione a blocco -->
-            <button class="format-btn" onclick="insertFormulaBlock()" title="Blocco Equazione ($$)">
-                <strong style="font-family: 'Times New Roman', serif; font-size: 14px; line-height:1;">$$</strong>
-            </button>
-            <button class="format-btn" onclick="toggleMathBar()" title="Tavolozza Simboli Matematici">
-                <span style="font-family: 'Times New Roman', serif; font-size: 17px; line-height:1;">&pi;▾</span>
-            </button>
-        </div>
-
-        <!-- Extra Markdown -->
-        <div class="tool-group">
-            <button class="format-btn" onclick="insertMarkdown('> ', '')" title="Citazione Blockquote">
-                <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;">
-                    <path
-                        d="M3 21v-5a4 4 0 0 1 4-4h1V8a4 4 0 0 1 4-4h1v6h-1a2 2 0 0 0-2 2v5H3zm10 0v-5a4 4 0 0 1 4-4h1V8a4 4 0 0 0-1-3V3h1a4 4 0 0 1 4 4v4h-1a2 2 0 0 0-2 2v5h-6z" />
-                </svg>
-                <span style="font-size:9px;margin-left:1px;">❝</span>
-            </button>
-            <button class="format-btn" onclick="insertHR()" title="Separatore Orizzontale (---)"
-                style="font-size:10px;">─ HR</button>
-            <button class="format-btn" onclick="insertLink()" title="Inserisci Link (Ctrl+K)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    style="width:14px;height:14px;">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                </svg>
-                <span style="font-size:9px;margin-left:1px;">URL</span>
-            </button>
-            <button class="format-btn" onclick="insertMarkdown('\n```\n', '\n```\n')" title="Blocco di Codice (```)"
-                style="font-size:10px; letter-spacing:-1px;">&lt;/&gt;</button>
-
-            <!-- Separator -->
-            <div style="width:1px; height:20px; background:var(--border-color); margin:0 4px;"></div>
-
-            <!-- Tables -->
-            <button id="table-menu-btn" class="format-btn" onclick="toggleTableMenu(event)" title="Inserisci Tabella">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <line x1="3" y1="9" x2="21" y2="9" />
-                    <line x1="3" y1="15" x2="21" y2="15" />
-                    <line x1="9" y1="3" x2="9" y2="21" />
-                    <line x1="15" y1="3" x2="15" y2="21" />
-                </svg>
-                <span style="font-size:10px; margin-left:2px;">Tab</span>
-            </button>
-        </div>
-
-        <!-- Help Button (Aligned rightmost but part of flow? Or separate? User said "close to other buttons") -->
-        <!-- We'll keep it as a tool group but maybe push it to the end OR just keep it in line. User requested all aligned left to right. -->
-        <!-- Help & View Controls -->
-        <div class="tool-group" style="border-right: none;">
-            <!-- View toggles -->
-            <button class="format-btn" onclick="toggleView('editor')" title="Solo Editor" id="view-editor-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="10" height="18" rx="1" />
-                </svg>
-            </button>
-            <button class="format-btn" onclick="toggleView('split')" title="Vista Divisa" id="view-split-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="18" height="18" rx="1" />
-                    <line x1="12" y1="3" x2="12" y2="21" />
-                </svg>
-            </button>
-            <button class="format-btn" onclick="toggleView('preview')" title="Solo Anteprima" id="view-preview-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="11" y="3" width="10" height="18" rx="1" />
-                </svg>
-            </button>
-            <!-- Help, Find, TOC -->
-            <button class="format-btn" onclick="openHelp()" title="Guida" id="btn-guida"><strong>?</strong></button>
-            <button class="format-btn" onclick="toggleFindBar()" title="Cerca (Ctrl+F)" style="font-size:10px;"
-                id="btn-find">🔍</button>
-            <button class="format-btn" onclick="generateTOC()" title="Genera Indice (TOC)" style="font-size:10px;"
-                id="btn-toc">📑</button>
-
-            <!-- Separator -->
-            <div style="width:1px; height:20px; background:var(--border-color); margin:0 4px;"></div>
-
-            <!-- System Toggles (Lang, Theme, Focus) -->
-            <button class="format-btn" onclick="toggleLanguage()" title="Lingua / Language" id="lang-toggle-btn"
-                style="padding: 0 4px;">
-                <strong style="font-size:12px; color:var(--text-color);" id="lang-label">IT</strong>
-            </button>
-            <!-- Dark mode toggle -->
-            <button class="format-btn" onclick="toggleDarkMode()" title="Modalità Scura" id="dark-toggle-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-            </button>
-            <!-- Theme cycle -->
-            <button class="format-btn" onclick="cycleTheme()" title="Cambia Colori (Tema)" id="theme-toggle-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path
-                        d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                </svg>
-            </button>
-            <button class="format-btn" onclick="toggleZenMode()" title="Schermo Intero (Zen)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path
-                        d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-                </svg>
-            </button>
-        </div>
-    </div>
-
-    <!-- FILE DROPDOWN MENU -->
-    <div id="file-menu" class="dropdown-menu">
-        <div class="dropdown-item" onclick="newNote(); closeAllMenus();">📄 Nuova Scheda</div>
-        <div class="dropdown-item" onclick="saveNow(); closeAllMenus();">💾 Salva (Ctrl+S)</div>
-        <div class="dropdown-divider"></div>
-        <div class="dropdown-item" onclick="exportMarkdown(); closeAllMenus();">⬇ Esporta .md</div>
-        <div class="dropdown-item" onclick="exportHTML();">⬇ Esporta .html</div>
-        <div class="dropdown-item" onclick="exportTXT();">⬇ Esporta .txt</div>
-        <div class="dropdown-item" onclick="exportTeX();">⬇ Esporta .tex (LaTeX)</div>
-        <div class="dropdown-divider"></div>
-        <div class="dropdown-item" onclick="document.getElementById('import-file').click(); closeAllMenus();">⬆ Importa
-            File</div>
-        <div class="dropdown-divider"></div>
-        <div class="dropdown-item" onclick="exportBackup(); closeAllMenus();">💾 Backup JSON</div>
-        <div class="dropdown-item" onclick="document.getElementById('import-backup').click(); closeAllMenus();">📥
-            Ripristina Backup</div>
-        <div class="dropdown-divider"></div>
-        <div class="dropdown-item" onclick="window.print(); closeAllMenus();">🖨 Stampa / Esporta PDF</div>
-    </div>
-
-    <!-- TABLE DROPDOWN MENU -->
-    <div id="table-menu" class="dropdown-menu">
-        <div class="dropdown-item" onclick="insertTable(2,2); closeAllMenus();">2×2 Tabella</div>
-        <div class="dropdown-item" onclick="insertTable(3,3); closeAllMenus();">3×3 Tabella</div>
-        <div class="dropdown-item" onclick="insertTable(4,4); closeAllMenus();">4×4 Tabella</div>
-        <div class="dropdown-item" onclick="insertTable(3,5); closeAllMenus();">3×5 Tabella</div>
-    </div>
-
-    <!-- FIND/REPLACE BAR -->
-    <div id="find-bar"
-        style="display:none; background:var(--toolbar-bg); border-bottom:1px solid var(--border-color); padding:6px 12px; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px;">
-        <label style="font-weight:600;">Cerca:</label>
-        <input type="text" id="find-input" placeholder="Testo da cercare..." oninput="highlightFind()"
-            style="padding:3px 7px; border:1px solid var(--border-color); border-radius:3px; background:var(--bg-color); color:var(--text-color); min-width:160px;">
-        <label>Sostituisci:</label>
-        <input type="text" id="replace-input" placeholder="Sostituisci con..."
-            style="padding:3px 7px; border:1px solid var(--border-color); border-radius:3px; background:var(--bg-color); color:var(--text-color); min-width:140px;">
-        <button onclick="findAndReplace()"
-            style="padding:3px 10px; background:var(--accent-color); color:white; border:none; border-radius:3px; cursor:pointer; font-size:11px;">Sostituisci
-            tutto</button>
-        <span id="find-count" style="color:#888; font-size:11px;"></span>
-        <button onclick="closeFindBar()"
-            style="margin-left:auto; background:none; border:none; cursor:pointer; font-size:16px; color:#888;">&times;</button>
-    </div>
-
-    <!-- MATH TOOLBAR -->
-    <div id="math-toolbar">
-        <div class="math-tabs" id="math-tabs-container"></div>
-        <div class="math-content">
-            <div class="math-grid" id="math-grid"></div>
-        </div>
-    </div>
-
-    <!-- MAIN CONTAINER -->
-    <div id="main-container">
-
-        <!-- TABS SIDEBAR -->
-        <aside id="sidebar" class="collapsed">
-            <div class="sidebar-header">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-weight:bold; font-size:13px; color:var(--text-color);">Schede aperte</div>
-                    <button class="format-btn" onclick="newNote()" title="Nuova Scheda"
-                        style="padding:2px; height:24px; min-width:24px;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                    </button>
+            <!-- TABS SIDEBAR -->
+            <aside id="sidebar" class="collapsed">
+                <div class="sidebar-header">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-weight:bold; font-size:13px; color:var(--text-color);">Schede aperte</div>
+                        <button class="format-btn" onclick="newNote()" title="Nuova Scheda"
+                            style="padding:2px; height:24px; min-width:24px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="sidebar-content" id="tabs-list">
-                <!-- Tab items injected by JS -->
-            </div>
-        </aside>
-
-        <!-- WORKSPACE WRAPPER -->
-        <div id="workspace-wrapper">
-
-            <!-- Workspace -->
-            <div id="workspace">
-                <div id="editor-pane">
-                    <textarea id="editor" spellcheck="false"
-                        placeholder="Scrivi qui... Usa $$ ... $$ per formule."></textarea>
+                <div class="sidebar-content" id="tabs-list">
+                    <!-- Tab items injected by JS -->
                 </div>
-                <div id="preview-pane">
-                    <div id="preview-content"></div>
+            </aside>
+
+            <!-- WORKSPACE WRAPPER -->
+            <div id="workspace-wrapper">
+
+                <!-- Workspace -->
+                <div id="workspace">
+                    <div id="editor-pane">
+                        <textarea id="editor" spellcheck="false"
+                            placeholder="Scrivi qui... Usa $$ ... $$ per formule."></textarea>
+                    </div>
+                    <div id="preview-pane">
+                        <div id="preview-content"></div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Zen Mode Exit Button -->
-            <div class="zen-btn" onclick="toggleZenMode()" title="Esci modalità Zen">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-color)" stroke-width="2">
-                    <path
-                        d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3">
-                    </path>
-                </svg>
-            </div>
+                <!-- Zen Mode Exit Button -->
+                <div class="zen-btn" onclick="toggleZenMode()" title="Esci modalità Zen">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-color)"
+                        stroke-width="2">
+                        <path
+                            d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3">
+                        </path>
+                    </svg>
+                </div>
 
-            <!-- Status Bar -->
-            <div id="statusbar">
-                <span id="status-left">Pronto</span>
-                <span id="status-right">Minipad Ready</span>
-            </div>
-        </div> <!-- End workspace-wrapper -->
-    </div> <!-- End main-container -->
+                <!-- Status Bar -->
+                <div id="statusbar">
+                    <span id="status-left">Pronto</span>
+                    <span id="status-right">Minipad Ready</span>
+                </div>
+            </div> <!-- End workspace-wrapper -->
+        </div> <!-- End main-container -->
+    </div> <!-- End app-root -->
 
     <!-- Help Modal -->
     <div id="help-modal" class="modal">
@@ -1505,7 +1389,8 @@
             <span class="close-modal" onclick="closeHelp()">&times;</span>
             <div id="help-it">
                 <h2>Guida a Minipad</h2>
-                <p><strong>Minipad</strong> è un editor pensato per la massima produttività. Tutti i dati rimangono nel
+                <p><strong>Minipad</strong> è un editor pensato per la massima produttività. Tutti i dati rimangono
+                    nel
                     tuo browser in locale.</p>
                 <h3>Appunti e Comandi Base</h3>
                 <ul>
@@ -1530,14 +1415,17 @@
                 </ul>
                 <h3>Matematica (LaTeX) e Diagrammi</h3>
                 <p>Inserisci calcoli o formule avvolgendoli con <code>$</code> (nella riga) o <code>$$</code> (come
-                    blocco isolato). Puoi usare il menu completo <strong>π▾</strong> per esplorare centinaia di modelli
+                    blocco isolato). Puoi usare il menu completo <strong>π▾</strong> per esplorare centinaia di
+                    modelli
                     rapidi!</p>
-                <p>Hai bisogno di schemi? Clicca sull'icona diagramma per aggiungere Mappe Mentali, Diagrammi di Flusso
+                <p>Hai bisogno di schemi? Clicca sull'icona diagramma per aggiungere Mappe Mentali, Diagrammi di
+                    Flusso
                     o di Sequenza generati istantaneamente.</p>
             </div>
             <div id="help-en" style="display:none;">
                 <h2>Minipad Full Guide</h2>
-                <p><strong>Minipad</strong> is a text editor designed for maximum productivity. All data stays secure in
+                <p><strong>Minipad</strong> is a text editor designed for maximum productivity. All data stays
+                    secure in
                     your browser locally.</p>
                 <h3>Basic Notes and Commands</h3>
                 <ul>
@@ -1549,7 +1437,8 @@
                     <li><strong>Zen Mode</strong>: Hide the UI instantly and immerse yourself in writing.</li>
                     <li><strong>AI & Math Tools (Pasting)</strong>: Seamlessly paste answers from AI tools (like
                         ChatGPT, Gemini, Claude). Minipad automatically intercepts and renders math notation using
-                        <code>\[ ... \]</code>, <code>\( ... \)</code>, <code>$$ ... $$</code>, and <code>$ ... $</code>
+                        <code>\[ ... \]</code>, <code>\( ... \)</code>, <code>$$ ... $$</code>, and
+                        <code>$ ... $</code>
                         so you never read messy code!
                     </li>
                 </ul>
@@ -1563,7 +1452,8 @@
                 <h3>Math (LaTeX) and Diagrams</h3>
                 <p>Insert complex formulas by wrapping them in <code>$</code> (inline) or <code>$$</code> (block).
                     Explore the <strong>π▾</strong> menu for hundreds of quick LaTeX snippets!</p>
-                <p>Need flowcharts? Press the chart icon to instantly append robust Mindmaps, Sequence, or Flow charts
+                <p>Need flowcharts? Press the chart icon to instantly append robust Mindmaps, Sequence, or Flow
+                    charts
                     directly into your markdown workspace.</p>
             </div>
         </div>
@@ -1710,11 +1600,6 @@
         let autoSaveTimeout = null;
         let previewTimeout = null;
         let savedSelection = null;
-
-        function saveSelection() {
-            const field = document.getElementById('editor');
-            savedSelection = { start: field.selectionStart, end: field.selectionEnd };
-        }
 
         // --- DIAGRAM DATA TEMPLATES ---
         const diagramTemplates = [
@@ -2526,26 +2411,6 @@
             });
         }
 
-        function applyHeading(level) {
-            const field = document.getElementById('editor');
-            const start = field.selectionStart;
-            const end = field.selectionEnd;
-            const val = field.value;
-            const selected = val.substring(start, end);
-            let prefix = '';
-            for (let i = 0; i < level; i++) prefix += '#';
-
-            if (level === 0) {
-                const lines = selected.split('\n');
-                const newLines = lines.map(l => l.replace(/^#+\s*/, ''));
-                field.value = val.substring(0, start) + newLines.join('\n') + val.substring(end);
-            } else {
-                // Apply to the beginning of the line(s)
-                field.value = val.substring(0, start) + prefix + ' ' + selected + val.substring(end);
-            }
-            handleInput();
-        }
-
         // Updated Insert Formula Logic (Smart Inline / Block)
         function insertSpecialFormula(borderStr, offset) {
             const field = document.getElementById('editor');
@@ -2597,6 +2462,7 @@
         function initTableGrid() {
             const grid = document.getElementById('table-grid');
             const label = document.getElementById('table-size-label');
+            if (!grid || !label) return;
             grid.innerHTML = '';
 
             for (let r = 1; r <= 8; r++) {
@@ -3315,7 +3181,6 @@ ${c}
             m.style.zIndex = '3001'; // Above diagram modal
         }
         function closeHelp() { document.getElementById('help-modal').style.display = 'none'; }
-        function updateStats() { const t = document.getElementById('editor').value; document.getElementById('status-left').textContent = `Caratteri: ${t.length} | Parole: ${t.split(/\s+/).filter(w => w).length}`; }
         function handleShortcuts(e) {
             const field = document.getElementById('editor');
             const val = field.value;
@@ -3484,55 +3349,6 @@ ${c}
                 deferredPrompt = null;
             });
         }
-
-        /* --- FILE MENU ACTIONS --- */
-        function newNote() {
-            if (confirm('Creare una nuova nota? Il contenuto attuale verrà perso se non salvato.')) {
-                const editor = document.getElementById('editor');
-                if (editor) editor.value = '';
-                updatePreview();
-                updateStatus();
-            }
-        }
-
-        function exportMarkdown() {
-            const editor = document.getElementById('editor');
-            const content = editor ? editor.value : '';
-            const blob = new Blob([content], { type: 'text/markdown' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'nota.md';
-            a.click();
-            URL.revokeObjectURL(a.href);
-        }
-
-        function exportBackup() {
-            // Export all notes from IndexedDB as JSON
-            getAllNotesForBackup().then(notes => {
-                const data = JSON.stringify({ notes, exportedAt: new Date().toISOString() }, null, 2);
-                const blob = new Blob([data], { type: 'application/json' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = 'minipad_backup.json';
-                a.click();
-                URL.revokeObjectURL(a.href);
-            }).catch(() => {
-                // Fallback: export current editor only
-                exportMarkdown();
-            });
-        }
-
-        function getAllNotesForBackup() {
-            return new Promise((resolve, reject) => {
-                if (!db) { reject('No DB'); return; }
-                const tx = db.transaction('tabs', 'readonly');
-                const store = tx.objectStore('tabs');
-                const req = store.getAll();
-                req.onsuccess = () => resolve(req.result || []);
-                req.onerror = () => reject(req.error);
-            });
-        }
-
 
     </script>
 </body>
