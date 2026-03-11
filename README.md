@@ -1,5 +1,5 @@
 # minipad 📝
-**minipad** è un editor di testo avanzato, gratuito e leggerissimo che gira interamente in locale nel tuo browser. Combina la semplicità di un blocco note con la potenza di **Markdown** e **LaTeX** e per creare documenti, appunti matematici e diagrammi.
+**minipad** è un editor di testo gratuito e leggerissimo che gira interamente in locale nel tuo browser. Combina la semplicità di un blocco note con la potenza di **Markdown** e **LaTeX** e per creare documenti, appunti matematici e diagrammi.
 
 *🇬🇧 **minipad** is an advanced, free, and feather-light text editor that runs entirely locally within your browser. It combines the simplicity of a notepad with the power of Markdown and LaTeX to create documents, math notes, and diagrams.*
 
