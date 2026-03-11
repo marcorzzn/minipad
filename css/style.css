@@ -189,19 +189,6 @@
             color: #e00;
         }
 
-        /* --- MERMAID ERROR SILENCING --- */
-        /* Aggressive catch-all for Mermaid 11.x Syntax Error SVG "bomb" overlays */
-        .error-icon,
-        .error-text,
-        svg[id^="mermaid-"] .error-icon,
-        svg[id^="mermaid-"] text[class*="error"],
-        svg[id^="mermaid-"] g[class*="error"],
-        body>div[id^="dmermaid"] {
-            display: none !important;
-            opacity: 0 !important;
-            visibility: hidden !important;
-        }
-
         /* --- MENU BUTTONS (File, Hamburger) in toolbar --- */
         .menu-btn {
             display: flex;

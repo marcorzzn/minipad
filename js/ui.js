@@ -458,13 +458,15 @@ function openDiagramModal() {
 
         /* ─── IMPROVED STATS ─────────────────────────────────────────────── */
         function updateStats() {
-            const t = document.getElementById('editor').value;
+            const editorEl = document.getElementById('editor');
+            if (!editorEl) return;
+            const t = editorEl.value;
             const chars = t.length;
             const words = t.split(/\s+/).filter(w => w).length;
             const lines = t.split('\n').length;
             const pages = Math.max(1, Math.ceil(words / 500));
-            document.getElementById('status-left').textContent =
-                `Caratteri: ${chars.toLocaleString('it')} | Parole: ${words.toLocaleString('it')} | Righe: ${lines} | ~${pages} pag.`;
+            const sLeft = document.getElementById('status-left');
+            if (sLeft) sLeft.textContent = `Caratteri: ${chars.toLocaleString('it')} | Parole: ${words.toLocaleString('it')} | Righe: ${lines} | ~${pages} pag.`;
         }
 
         function applyList(prefix) {
@@ -671,13 +673,10 @@ ${c}
         /* --- DIAGRAM LOGIC UPDATED --- */
         function initDiagramGrid() {
             const grid = document.getElementById('diagram-grid');
+            if (!grid) return;
             grid.innerHTML = '';
 
-function initDiagramGrid() {
-    const grid = document.getElementById('diagram-grid');
-    grid.innerHTML = '';
-
-    diagramTemplates.forEach((item) => {
+            diagramTemplates.forEach((item) => {
         const card = document.createElement('div');
         card.className = 'diagram-card';
         card.onclick = () => insertDiagram(item.code);

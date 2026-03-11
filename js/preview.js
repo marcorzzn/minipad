@@ -19,11 +19,7 @@ function updatePreview() {
     // 3. Rendering Markdown
     let html = rawMarkdown;
     try {
-        if (typeof marked.parse === 'function') {
-            html = marked.parse(rawMarkdown, { gfm: true, breaks: true });
-        } else if (typeof marked === 'function') {
-            html = marked(rawMarkdown, { gfm: true, breaks: true });
-        }
+        html = marked.parse(rawMarkdown, { gfm: true, breaks: true });
     } catch(e) { 
         console.warn("Markdown parsing error", e);
     }

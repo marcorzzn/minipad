@@ -1,5 +1,3 @@
-// marked.setOptions is removed because it causes errors in newer marked.js versions.
-
         let currentLang = 'it';
 
         function getStr(key) {
@@ -8,7 +6,8 @@
 
         function toggleLanguage() {
             currentLang = currentLang === 'it' ? 'en' : 'it';
-            document.getElementById('lang-label').textContent = currentLang.toUpperCase();
+            const langLabel = document.getElementById('lang-label');
+            if (langLabel) langLabel.textContent = currentLang.toUpperCase();
             try { localStorage.setItem('minipad_lang', currentLang); } catch (e) { }
             applyLanguage();
             renderSidebar(); // Redraw UI tabs
@@ -16,15 +15,16 @@
 
         function applyLanguage() {
             // Dropdowns
-            const fileMenu = document.getElementById('file-menu').children;
-            if (fileMenu.length > 5) {
-                fileMenu[0].textContent = getStr('new');
-                fileMenu[1].textContent = getStr('open');
-                fileMenu[3].textContent = getStr('save_as');
-                fileMenu[5].textContent = getStr('export_pdf');
-                fileMenu[6].textContent = getStr('export_html');
-                fileMenu[7].textContent = getStr('export_md');
-                fileMenu[8].textContent = getStr('export_tex');
+            const fileMenu = document.getElementById('file-menu');
+            if (fileMenu && fileMenu.children.length > 5) {
+                const children = fileMenu.children;
+                children[0].textContent = getStr('new');
+                children[1].textContent = getStr('open');
+                children[3].textContent = getStr('save_as');
+                children[5].textContent = getStr('export_pdf');
+                children[6].textContent = getStr('export_html');
+                children[7].textContent = getStr('export_md');
+                children[8].textContent = getStr('export_tex');
             }
 
             // UI elements
@@ -35,7 +35,7 @@
             if (diagTitle) diagTitle.childNodes[0].nodeValue = getStr('diagram_title');
 
             const sInd = document.getElementById('save-indicator');
-            if (sInd && sInd.textContent === i18n['it']['saved_indicator'] || sInd.textContent === i18n['en']['saved_indicator']) sInd.textContent = getStr('saved_indicator');
+            if (sInd && (sInd.textContent === i18n['it']['saved_indicator'] || sInd.textContent === i18n['en']['saved_indicator'])) sInd.textContent = getStr('saved_indicator');
 
             const btnGuida = document.getElementById('btn-guida');
             if (btnGuida) btnGuida.title = getStr('btn_guida');
@@ -47,13 +47,18 @@
             document.getElementById('editor').placeholder = getStr('placeholder');
 
             // Find bar
-            document.getElementById('find-label').textContent = getStr('find_label');
-            document.getElementById('replace-label').textContent = getStr('replace_label');
-            document.getElementById('find-input').placeholder = getStr('find_placeholder');
-            document.getElementById('replace-input').placeholder = getStr('replace_placeholder');
-            document.getElementById('replace-btn').textContent = getStr('btn_replace');
+            const findLabel = document.getElementById('find-label');
+            if (findLabel) findLabel.textContent = getStr('find_label');
+            const replaceLabel = document.getElementById('replace-label');
+            if (replaceLabel) replaceLabel.textContent = getStr('replace_label');
+            const findInput = document.getElementById('find-input');
+            if (findInput) findInput.placeholder = getStr('find_placeholder');
+            const replaceInput = document.getElementById('replace-input');
+            if (replaceInput) replaceInput.placeholder = getStr('replace_placeholder');
+            const replaceBtn = document.getElementById('replace-btn');
+            if (replaceBtn) replaceBtn.textContent = getStr('btn_replace');
             const sLeft = document.getElementById('status-left');
-            if (sLeft.textContent === i18n['it']['status_ready'] || sLeft.textContent === i18n['en']['status_ready']) sLeft.textContent = getStr('status_ready');
+            if (sLeft && (sLeft.textContent === i18n['it']['status_ready'] || sLeft.textContent === i18n['en']['status_ready'])) sLeft.textContent = getStr('status_ready');
 
             const helpIt = document.getElementById('help-it');
             const helpEn = document.getElementById('help-en');
@@ -84,7 +89,8 @@
                 const savedLang = localStorage.getItem('minipad_lang');
                 if (savedLang === 'en' || savedLang === 'it') currentLang = savedLang;
             } catch (e) { }
-            document.getElementById('lang-label').textContent = currentLang.toUpperCase();
+            const langLabel = document.getElementById('lang-label');
+            if (langLabel) langLabel.textContent = currentLang.toUpperCase();
             applyLanguage();
 
             // PERSISTENCE FIX: Ensure we read from IndexedDB

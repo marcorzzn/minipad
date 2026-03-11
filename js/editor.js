@@ -146,6 +146,7 @@ function newNote() {
         }
         function showSavedIndicator() {
             const el = document.getElementById('save-indicator');
+            if (!el) return;
             el.style.opacity = '1';
             clearTimeout(window.saveIndicatorTimeout);
             window.saveIndicatorTimeout = setTimeout(() => el.style.opacity = '0', 2000);
@@ -380,14 +381,3 @@ function newNote() {
 
         function toggleFullScreen() { !document.fullscreenElement ? document.documentElement.requestFullscreen() : document.exitFullscreen(); }
 
-        function updateStats() {
-            const text = document.getElementById('editor').value;
-            const chars = text.length;
-            const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-            const lines = text.split('\n').length;
-            const pages = Math.max(1, Math.ceil(chars / 1800)); // ≈1800 chars per page
-
-            document.getElementById('status-left').textContent = `Caratteri: ${chars} | Parole: ${words} | Righe: ${lines} | ~${pages} pag.`;
-        }
-
-
