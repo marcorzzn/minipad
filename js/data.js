@@ -1,37 +1,37 @@
 const diagramTemplates = [
-    { 
-        title: "Albero Cartelle", 
-        code: "```text\nProgetto/\n ├── Src/\n │   ├── index.html\n │   └── style.css\n └── Assets/\n     └── logo.png\n```" 
-    },
-    { 
-        title: "Flusso Dati", 
-        code: "```text\n[Utente] --(Richiesta HTTP)--> [Server]\n   ^                              |\n   |-------(Risposta JSON)--------+\n```" 
-    },
-    { 
-        title: "Tabella Semplice", 
-        code: "| ID  | Elemento | Stato   |\n|-----|----------|---------|\n| 01  | Server   | Online  |\n| 02  | Database | Standby |" 
-    },
-    {
-        title: "Timeline",
-        code: "```text\n2024: Progettazione\n  |\n2025: Sviluppo Beta\n  |\n2026: Rilascio Stabile\n```"
-    },
-    {
-        title: "Mappa Concettuale",
-        code: "```text\n          (Applicazione)\n            /         \\\n      (Frontend)   (Backend)\n         /             \\\n      [UI]           [API]\n```"
-    }
+    { category: "Blocchi", title: "Riquadro Testo", code: "+-------+\n| testo |\n+-------+" },
+    { category: "Blocchi", title: "Etichetta", code: "[concetto]" },
+    { category: "Blocchi", title: "Bolla", code: "(_____)" },
+    { category: "Frecce", title: "Destra", code: "---->" },
+    { category: "Frecce", title: "Sinistra", code: "<----" },
+    { category: "Frecce", title: "Doppia", code: "<====>" },
+    { category: "Frecce", title: "Freccia Curva", code: ".-->" },
+    { category: "Frecce", title: "Verticale (Giu')", code: "  |\n  v" },
+    { category: "Frecce", title: "Verticale (Su)", code: "  ^\n  |" },
+    { category: "Forme", title: "Cerchio", code: " .-. \n(   )\n '-'" },
+    { category: "Forme", title: "Rombo", code: "  /\\  \n /  \\ \n \\  / \n  \\/" },
+    { category: "Forme", title: "Nuvola", code: "   .-\"\"-.   \n .'      '. \n(          )\n '-.____.-' " },
+    { category: "Template rapidi", title: "Catena Dati", code: "```text\n[A] ---> [B] ---> [C]\n```" },
+    { category: "Template rapidi", title: "Ciclo di Controllo", code: "```text\n[Inizio] --> [Azione] --> [Controllo] --No--> [Azione]\n                             |\n                            Si\n                             |\n                             v\n                           [Fine]\n```" },
+    { category: "Template rapidi", title: "Mappa 3 Nodi", code: "```text\n          [Tema Centrale]\n            /         \\\n      [Ramo 1]      [Ramo 2]\n```" },
+    { category: "Template rapidi", title: "Albero Cartelle", code: "```text\nProgetto/\n ├── Src/\n │   ├── index.html\n │   └── style.css\n └── Assets/\n     └── logo.png\n```" }
 ];
 
 const i18n = {
     'it': {
         'file': 'File',
-        'new': 'Nuovo',
-        'open': 'Apri...',
+        'new': 'Nuova Scheda',
+        'open': 'Apri/Importa File',
         'save_as': 'Salva con nome...',
-        'export_pdf': 'Esporta PDF',
-        'export_html': 'Esporta HTML',
-        'export_md': 'Esporta Markdown (.md)',
-        'export_tex': 'Esporta LaTeX (.tex)',
-        'save_title': 'Salva Ora',
+        'export_pdf': 'Stampa / Esporta PDF',
+        'export_html': 'Esporta .html',
+        'export_md': 'Esporta .md',
+        'export_tex': 'Esporta .tex (LaTeX)',
+        'export_txt': 'Esporta .txt',
+        'save_title': 'Salva (Ctrl+S)',
+        'clear_editor': 'Svuota Editor',
+        'backup_json': 'Backup JSON',
+        'restore_backup': 'Ripristina Backup',
         'saved_indicator': 'Salvato',
         'find_label': 'Cerca:',
         'replace_label': 'Sostituisci:',
@@ -49,20 +49,24 @@ const i18n = {
         'tab_rename_prompt': 'Rinomina scheda:',
         'tab_untitled': 'Senza nome',
         'tab_close_confirm': "Chiudere l'ultima scheda?",
-        'btn_guida': 'Guida',
+        'btn_guida': 'Informazioni / Guida',
         'btn_find': 'Cerca (Ctrl+F)',
         'btn_toc': 'Genera Indice (TOC)'
     },
     'en': {
         'file': 'File',
-        'new': 'New',
-        'open': 'Open...',
+        'new': 'New Note',
+        'open': 'Open/Import File',
         'save_as': 'Save as...',
-        'export_pdf': 'Export PDF',
-        'export_html': 'Export HTML',
-        'export_md': 'Export Markdown (.md)',
-        'export_tex': 'Export LaTeX (.tex)',
-        'save_title': 'Save Now',
+        'export_pdf': 'Print / Export PDF',
+        'export_html': 'Export .html',
+        'export_md': 'Export .md',
+        'export_tex': 'Export .tex (LaTeX)',
+        'export_txt': 'Export .txt',
+        'save_title': 'Save (Ctrl+S)',
+        'clear_editor': 'Clear Editor',
+        'backup_json': 'Backup JSON',
+        'restore_backup': 'Restore Backup',
         'saved_indicator': 'Saved',
         'find_label': 'Find:',
         'replace_label': 'Replace:',
@@ -80,7 +84,7 @@ const i18n = {
         'tab_rename_prompt': 'Rename tab:',
         'tab_untitled': 'Untitled',
         'tab_close_confirm': "Close the last tab?",
-        'btn_guida': 'Help',
+        'btn_guida': 'About / Help',
         'btn_find': 'Find (Ctrl+F)',
         'btn_toc': 'Generate TOC'
     }

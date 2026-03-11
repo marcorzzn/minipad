@@ -1,7 +1,3 @@
-function openDiagramModal() {
-            document.getElementById('diagram-modal').style.display = 'flex';
-            document.getElementById('diagram-modal').classList.add('active'); // Add active class to CSS to handle z-index
-        }
 
         // Helper to handle z-index of modals correctly
         document.querySelectorAll('.modal').forEach(m => {
@@ -106,16 +102,6 @@ function openDiagramModal() {
             handleInput();
         }
 
-        function insertDiagram(code) {
-            const field = document.getElementById('editor');
-            const start = field.selectionStart;
-            const end = field.selectionEnd;
-            const val = field.value;
-
-            field.value = val.substring(0, start) + "\n" + code + "\n" + val.substring(end);
-            document.getElementById('diagram-modal').style.display = 'none';
-            handleInput();
-        }
 
         /* --- TOOLTIP FUNCTIONS --- */
         const tooltip = document.getElementById('math-tooltip');
@@ -215,15 +201,112 @@ function openDiagramModal() {
             if (!isShowing) positionDropdown('table-menu', btn);
         }
 
+        function toggleListMenu(e) {
+            if (e) e.stopPropagation();
+            const btn = e && e.currentTarget ? e.currentTarget : document.querySelector('[onclick*="toggleListMenu"]');
+            const menu = document.getElementById('list-menu');
+            if (!menu) return;
+            const isShowing = menu.classList.contains('show');
+            closeAllMenus();
+            if (!isShowing) positionDropdown('list-menu', btn);
+        }
+
+        function toggleHeadingsMenu(e) {
+            if (e) e.stopPropagation();
+            const btn = e && e.currentTarget ? e.currentTarget : document.querySelector('[onclick*="toggleHeadingsMenu"]');
+            const menu = document.getElementById('headings-menu');
+            if (!menu) return;
+            const isShowing = menu.classList.contains('show');
+            closeAllMenus();
+            if (!isShowing) positionDropdown('headings-menu', btn);
+        }
+
+        function toggleDiagramMenu(e) {
+            if (e) e.stopPropagation();
+            const btn = e && e.currentTarget ? e.currentTarget : document.querySelector('[onclick*="toggleDiagramMenu"]');
+            const menu = document.getElementById('diagram-dropdown-menu');
+            if (!menu) return;
+
+            // Build content if empty
+            if (menu.innerHTML.trim() === '<!-- Content injected by JS -->') {
+                buildDiagramMenu();
+            }
+
+            const isShowing = menu.classList.contains('show');
+            closeAllMenus();
+            if (!isShowing) positionDropdown('diagram-dropdown-menu', btn);
+        }
+
+        function buildDiagramMenu() {
+            const menu = document.getElementById('diagram-dropdown-menu');
+            if (!menu) return;
+            menu.innerHTML = '';
+
+            const categories = [...new Set(diagramTemplates.map(t => t.category || "Altri"))];
+
+            categories.forEach(cat => {
+                const catTitle = document.createElement('div');
+                catTitle.style.cssText = "font-size: 11px; font-weight: bold; color: #888; padding: 4px 12px; margin-top: 4px;";
+                catTitle.textContent = cat.toUpperCase();
+                menu.appendChild(catTitle);
+
+                const items = diagramTemplates.filter(t => (t.category || "Altri") === cat);
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'dropdown-item';
+                    div.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; cursor: pointer;";
+
+                    const titleSpan = document.createElement('span');
+                    titleSpan.textContent = item.title;
+
+                    div.appendChild(titleSpan);
+
+                    div.onclick = () => {
+                        insertDiagramAtCursor(item.code);
+                        closeAllMenus();
+                    };
+                    menu.appendChild(div);
+                });
+            });
+        }
+
+        function insertDiagramAtCursor(code) {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const val = field.value;
+            // Check if we need to add a newline before
+            const prefix = (start > 0 && val[start-1] !== '\n') ? '\n' : '';
+            // Check if we need to add a newline after
+            const suffix = (start < val.length && val[start] !== '\n') ? '\n' : '';
+
+            const insertText = prefix + code + suffix;
+            field.value = val.substring(0, start) + insertText + val.substring(start);
+            field.focus();
+            field.setSelectionRange(start + insertText.length, start + insertText.length);
+            handleInput();
+        }
+
+        function insertCustomTable() {
+            const rowsInput = document.getElementById('custom-table-rows');
+            const colsInput = document.getElementById('custom-table-cols');
+            let r = parseInt(rowsInput ? rowsInput.value : 4);
+            let c = parseInt(colsInput ? colsInput.value : 4);
+            if (isNaN(r) || r < 1) r = 1;
+            if (isNaN(c) || c < 1) c = 1;
+            insertTable(r, c);
+        }
+
+        const ALL_MENUS = ['file-menu', 'table-menu', 'list-menu', 'headings-menu', 'diagram-dropdown-menu'];
+
         function closeAllMenus() {
-            ['file-menu', 'table-menu'].forEach(id => {
+            ALL_MENUS.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.remove('show');
             });
         }
 
         function closeOtherMenus(exceptId) {
-            ['file-menu', 'table-menu'].forEach(id => {
+            ALL_MENUS.forEach(id => {
                 const el = document.getElementById(id);
                 if (el && id !== exceptId) el.classList.remove('show');
             });
@@ -352,11 +435,11 @@ function openDiagramModal() {
         }
 
 
-        /* --- FILE MENU FIX --- */
+        /* --- MENU FIX --- */
         window.addEventListener('click', (e) => {
             // Don't close if clicking inside a dropdown menu or on a designated menu toggle button
             const insideMenu = e.target.closest('.dropdown-menu');
-            const isMenuToggle = e.target.closest('#file-btn') || e.target.closest('#table-menu-btn');
+            const isMenuToggle = e.target.closest('.format-btn') || e.target.closest('.menu-btn');
             if (!insideMenu && !isMenuToggle) {
                 closeAllMenus();
             }
@@ -631,6 +714,16 @@ ${c}
         function exportTEX() { promptExport('tex'); toggleFileMenu(); }
         function saveNow() { saveToStorage(); showSavedIndicator(); }
 
+        function clearEditor() {
+            if (confirm("Sei sicuro di voler svuotare l'editor?")) {
+                const field = document.getElementById('editor');
+                if (field) {
+                    field.value = '';
+                    handleInput();
+                }
+            }
+        }
+
         /* --- EDITING --- */
         function insertMarkdown(start, end) {
             const field = document.getElementById('editor');
@@ -670,51 +763,6 @@ ${c}
             handleInput();
         }
 
-        /* --- DIAGRAM LOGIC UPDATED --- */
-        function initDiagramGrid() {
-            const grid = document.getElementById('diagram-grid');
-            if (!grid) return;
-            grid.innerHTML = '';
-
-            diagramTemplates.forEach((item) => {
-        const card = document.createElement('div');
-        card.className = 'diagram-card';
-        card.onclick = () => insertDiagram(item.code);
-
-        const title = document.createElement('div');
-        title.className = 'diagram-title';
-        title.textContent = item.title;
-
-        const preview = document.createElement('div');
-        preview.className = 'diagram-preview';
-        preview.style.fontFamily = 'monospace';
-        preview.style.whiteSpace = 'pre';
-        preview.style.textAlign = 'left';
-        preview.style.fontSize = '10px';
-        preview.style.lineHeight = '1.2';
-        preview.style.overflow = 'hidden';
-        preview.style.color = 'var(--text-color)';
-        
-        // Pulizia dei markdown backticks per l'anteprima visiva
-        const cleanText = item.code.replace(/```text/g, '').replace(/```/g, '').trim();
-        preview.textContent = cleanText;
-
-        card.appendChild(title);
-        card.appendChild(preview);
-        grid.appendChild(card);
-    });
-}
-
-        function insertDiagram(code) {
-            const field = document.getElementById('editor');
-            const start = field.selectionStart;
-            const end = field.selectionEnd;
-            const val = field.value;
-
-            field.value = val.substring(0, start) + "\n" + code + "\n" + val.substring(end);
-            document.getElementById('diagram-modal').style.display = 'none';
-            handleInput();
-        }
 
         /* --- OLD FUNCTIONS REMOVED (Replaced above) --- */
 

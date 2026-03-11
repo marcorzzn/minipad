@@ -14,18 +14,30 @@
         }
 
         function applyLanguage() {
-            // Dropdowns
-            const fileMenu = document.getElementById('file-menu');
-            if (fileMenu && fileMenu.children.length > 5) {
-                const children = fileMenu.children;
-                children[0].textContent = getStr('new');
-                children[1].textContent = getStr('open');
-                children[3].textContent = getStr('save_as');
-                children[5].textContent = getStr('export_pdf');
-                children[6].textContent = getStr('export_html');
-                children[7].textContent = getStr('export_md');
-                children[8].textContent = getStr('export_tex');
-            }
+            // Translate all elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+
+                // Preserve emojis or other formatting if present.
+                // We'll just replace the text node content, but simpler is to use a map of icons in html.
+                // Since the original HTML had emojis, let's keep it simple and just set text,
+                // but the user might lose the emoji. Let's build a quick mapping for emojis if needed,
+                // or just let the translation string include it.
+                // The cleanest approach is to prepend the emoji based on the key.
+
+                const translation = getStr(key);
+                let emoji = "";
+                if (el.innerHTML.includes("📄")) emoji = "📄 ";
+                if (el.innerHTML.includes("💾")) emoji = "💾 ";
+                if (el.innerHTML.includes("🗑")) emoji = "🗑 ";
+                if (el.innerHTML.includes("⬇")) emoji = "⬇ ";
+                if (el.innerHTML.includes("⬆")) emoji = "⬆ ";
+                if (el.innerHTML.includes("📥")) emoji = "📥 ";
+                if (el.innerHTML.includes("🖨")) emoji = "🖨 ";
+                if (el.innerHTML.includes("ℹ️")) emoji = "ℹ️ ";
+
+                el.textContent = emoji + translation;
+            });
 
             // UI elements
             const bFile = document.getElementById('file-btn').querySelector('span');
