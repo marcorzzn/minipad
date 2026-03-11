@@ -813,25 +813,55 @@
             #toolbar,
             #math-toolbar,
             #tabs-container,
+            #sidebar,
             #editor-pane,
             #statusbar,
+            .zen-btn,
             .modal,
             #math-tooltip {
                 display: none !important;
             }
 
-            #preview-pane {
-                width: 100% !important;
-                margin: 0;
-                padding: 0;
-                overflow: visible;
+            #app-root,
+            #main-container,
+            #workspace-wrapper,
+            #workspace {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+                border: none !important;
+                box-shadow: none !important;
+                background: white !important;
             }
 
-            body {
-                height: auto;
-                overflow: visible;
-                background: white;
-                color: black;
+            #preview-pane {
+                width: 100% !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                overflow: visible !important;
+                display: block !important;
+            }
+
+            #preview-content {
+                padding: 0 !important;
+                margin: 0 !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+
+            body, html {
+                height: auto !important;
+                overflow: visible !important;
+                background: white !important;
+                color: black !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            @page {
+                margin: 2cm;
             }
         }
 
