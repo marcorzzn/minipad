@@ -1,9 +1,15 @@
-const CACHE_NAME = 'minipad-v3.0';
+const CACHE_NAME = 'minipad-v3.1';
 const urlsToCache = [
   './',
   './index.html',
   './icon.svg',
   './manifest.json',
+  './css/style.css',
+  './js/data.js',
+  './js/ui.js',
+  './js/editor.js',
+  './js/preview.js',
+  './js/main.js',
   'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
   'https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js',
   'https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js',

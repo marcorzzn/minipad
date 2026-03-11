@@ -1,0 +1,2190 @@
+﻿
+>     <style>
+          /* --- Base Styles & Windows 11 Theme --- */
+          :root {
+              --bg-color: #ffffff;
+              --toolbar-bg: #f9f9f9;
+              --sidebar-bg: #f3f3f3;
+              --text-color: #202020;
+              --accent-color: #0067c0;
+              --border-color: #e5e5e5;
+              --hover-color: rgba(0, 0, 0, 0.04);
+              --math-btn-bg: #f9f9f9;
+              --math-btn-border: #ccc;
+              --font-ui: 'Segoe UI Variable', 'Segoe UI', sans-serif;
+              --shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+          }
+  
+          body.dark-mode {
+              --bg-color: #202020;
+              --toolbar-bg: #252525;
+              --sidebar-bg: #2d2d2d;
+              --text-color: #ffffff;
+              --accent-color: #4cc2ff;
+              --border-color: #444;
+              --hover-color: rgba(255, 255, 255, 0.06);
+              --math-btn-bg: #333;
+              --math-btn-border: #555;
+          }
+  
+          body[data-theme="sepia"] {
+              --bg-color: #f4ecd8;
+              --sidebar-bg: #eAddc5;
+              --text-color: #433422;
+              --accent-color: #d16b27;
+              --border-color: #d8c8b8;
+              --hover-color: rgba(67, 52, 34, 0.05);
+              --math-btn-bg: #eAddc5;
+              --math-btn-border: #c8b8a8;
+          }
+  
+          body.dark-mode[data-theme="sepia"] {
+              --bg-color: #433422;
+              --sidebar-bg: #322618;
+              --text-color: #eAddc5;
+              --accent-color: #e38240;
+              --border-color: #554433;
+              --hover-color: rgba(234, 221, 197, 0.05);
+              --math-btn-bg: #443322;
+              --math-btn-border: #665544;
+          }
+  
+          body[data-theme="hacker"] {
+              --bg-color: #f0fff0;
+              --sidebar-bg: #e0ffe0;
+              --text-color: #005500;
+              --accent-color: #008800;
+              --border-color: #c0ebc0;
+              --hover-color: rgba(0, 85, 0, 0.05);
+              --math-btn-bg: #e0ffe0;
+              --math-btn-border: #99d699;
+              --font-ui: 'Courier New', Courier, monospace;
+          }
+  
+          body.dark-mode[data-theme="hacker"] {
+              --bg-color: #0d1117;
+              --sidebar-bg: #010409;
+              --text-color: #00ff00;
+              --accent-color: #39d353;
+              --border-color: #30363d;
+              --hover-color: rgba(0, 255, 0, 0.1);
+              --math-btn-bg: #161b22;
+              --math-btn-border: #21262d;
+              --font-ui: 'Courier New', Courier, monospace;
+          }
+  
+          html {
+              height: 100%;
+              overflow: hidden;
+          }
+  
+          body {
+              height: 100vh;
+              height: 100dvh;
+              margin: 0;
+              padding: 0;
+              overflow: hidden;
+              font-family: var(--font-ui);
+              background-color: var(--bg-color);
+              color: var(--text-color);
+          }
+  
+          #app-root {
+              display: flex;
+              flex-direction: column;
+              width: 100%;
+              height: 100%;
+              overflow: hidden;
+          }
+  
+          #main-container {
+              display: flex;
+              flex: 1 1 0;
+              min-height: 0;
+              overflow: hidden;
+          }
+  
+          /* --- SIDEBAR EXPLORER --- */
+          #sidebar {
+              width: 250px;
+              background-color: var(--sidebar-bg);
+              border-right: 1px solid var(--border-color);
+              display: flex;
+              flex-direction: column;
+              transition: width 0.2s ease;
+              overflow: hidden;
+          }
+  
+          #sidebar.collapsed {
+              width: 0;
+              border-right: none;
+          }
+  
+          .sidebar-header {
+              padding: 10px;
+              border-bottom: 1px solid var(--border-color);
+              display: flex;
+              gap: 5px;
+              flex-direction: column;
+          }
+  
+          .sidebar-search {
+              width: 100%;
+              padding: 4px;
+              border: 1px solid var(--border-color);
+              border-radius: 4px;
+              background: var(--bg-color);
+              color: var(--text-color);
+              font-size: 12px;
+              box-sizing: border-box;
+          }
+  
+          .sidebar-content {
+              flex: 1;
+              overflow-y: auto;
+          }
+  
+          .sidebar-item {
+              padding: 8px 12px;
+              font-size: 13px;
+              cursor: pointer;
+              border-bottom: 1px solid var(--hover-color);
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+          }
+  
+          .sidebar-item:hover {
+              background-color: var(--hover-color);
+          }
+  
+          .sidebar-item.active {
+              background-color: var(--hover-color);
+              border-left: 3px solid var(--accent-color);
+              padding-left: 9px;
+              font-weight: bold;
+          }
+  
+          .sidebar-item-date {
+              font-size: 10px;
+              color: #888;
+          }
+  
+          .sidebar-item-close {
+              display: none;
+              background: none;
+              border: none;
+              cursor: pointer;
+              color: #999;
+              font-size: 14px;
+              line-height: 1;
+              padding: 0 2px;
+              border-radius: 3px;
+          }
+  
+          .sidebar-item:hover .sidebar-item-close {
+              display: inline-block;
+          }
+  
+          .sidebar-item-close:hover {
+              background: rgba(200, 50, 50, 0.15);
+              color: #e00;
+          }
+  
+          /* --- MERMAID ERROR SILENCING --- */
+          /* Aggressive catch-all for Mermaid 11.x Syntax Error SVG "bomb" overlays */
+          .error-icon,
+          .error-text,
+          svg[id^="mermaid-"] .error-icon,
+          svg[id^="mermaid-"] text[class*="error"],
+          svg[id^="mermaid-"] g[class*="error"],
+          body>div[id^="dmermaid"] {
+              display: none !important;
+              opacity: 0 !important;
+              visibility: hidden !important;
+          }
+  
+          /* --- MENU BUTTONS (File, Hamburger) in toolbar --- */
+          .menu-btn {
+              display: flex;
+              align-items: center;
+              background: transparent;
+              border: 1px solid transparent;
+              border-radius: 4px;
+              padding: 3px 8px;
+              cursor: pointer;
+              font-size: 13px;
+              color: var(--text-color);
+              height: 26px;
+              gap: 4px;
+              transition: background 0.15s ease;
+              white-space: nowrap;
+          }
+  
+          .menu-btn:hover {
+              background-color: var(--hover-color);
+              border-color: var(--border-color);
+          }
+  
+          .menu-btn svg {
+              width: 14px;
+              height: 14px;
+              flex-shrink: 0;
+          }
+  
+          .icon-btn-title {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: transparent;
+              border: none;
+              border-radius: 3px;
+              padding: 3px;
+              cursor: pointer;
+              color: var(--text-color);
+              width: 28px;
+              height: 26px;
+              transition: background 0.15s ease;
+          }
+  
+          .icon-btn-title:hover {
+              background-color: var(--hover-color);
+          }
+  
+          .icon-btn-title svg {
+              width: 14px;
+              height: 14px;
+          }
+  
+  
+          /* Dropdowns: position fixed so they escape toolbar overflow:auto clipping */
+          .dropdown-menu {
+              position: fixed;
+              background: var(--bg-color);
+              border: 1px solid var(--border-color);
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+              border-radius: 6px;
+              width: 200px;
+              display: none;
+              flex-direction: column;
+              padding: 4px;
+              z-index: 9000;
+              opacity: 0;
+              transform: translateY(-4px);
+              transition: opacity 0.1s ease, transform 0.1s ease;
+          }
+  
+          .dropdown-menu.show {
+              display: flex;
+              opacity: 1;
+              transform: translateY(0);
+          }
+  
+          .dropdown-item {
+              padding: 8px 12px;
+              cursor: pointer;
+              border-radius: 4px;
+              font-size: 13px;
+          }
+  
+          .dropdown-item:hover {
+              background-color: var(--hover-color);
+          }
+  
+          .dropdown-divider {
+              height: 1px;
+              background: var(--border-color);
+              margin: 4px 0;
+          }
+  
+          #save-indicator {
+              font-size: 11px;
+              color: #888;
+              margin-left: auto;
+              opacity: 0;
+              transition: opacity 0.5s;
+          }
+  
+          #save-indicator.visible {
+              opacity: 1;
+              color: var(--accent-color);
+          }
+  
+  
+  
+          #toolbar {
+              display: flex;
+              align-items: center;
+              padding: 4px 8px;
+              border-bottom: 1px solid var(--border-color);
+              background: var(--bg-color);
+              gap: 4px;
+              flex-wrap: nowrap;
+              overflow-x: auto;
+              scrollbar-width: none;
+              /* Firefox */
+              -ms-overflow-style: none;
+              /* IE/Edge */
+              position: relative;
+              flex-shrink: 0;
+          }
+  
+          #toolbar::-webkit-scrollbar {
+              display: none;
+              /* Chrome/Safari */
+          }
+  
+          .tool-group {
+              display: flex;
+              gap: 2px;
+              padding-right: 8px;
+              border-right: 1px solid var(--border-color);
+              align-items: center;
+              height: 28px;
+              position: relative;
+              flex-shrink: 0;
+              flex-wrap: nowrap;
+          }
+  
+          /* Last group shouldn't have border */
+          .format-btn {
+              min-width: 28px;
+              height: 26px;
+              border: none;
+              background: transparent;
+              color: var(--text-color);
+              border-radius: 3px;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 2px 4px;
+              font-size: 12px;
+              transition: background 0.15s ease, opacity 0.15s ease;
+          }
+  
+  
+  
+          .format-btn:hover {
+              background-color: var(--hover-color);
+          }
+  
+          .format-btn:active {
+              transform: scale(0.95);
+          }
+  
+          .format-btn svg {
+              width: 12px;
+              height: 12px;
+              fill: currentColor;
+              transition: fill 0.15s ease;
+          }
+  
+          /* Inputs */
+          select.tool-select {
+              padding: 2px 4px;
+              border-radius: 3px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-color);
+              color: var(--text-color);
+              font-size: 12px;
+              max-width: 110px;
+          }
+  
+          input.number-input {
+              width: 40px;
+              padding: 2px 4px;
+              border-radius: 3px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-color);
+              color: var(--text-color);
+              font-size: 12px;
+              text-align: center;
+          }
+  
+          /* Color Pickers */
+          .color-wrapper {
+              position: relative;
+              width: 26px;
+              height: 26px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+          }
+  
+          .color-wrapper:hover {
+              background-color: var(--hover-color);
+              border-radius: 3px;
+          }
+  
+          input[type="color"] {
+              opacity: 0;
+              position: absolute;
+              width: 100%;
+              height: 100%;
+              cursor: pointer;
+          }
+  
+          /* --- MATH TOOLBAR --- */
+          #math-toolbar {
+              display: none;
+              background: #f0f0f0;
+              border-bottom: 1px solid var(--border-color);
+              padding: 0;
+              flex-direction: column;
+              z-index: 1000;
+              /* Below dropdowns, above editor */
+          }
+  
+          [data-theme="dark"] #math-toolbar {
+              background: #252525;
+          }
+  
+          #math-toolbar.show {
+              display: flex;
+          }
+  
+          .math-tabs {
+              display: flex;
+              gap: 1px;
+              padding: 2px;
+              background: #e5e5e5;
+              border-bottom: 1px solid #ccc;
+              overflow-x: auto;
+          }
+  
+          [data-theme="dark"] .math-tabs {
+              background: #333;
+              border-bottom: #444;
+          }
+  
+          .math-tab {
+              padding: 4px 8px;
+              font-size: 11px;
+              cursor: pointer;
+              border-radius: 3px 3px 0 0;
+              border: 1px solid transparent;
+              white-space: nowrap;
+              background: transparent;
+              color: #555;
+          }
+  
+          .math-tab:hover {
+              background: #fff;
+              color: #000;
+          }
+  
+          .math-tab.active {
+              background: #f9f9f9;
+              border-color: #ccc;
+              border-bottom-color: #f9f9f9;
+              font-weight: bold;
+              color: #000;
+              box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.05);
+          }
+  
+          [data-theme="dark"] .math-tab {
+              background: transparent;
+              color: #aaa;
+          }
+  
+          [data-theme="dark"] .math-tab:hover {
+              background: #444;
+              color: #fff;
+          }
+  
+          [data-theme="dark"] .math-tab.active {
+              background: #333;
+              border-color: #555;
+              border-bottom-color: #333;
+              color: #fff;
+          }
+  
+          .math-content {
+              padding: 4px;
+              overflow-x: auto;
+              background: var(--math-btn-bg);
+              max-height: 160px;
+          }
+  
+          .math-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+              gap: 5px;
+              padding: 4px;
+          }
+  
+          /* Math Button â€” wider to show expressions clearly */
+          .math-btn {
+              min-width: 56px;
+              height: 44px;
+              padding: 2px 6px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: #fff;
+              border: 1px solid #ddd;
+              border-radius: 6px;
+              cursor: pointer;
+              color: #000;
+              font-size: 13px;
+              transition: all 0.12s ease-in-out;
+              box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+              overflow: hidden;
+              white-space: nowrap;
+          }
+  
+          .math-btn * {
+              pointer-events: none;
+          }
+  
+          .math-btn .katex {
+              font-size: 1em;
+          }
+  
+          .math-btn .katex-display {
+              margin: 0;
+          }
+  
+          .math-btn .math-label {
+              font-family: 'Courier New', monospace;
+              font-size: 10px;
+              color: #555;
+              text-align: center;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              max-width: 100%;
+          }
+  
+          [data-theme="dark"] .math-btn {
+              background: #444;
+              border-color: #555;
+              color: white;
+          }
+  
+          .math-btn:hover {
+              background: #e8f0fe;
+              border-color: #8ab4f8;
+              transform: translateY(-1px);
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+              z-index: 2;
+          }
+  
+          [data-theme="dark"] .math-btn:hover {
+              background: #555;
+              border-color: var(--accent-color);
+          }
+  
+          .math-btn:active {
+              transform: translateY(1px);
+              box-shadow: none;
+          }
+  
+          /* --- DIAGRAM MODAL (NEW) --- */
+          @keyframes fadeIn {
+              from {
+                  opacity: 0;
+                  transform: scale(0.98);
+              }
+  
+              to {
+                  opacity: 1;
+                  transform: scale(1);
+              }
+          }
+  
+          .modal {
+              display: none;
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background: rgba(0, 0, 0, 0.4);
+              backdrop-filter: blur(2px);
+              z-index: 3000;
+              justify-content: center;
+              align-items: center;
+          }
+  
+          .modal-content {
+              background: var(--bg-color);
+              padding: 20px;
+              border-radius: 8px;
+              width: 800px;
+              max-width: 95%;
+              max-height: 85vh;
+              overflow-y: auto;
+              border: 1px solid var(--border-color);
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+              animation: fadeIn 0.2s ease-out;
+          }
+  
+          .modal h2 {
+              margin-top: 0;
+              border-bottom: 1px solid var(--border-color);
+              padding-bottom: 10px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+          }
+  
+          .close-modal {
+              cursor: pointer;
+              font-size: 20px;
+              font-weight: bold;
+          }
+  
+          .diagram-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+              gap: 15px;
+              padding: 10px 0;
+          }
+  
+          .diagram-card {
+              border: 1px solid var(--border-color);
+              border-radius: 6px;
+              padding: 10px;
+              cursor: pointer;
+              text-align: center;
+              transition: background 0.2s;
+          }
+  
+          .diagram-card:hover {
+              background-color: var(--sidebar-bg);
+              border-color: var(--accent-color);
+          }
+  
+          .diagram-preview {
+              background: white;
+              border: 1px solid #eee;
+              padding: 10px;
+              margin-bottom: 10px;
+              min-height: 60px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+          }
+  
+          [data-theme="dark"] .diagram-preview {
+              background: #333;
+              border-color: #555;
+          }
+  
+          .diagram-title {
+              font-size: 14px;
+              font-weight: bold;
+              margin-bottom: 5px;
+          }
+  
+          /* --- TOOLTIP --- */
+          #math-tooltip {
+              position: fixed;
+              display: none;
+              background: var(--bg-color);
+              border: 1px solid var(--border-color);
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+              border-radius: 8px;
+              padding: 10px 15px;
+              pointer-events: none;
+              z-index: 9999;
+              transition: opacity 0.1s;
+          }
+  
+          #math-tooltip .katex {
+              font-size: 1.5rem;
+              color: var(--text-color);
+          }
+  
+          /* --- TABS --- */
+          #tabs-container {
+              display: flex;
+              background: var(--sidebar-bg);
+              padding-left: 10px;
+              border-bottom: 1px solid var(--border-color);
+              overflow-x: auto;
+          }
+  
+          .tab {
+              padding: 6px 12px;
+              border-radius: 4px 4px 0 0;
+              cursor: pointer;
+              font-size: 12px;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              background: transparent;
+              color: var(--text-color);
+              border: 1px solid transparent;
+              margin-top: 4px;
+              transition: background-color 0.2s ease, opacity 0.2s ease;
+              opacity: 0.7;
+          }
+  
+          .tab:hover {
+              background: var(--hover-color);
+              opacity: 1;
+          }
+  
+          .tab.active {
+              background: var(--bg-color);
+              font-weight: 600;
+              border: 1px solid var(--border-color);
+              border-bottom: 1px solid var(--bg-color);
+              margin-bottom: -1px;
+              z-index: 10;
+              opacity: 1;
+              box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.02);
+          }
+  
+          .tab-close {
+              opacity: 0.5;
+              font-size: 14px;
+          }
+  
+          .tab-close:hover {
+              opacity: 1;
+              color: #e81123;
+          }
+  
+          /* --- WORKSPACE --- */
+          #workspace-wrapper {
+              display: flex;
+              flex-direction: column;
+              flex: 1 1 0;
+              min-height: 0;
+              position: relative;
+          }
+  
+          #workspace {
+              display: flex;
+              flex: 1 1 0;
+              min-height: 0;
+              overflow: hidden;
+              position: relative;
+          }
+  
+          #editor-pane {
+              width: 50%;
+              border-right: 1px solid var(--border-color);
+              display: flex;
+              flex-direction: column;
+          }
+  
+          #preview-pane {
+              width: 50%;
+              overflow-y: auto;
+              padding: 30px;
+              background: var(--bg-color);
+          }
+  
+          textarea#editor {
+              flex-grow: 1;
+              border: none;
+              resize: none;
+              padding: 20px;
+              background: var(--bg-color);
+              color: var(--text-color);
+              outline: none;
+              line-height: 1.6;
+              transition: box-shadow 0.2s ease;
+          }
+  
+          textarea#editor:focus {
+              box-shadow: inset 0 0 0 1px var(--accent-color);
+          }
+  
+          /* Preview Styles */
+          #preview-content {
+              max-width: 800px;
+              margin: 0 auto;
+              line-height: 1.7;
+              font-size: 15px;
+          }
+  
+          #preview-content h1,
+          #preview-content h2 {
+              border-bottom: 1px solid var(--border-color);
+              padding-bottom: 0.3em;
+              margin-top: 1em;
+          }
+  
+          #preview-content code {
+              background: rgba(127, 127, 127, 0.15);
+              padding: 2px 4px;
+              border-radius: 3px;
+          }
+  
+          #preview-content pre {
+              background: var(--sidebar-bg);
+              padding: 15px;
+              border-radius: 8px;
+              overflow-x: auto;
+              border: 1px solid var(--border-color);
+          }
+  
+          #preview-content blockquote {
+              border-left: 4px solid var(--accent-color);
+              padding-left: 15px;
+              color: #888;
+              font-style: italic;
+          }
+  
+          #preview-content img {
+              max-width: 100%;
+              border-radius: 4px;
+          }
+  
+          #preview-content table {
+              border-collapse: collapse;
+              width: auto;
+              min-width: 100%;
+              table-layout: auto;
+          }
+  
+          #preview-content th,
+          #preview-content td {
+              border: 1px solid var(--border-color);
+              padding: 8px;
+          }
+  
+          /* --- STATUS BAR --- */
+          #statusbar {
+              height: 22px;
+              background: #202020;
+              color: #ffffff;
+              display: flex;
+              align-items: center;
+              padding: 0 15px;
+              font-size: 11px;
+              justify-content: space-between;
+              opacity: 0.9;
+          }
+  
+          body[data-theme="sepia"] #statusbar {
+              background: var(--accent-color);
+              color: #fff;
+          }
+  
+          body[data-theme="hacker"] #statusbar {
+              background: var(--accent-color);
+              color: var(--bg-color);
+          }
+  
+          /* Print */
+          @media print {
+  
+              #titlebar,
+              #toolbar,
+              #math-toolbar,
+              #tabs-container,
+              #editor-pane,
+              #statusbar,
+              .modal,
+              #math-tooltip {
+                  display: none !important;
+              }
+  
+              #preview-pane {
+                  width: 100% !important;
+                  margin: 0;
+                  padding: 0;
+                  overflow: visible;
+              }
+  
+              body {
+                  height: auto;
+                  overflow: visible;
+                  background: white;
+                  color: black;
+              }
+          }
+  
+          /* --- MOBILE RESPONSIVENESS --- */
+          @media (max-width: 768px) {
+              #workspace {
+                  flex-direction: column;
+                  height: calc(100vh - 150px);
+              }
+  
+              #editor-pane,
+              #preview-pane {
+                  width: 100% !important;
+                  height: 50%;
+                  border-right: none;
+              }
+  
+              #preview-pane {
+                  border-top: 1px solid var(--border-color);
+                  padding: 15px;
+              }
+  
+              #toolbar {
+                  overflow-x: auto;
+                  flex-wrap: nowrap;
+                  padding-bottom: 2px;
+              }
+  
+              .tool-group {
+                  flex-shrink: 0;
+              }
+  
+              .modal-content {
+                  width: 95%;
+                  padding: 10px;
+              }
+  
+              #titlebar {
+                  font-size: 11px;
+              }
+  
+              .math-tabs {
+                  overflow-x: auto;
+                  flex-wrap: nowrap;
+                  padding-bottom: 2px;
+              }
+          }
+  
+          .hidden {
+              display: none !important;
+          }
+  
+          /* --- ZEN MODE --- */
+          body.zen-mode #toolbar,
+          body.zen-mode #math-toolbar,
+          body.zen-mode #statusbar {
+              display: none !important;
+          }
+  
+          body.zen-mode #workspace {
+              height: 100vh !important;
+          }
+  
+          .zen-btn {
+              position: fixed;
+              bottom: 20px;
+              right: 20px;
+              background: var(--bg-color);
+              border: 1px solid var(--border-color);
+              border-radius: 50%;
+              width: 40px;
+              height: 40px;
+              display: none;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+              z-index: 5000;
+          }
+  
+          body.zen-mode .zen-btn {
+              display: flex;
+          }
+  
+          /* --- MOBILE RESPONSIVENESS AND SIDEBAR --- */
+          @media (max-width: 768px) {
+              #sidebar {
+                  position: absolute;
+                  z-index: 1000;
+                  height: 100%;
+                  left: 0;
+                  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+                  transition: left 0.3s ease;
+              }
+  
+              #sidebar.collapsed {
+                  left: -250px;
+                  width: 250px;
+                  /* retain width to slide out rather than shrink */
+                  border-right: 1px solid var(--border-color);
+                  box-shadow: none;
+              }
+  
+              /* When sidebar is active on mobile, hide the editor completely to avoid scrolling issues or just 
+overlay it. Overlay is fine since z-index 1000 */
+          }
+      </style>
+  </head>
+  
+  <body>
+  
+      <!-- Tooltip Element -->
+      <div id="math-tooltip"></div>
+  
+      <!-- Diagram Modal -->
+      <div id="diagram-modal" class="modal">
+          <div class="modal-content">
+              <h2>Inserisci Diagramma</h2>
+              <div class="diagram-grid" id="diagram-grid"></div>
+          </div>
+      </div>
+  
+      <div id="app-root">
+          <!-- Formatting Toolbar (Merged File + Formatting) -->
+          <div id="toolbar">
+  
+              <!-- File & Sidebar Group -->
+              <div class="tool-group" style="padding-left: 4px;">
+                  <button class="menu-btn" onclick="toggleSidebar()" title="Esplora Note"
+                      style="margin-right: 4px; padding: 4px;">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+stroke-width="2">
+                          <line x1="3" y1="12" x2="21" y2="12"></line>
+                          <line x1="3" y1="6" x2="21" y2="6"></line>
+                          <line x1="3" y1="18" x2="21" y2="18"></line>
+                      </svg>
+                  </button>
+                  <button class="menu-btn" id="file-btn" onclick="toggleFileMenu(event)">
+                      <span style="margin-right:4px;">File</span>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+stroke-width="2">
+                          <path d="M6 9l6 6 6-6" />
+                      </svg>
+                  </button>
+              </div>
+              <!-- Fonts -->
+              <div class="tool-group">
+                  <select class="tool-select" id="font-family" onchange="changeFont()">
+                      <option value="'Segoe UI', sans-serif" selected>Segoe UI</option>
+                      <option value="'Arial', sans-serif">Arial</option>
+                      <option value="'Verdana', sans-serif">Verdana</option>
+                      <option value="'Georgia', serif">Georgia</option>
+                      <option value="'Consolas', monospace">Consolas</option>
+                      <option value="'Courier New', monospace">Courier New</option>
+                      <option value="'Roboto', sans-serif">Roboto</option>
+                      <option value="'Monaco', monospace">Monaco</option>
+                  </select>
+                  <input type="number" id="font-size" class="number-input" value="14" min="8" max="72"
+                      onchange="changeFontSize()">
+              </div>
+  
+              <!-- Basic Format -->
+              <div class="tool-group">
+                  <button class="format-btn" onclick="insertMarkdown('**', '**')"
+                      title="Grassetto (Ctrl+B)"><strong>B</strong></button>
+                  <button class="format-btn" onclick="insertMarkdown('*', '*')"
+                      title="Corsivo (Ctrl+I)"><em>I</em></button>
+                  <button class="format-btn" onclick="insertMarkdown('<u>', '</u>')"
+                      title="Sottolineato"><u>U</u></button>
+                  <button class="format-btn" onclick="insertMarkdown('~~', '~~')" title="Barrato"><s>S</s></button>
+                  <button class="format-btn" onclick="insertMarkdown('<sup>', '</sup>')" title="Apice"
+                      style="font-size:11px;">xÂ²</button>
+                  <button class="format-btn" onclick="insertMarkdown('<sub>', '</sub>')" title="Pedice"
+                      style="font-size:11px;">xâ‚‚</button>
+              </div>
+  
+              <!-- Colors -->
+              <div class="tool-group" onmousedown="saveSelection()">
+                  <button class="format-btn" onclick="document.getElementById('text-color-picker').click()"
+                      title="Colore Testo">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+stroke-width="2">
+                          <path d="M4 20h16" />
+                          <path d="M12 4l-6 13h12L12 4z" />
+                          <path d="M12 15h0" stroke-width="4" stroke="var(--accent-color)" />
+                      </svg>
+                  </button>
+                  <input type="color" id="text-color-picker" style="display:none"
+                      onchange="insertColor('color', this.value)" value="#000000">
+  
+                  <button class="format-btn" onclick="document.getElementById('bg-color-picker').click()"
+                      title="Evidenziatore">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+stroke-width="2">
+                          <path d="M15.24 6.36l-3.53-3.53a2 2 0 0 0-2.83 0l-7.79 7.79a2 2 0 0 0 0 2.83L6.36 18.76" />
+                          <path d="M12.41 9.19l3.54 3.54" />
+                          <path d="M14 18h6v2h-6z" />
+                          <path d="M9.19 12.41l-2.43 2.43" />
+                      </svg>
+                  </button>
+                  <input type="color" id="bg-color-picker" style="display:none"
+                      onchange="insertColor('background-color', this.value)" value="#ffff00">
+              </div>
+  
+              <!-- Headings Flat -->
+              <div class="tool-group">
+                  <button class="format-btn" onclick="applyHeading(1)" title="Titolo H1"><strong
+                          style="font-size:14px">H1</strong></button>
+                  <button class="format-btn" onclick="applyHeading(2)" title="Titolo H2"><strong
+                          style="font-size:13px">H2</strong></button>
+                  <button class="format-btn" onclick="applyHeading(3)" title="Titolo H3"><strong
+                          style="font-size:12px">H3</strong></button>
+                  <button class="format-btn" onclick="applyHeading(0)" title="Paragrafo Normale"
+                      style="font-size:11px;">Â¶</button>
+              </div>
+  
+              <!-- Lists Flat -->
+              <div class="tool-group">
+                  <button class="format-btn" onclick="applyList('- ')" title="Elenco Puntato (â€¢)">
+                      <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;">
+                          <circle cx="5" cy="6" r="2" />
+                          <circle cx="5" cy="12" r="2" />
+                          <circle cx="5" cy="18" r="2" />
+                          <line x1="11" y1="6" x2="22" y2="6" stroke="currentColor" stroke-width="2.5" />
+                          <line x1="11" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2.5" />
+                          <line x1="11" y1="18" x2="22" y2="18" stroke="currentColor" stroke-width="2.5" />
+                      </svg>
+                      <span style="font-size:9px;margin-left:1px;">â€¢â€”</span>
+                  </button>
+                  <button class="format-btn" onclick="applyList('1. ')" title="Elenco Numerato (1. 2. 3.)"
+                      style="font-size:10px; letter-spacing:-0.5px;">1.<br>2.</button>
+                  <button class="format-btn" onclick="applyList('- [ ] ')" title="Checklist (â˜)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                          style="width:14px;height:14px;">
+                          <rect x="3" y="3" width="18" height="18" rx="3" />
+                          <path d="M7 12l4 4 6-6" />
+                      </svg>
+                      <span style="font-size:9px;margin-left:1px;">â˜</span>
+                  </button>
+              </div>
+  
+              <!-- MATH SECTION -->
+              <div class="tool-group">
+                  <!-- Pulsante equazione a blocco -->
+                  <button class="format-btn" onclick="insertFormulaBlock()" title="Blocco Equazione ($$)">
+                      <strong style="font-family: 'Times New Roman', serif; font-size: 14px; 
+line-height:1;">$$</strong>
+                  </button>
+                  <button class="format-btn" onclick="toggleMathBar()" title="Tavolozza Simboli Matematici">
+                      <span style="font-family: 'Times New Roman', serif; font-size: 17px; 
+line-height:1;">&pi;â–¾</span>
+                  </button>
+              </div>
+  
+              <!-- Extra Markdown -->
+              <div class="tool-group">
+                  <button class="format-btn" onclick="insertMarkdown('> ', '')" title="Citazione Blockquote">
+                      <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;">
+                          <path
+                              d="M3 21v-5a4 4 0 0 1 4-4h1V8a4 4 0 0 1 4-4h1v6h-1a2 2 0 0 0-2 2v5H3zm10 0v-5a4 4 0 0 1 
+4-4h1V8a4 4 0 0 0-1-3V3h1a4 4 0 0 1 4 4v4h-1a2 2 0 0 0-2 2v5h-6z" />
+                      </svg>
+                      <span style="font-size:9px;margin-left:1px;">â</span>
+                  </button>
+                  <button class="format-btn" onclick="insertHR()" title="Separatore Orizzontale (---)"
+                      style="font-size:10px;">â”€ HR</button>
+                  <button class="format-btn" onclick="insertLink()" title="Inserisci Link (Ctrl+K)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          style="width:14px;height:14px;">
+                          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                      </svg>
+                      <span style="font-size:9px;margin-left:1px;">URL</span>
+                  </button>
+                  <button class="format-btn" onclick="insertMarkdown('\n```\n', '\n```\n')" title="Blocco di Codice 
+(```)"
+                      style="font-size:10px; letter-spacing:-1px;">&lt;/&gt;</button>
+  
+                  <!-- Separator -->
+                  <div style="width:1px; height:20px; background:var(--border-color); margin:0 4px;"></div>
+  
+                  <!-- Tables -->
+                  <button id="table-menu-btn" class="format-btn" onclick="toggleTableMenu(event)"
+                      title="Inserisci Tabella">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <rect x="3" y="3" width="18" height="18" rx="2" />
+                          <line x1="3" y1="9" x2="21" y2="9" />
+                          <line x1="3" y1="15" x2="21" y2="15" />
+                          <line x1="9" y1="3" x2="9" y2="21" />
+                          <line x1="15" y1="3" x2="15" y2="21" />
+                      </svg>
+                      <span style="font-size:10px; margin-left:2px;">Tab</span>
+                  </button>
+              </div>
+  
+              <!-- Help Button (Aligned rightmost but part of flow? Or separate? User said "close to other buttons") 
+-->
+              <!-- We'll keep it as a tool group but maybe push it to the end OR just keep it in line. User requested 
+all aligned left to right. -->
+              <!-- Help & View Controls -->
+              <div class="tool-group" style="border-right: none;">
+                  <!-- View toggles -->
+                  <button class="format-btn" onclick="toggleView('editor')" title="Solo Editor" id="view-editor-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <rect x="3" y="3" width="10" height="18" rx="1" />
+                      </svg>
+                  </button>
+                  <button class="format-btn" onclick="toggleView('split')" title="Vista Divisa" id="view-split-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <rect x="3" y="3" width="18" height="18" rx="1" />
+                          <line x1="12" y1="3" x2="12" y2="21" />
+                      </svg>
+                  </button>
+                  <button class="format-btn" onclick="toggleView('preview')" title="Solo Anteprima" 
+id="view-preview-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <rect x="11" y="3" width="10" height="18" rx="1" />
+                      </svg>
+                  </button>
+                  <!-- Help, Find, TOC -->
+                  <button class="format-btn" onclick="openHelp()" title="Guida" 
+id="btn-guida"><strong>?</strong></button>
+                  <button class="format-btn" onclick="toggleFindBar()" title="Cerca (Ctrl+F)" style="font-size:10px;"
+                      id="btn-find">ðŸ”</button>
+                  <button class="format-btn" onclick="generateTOC()" title="Genera Indice (TOC)" 
+style="font-size:10px;"
+                      id="btn-toc">ðŸ“‘</button>
+  
+                  <!-- Separator -->
+                  <div style="width:1px; height:20px; background:var(--border-color); margin:0 4px;"></div>
+  
+                  <!-- System Toggles (Lang, Theme, Focus) -->
+                  <button class="format-btn" onclick="toggleLanguage()" title="Lingua / Language" id="lang-toggle-btn"
+                      style="padding: 0 4px;">
+                      <strong style="font-size:12px; color:var(--text-color);" id="lang-label">IT</strong>
+                  </button>
+                  <!-- Dark mode toggle -->
+                  <button class="format-btn" onclick="toggleDarkMode()" title="ModalitÃ  Scura" id="dark-toggle-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                      </svg>
+                  </button>
+                  <!-- Theme cycle -->
+                  <button class="format-btn" onclick="cycleTheme()" title="Cambia Colori (Tema)" id="theme-toggle-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path
+                              d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 
+19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                      </svg>
+                  </button>
+                  <button class="format-btn" onclick="toggleZenMode()" title="Schermo Intero (Zen)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path
+                              d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 
+0 2 2h3" />
+                      </svg>
+                  </button>
+              </div>
+          </div>
+  
+          <!-- FILE DROPDOWN MENU -->
+          <div id="file-menu" class="dropdown-menu">
+              <div class="dropdown-item" onclick="newNote(); closeAllMenus();">ðŸ“„ Nuova Scheda</div>
+              <div class="dropdown-item" onclick="saveNow(); closeAllMenus();">ðŸ’¾ Salva (Ctrl+S)</div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" onclick="exportMarkdown(); closeAllMenus();">â¬‡ Esporta .md</div>
+              <div class="dropdown-item" onclick="exportHTML();">â¬‡ Esporta .html</div>
+              <div class="dropdown-item" onclick="exportTXT();">â¬‡ Esporta .txt</div>
+              <div class="dropdown-item" onclick="exportTeX();">â¬‡ Esporta .tex (LaTeX)</div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" onclick="document.getElementById('import-file').click(); closeAllMenus();">â¬†
+                  Importa
+                  File</div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" onclick="exportBackup(); closeAllMenus();">ðŸ’¾ Backup JSON</div>
+              <div class="dropdown-item" onclick="document.getElementById('import-backup').click(); 
+closeAllMenus();">ðŸ“¥
+                  Ripristina Backup</div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-item" onclick="window.print(); closeAllMenus();">ðŸ–¨ Stampa / Esporta PDF</div>
+          </div>
+  
+          <!-- TABLE DROPDOWN MENU -->
+          <div id="table-menu" class="dropdown-menu">
+              <div class="dropdown-item" onclick="insertTable(2,2); closeAllMenus();">2Ã—2 Tabella</div>
+              <div class="dropdown-item" onclick="insertTable(3,3); closeAllMenus();">3Ã—3 Tabella</div>
+              <div class="dropdown-item" onclick="insertTable(4,4); closeAllMenus();">4Ã—4 Tabella</div>
+              <div class="dropdown-item" onclick="insertTable(3,5); closeAllMenus();">3Ã—5 Tabella</div>
+          </div>
+  
+          <!-- FIND/REPLACE BAR -->
+          <div id="find-bar"
+              style="display:none; background:var(--toolbar-bg); border-bottom:1px solid var(--border-color); 
+padding:6px 12px; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px;">
+              <label style="font-weight:600;">Cerca:</label>
+              <input type="text" id="find-input" placeholder="Testo da cercare..." oninput="highlightFind()"
+                  style="padding:3px 7px; border:1px solid var(--border-color); border-radius:3px; 
+background:var(--bg-color); color:var(--text-color); min-width:160px;">
+              <label>Sostituisci:</label>
+              <input type="text" id="replace-input" placeholder="Sostituisci con..."
+                  style="padding:3px 7px; border:1px solid var(--border-color); border-radius:3px; 
+background:var(--bg-color); color:var(--text-color); min-width:140px;">
+              <button onclick="findAndReplace()"
+                  style="padding:3px 10px; background:var(--accent-color); color:white; border:none; 
+border-radius:3px; cursor:pointer; font-size:11px;">Sostituisci
+                  tutto</button>
+              <span id="find-count" style="color:#888; font-size:11px;"></span>
+              <button onclick="closeFindBar()"
+                  style="margin-left:auto; background:none; border:none; cursor:pointer; font-size:16px; 
+color:#888;">&times;</button>
+          </div>
+  
+          <!-- MATH TOOLBAR -->
+          <div id="math-toolbar">
+              <div class="math-tabs" id="math-tabs-container"></div>
+              <div class="math-content">
+                  <div class="math-grid" id="math-grid"></div>
+              </div>
+          </div>
+  
+          <!-- MAIN CONTAINER -->
+          <div id="main-container">
+  
+              <!-- TABS SIDEBAR -->
+              <aside id="sidebar" class="collapsed">
+                  <div class="sidebar-header">
+                      <div style="display:flex; justify-content:space-between; align-items:center;">
+                          <div style="font-weight:bold; font-size:13px; color:var(--text-color);">Schede aperte</div>
+                          <button class="format-btn" onclick="newNote()" title="Nuova Scheda"
+                              style="padding:2px; height:24px; min-width:24px;">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                  stroke-width="2">
+                                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                              </svg>
+                          </button>
+                      </div>
+                  </div>
+                  <div class="sidebar-content" id="tabs-list">
+                      <!-- Tab items injected by JS -->
+                  </div>
+              </aside>
+  
+              <!-- WORKSPACE WRAPPER -->
+              <div id="workspace-wrapper">
+  
+                  <!-- Workspace -->
+                  <div id="workspace">
+                      <div id="editor-pane">
+                          <textarea id="editor" spellcheck="false"
+                              placeholder="Scrivi qui... Usa $$ ... $$ per formule."></textarea>
+                      </div>
+                      <div id="preview-pane">
+                          <div id="preview-content"></div>
+                      </div>
+                  </div>
+  
+                  <!-- Zen Mode Exit Button -->
+                  <div class="zen-btn" onclick="toggleZenMode()" title="Esci modalitÃ  Zen">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-color)"
+                          stroke-width="2">
+                          <path
+                              d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 
+1 2 2v3">
+                          </path>
+                      </svg>
+                  </div>
+  
+                  <!-- Status Bar -->
+                  <div id="statusbar">
+                      <span id="status-left">Pronto</span>
+                      <span id="status-right">Minipad Ready</span>
+                  </div>
+              </div> <!-- End workspace-wrapper -->
+          </div> <!-- End main-container -->
+      </div> <!-- End app-root -->
+  
+      <!-- Help Modal -->
+      <div id="help-modal" class="modal">
+          <div class="modal-content">
+              <span class="close-modal" onclick="closeHelp()">&times;</span>
+              <div id="help-it">
+                  <h2>Guida a Minipad</h2>
+                  <p><strong>Minipad</strong> Ã¨ un editor pensato per la massima produttivitÃ . Tutti i dati rimangono
+                      nel
+                      tuo browser in locale.</p>
+                  <h3>Appunti e Comandi Base</h3>
+                  <ul>
+                      <li><strong>Markdown</strong>: Usa la barra in alto o scrivi direttamente
+                          <code>**grassetto**</code>, <code>*corsivo*</code>, <code># Titolo</code>.
+                      </li>
+                      <li><strong>Tabelle</strong>: Fai clic sul tasto <strong>Tab</strong> per inserire rapidamente
+                          tabelle ridimensionabili.</li>
+                      <li><strong>Zen Mode</strong>: Nascondi l'interfaccia e concentrati solo sul testo.</li>
+                      <li><strong>AI & Formule (Pasting)</strong>: Incolla testi generati da intelligenze artificiali
+                          (come ChatGPT, Gemini, Claude). Minipad individua e renderizza in automatico le espressioni
+                          matematiche esportate dalle AI con <code>\[ ... \]</code>, <code>\( ... \)</code>,
+                          <code>$$ ... $$</code> e <code>$ ... $</code> per farti vedere subito la formula corretta!
+                      </li>
+                  </ul>
+                  <h3>Scorciatoie da Tastiera</h3>
+                  <ul>
+                      <li><code>Ctrl+S</code>: Salva il documento nel browser</li>
+                      <li><code>Ctrl+B</code> / <code>Ctrl+I</code>: Grassetto / Corsivo</li>
+                      <li><code>Ctrl+K</code>: Inserisci Link</li>
+                      <li><code>Ctrl+F</code>: Cerca e Sostituisci all'interno dell'editor</li>
+                  </ul>
+                  <h3>Matematica (LaTeX) e Diagrammi</h3>
+                  <p>Inserisci calcoli o formule avvolgendoli con <code>$</code> (nella riga) o <code>$$</code> (come
+                      blocco isolato). Puoi usare il menu completo <strong>Ï€â–¾</strong> per esplorare centinaia di
+                      modelli
+                      rapidi!</p>
+                  <p>Hai bisogno di schemi? Clicca sull'icona diagramma per aggiungere Mappe Mentali, Diagrammi di
+                      Flusso
+                      o di Sequenza generati istantaneamente.</p>
+              </div>
+              <div id="help-en" style="display:none;">
+                  <h2>Minipad Full Guide</h2>
+                  <p><strong>Minipad</strong> is a text editor designed for maximum productivity. All data stays
+                      secure in
+                      your browser locally.</p>
+                  <h3>Basic Notes and Commands</h3>
+                  <ul>
+                      <li><strong>Markdown</strong>: Use the formatting toolbar or write directly using
+                          <code>**bold**</code>, <code>*italic*</code>, and <code># Title</code>.
+                      </li>
+                      <li><strong>Tables</strong>: Click the <strong>Tab</strong> button to quickly generate resizable
+                          tables.</li>
+                      <li><strong>Zen Mode</strong>: Hide the UI instantly and immerse yourself in writing.</li>
+                      <li><strong>AI & Math Tools (Pasting)</strong>: Seamlessly paste answers from AI tools (like
+                          ChatGPT, Gemini, Claude). Minipad automatically intercepts and renders math notation using
+                          <code>\[ ... \]</code>, <code>\( ... \)</code>, <code>$$ ... $$</code>, and
+                          <code>$ ... $</code>
+                          so you never read messy code!
+                      </li>
+                  </ul>
+                  <h3>Keyboard Shortcuts</h3>
+                  <ul>
+                      <li><code>Ctrl+S</code>: Save document strictly locally</li>
+                      <li><code>Ctrl+B</code> / <code>Ctrl+I</code>: Bold / Italic</li>
+                      <li><code>Ctrl+K</code>: Insert Link URL</li>
+                      <li><code>Ctrl+F</code>: Native Find and Replace menu</li>
+                  </ul>
+                  <h3>Math (LaTeX) and Diagrams</h3>
+                  <p>Insert complex formulas by wrapping them in <code>$</code> (inline) or <code>$$</code> (block).
+                      Explore the <strong>Ï€â–¾</strong> menu for hundreds of quick LaTeX snippets!</p>
+                  <p>Need flowcharts? Press the chart icon to instantly append robust Mindmaps, Sequence, or Flow
+                      charts
+                      directly into your markdown workspace.</p>
+              </div>
+          </div>
+      </div>
+  
+      <script>
+          // marked.setOptions is removed because it causes errors in newer marked.js versions.
+          if (window.mermaid) {
+              mermaid.initialize({ startOnLoad: false, theme: 'default' });
+          }
+  
+          let currentLang = 'it';
+          const i18n = {
+              'it': {
+                  'file': 'File',
+                  'new': 'Nuovo',
+                  'open': 'Apri...',
+                  'save_as': 'Salva con nome...',
+                  'export_pdf': 'Esporta PDF',
+                  'export_html': 'Esporta HTML',
+                  'export_md': 'Esporta Markdown (.md)',
+                  'export_tex': 'Esporta LaTeX (.tex)',
+                  'save_title': 'Salva Ora',
+                  'saved_indicator': 'Salvato',
+                  'find_label': 'Cerca:',
+                  'replace_label': 'Sostituisci:',
+                  'btn_replace': 'Sostituisci tutto',
+                  'find_placeholder': 'Testo da cercare...',
+                  'replace_placeholder': 'Sostituisci con...',
+                  'diagram_title': 'Inserisci Diagramma',
+                  'tooltip_bold': 'Grassetto (Ctrl+B)',
+                  'tooltip_italic': 'Corsivo (Ctrl+I)',
+                  'tooltip_underline': 'Sottolineato',
+                  'tooltip_strikethrough': 'Barrato',
+                  'status_ready': 'Pronto',
+                  'placeholder': 'Scrivi qui... Usa $$ ... $$ per formule.',
+                  'new_tab_name': 'Nuova Nota',
+                  'tab_rename_prompt': 'Rinomina scheda:',
+                  'tab_untitled': 'Senza nome',
+                  'tab_close_confirm': "Chiudere l'ultima scheda?",
+                  'btn_guida': 'Guida',
+                  'btn_find': 'Cerca (Ctrl+F)',
+                  'btn_toc': 'Genera Indice (TOC)'
+              },
+              'en': {
+                  'file': 'File',
+                  'new': 'New',
+                  'open': 'Open...',
+                  'save_as': 'Save as...',
+                  'export_pdf': 'Export PDF',
+                  'export_html': 'Export HTML',
+                  'export_md': 'Export Markdown (.md)',
+                  'export_tex': 'Export LaTeX (.tex)',
+                  'save_title': 'Save Now',
+                  'saved_indicator': 'Saved',
+                  'find_label': 'Find:',
+                  'replace_label': 'Replace:',
+                  'btn_replace': 'Replace All',
+                  'find_placeholder': 'Search text...',
+                  'replace_placeholder': 'Replace with...',
+                  'diagram_title': 'Insert Diagram',
+                  'tooltip_bold': 'Bold (Ctrl+B)',
+                  'tooltip_italic': 'Italic (Ctrl+I)',
+                  'tooltip_underline': 'Underline',
+                  'tooltip_strikethrough': 'Strikethrough',
+                  'status_ready': 'Ready',
+                  'placeholder': 'Type here... Use $$ ... $$ for math.',
+                  'new_tab_name': 'New Note',
+                  'tab_rename_prompt': 'Rename tab:',
+                  'tab_untitled': 'Untitled',
+                  'tab_close_confirm': "Close the last tab?",
+                  'btn_guida': 'Help',
+                  'btn_find': 'Find (Ctrl+F)',
+                  'btn_toc': 'Generate TOC'
+              }
+>     <style>
+          body { 
+              font-family: 'Segoe UI', Arial, sans-serif; 
+              line-height: 1.6; 
+              color: #333; 
+              max-width: 800px; 
+              margin: 40px auto; 
+              padding: 20px; 
+              background: #fff;
+          }
+          h1, h2, h3 { border-bottom: 1px solid #eee; padding-bottom: 10px; }
+          code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+          pre { background: #f8f8f8; padding: 15px; border-radius: 8px; overflow-x: auto; border: 1px solid #ddd; }
+          blockquote { border-left: 4px solid #0067c0; margin: 0; padding-left: 15px; color: #555; }
+          img { max-width: 100%; border-radius: 4px; }
+          table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #f2f2f2; }
+      </style>
+  </head>
+  <body>
+  ${c}
+  </body>
+  </html>`;
+                  downloadFile(name + ".html", html, "text/html");
+              }
+              if (type === 'pdf') window.print();
+          }
+  
+          function downloadFile(filename, content, type) {
+              const blob = new Blob([content], { type: type });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = filename;
+              a.click();
+              URL.revokeObjectURL(url);
+          }
+  
+          /* --- BACKUP LOGIC --- */
+          function exportBackup() {
+              const dataStr = JSON.stringify(tabs, null, 2);
+              const dateStr = new Date().toISOString().split('T')[0];
+              downloadFile(`minipad_backup_${dateStr}.json`, dataStr, "application/json");
+              toggleFileMenu();
+          }
+  
+          async function importBackup(e) {
+              const file = e.target.files[0];
+              if (!file) return;
+              const text = await file.text();
+              try {
+                  const importedTabs = JSON.parse(text);
+                  if (Array.isArray(importedTabs) && importedTabs.length > 0) {
+                      if (confirm("Questo unirÃ le note salvate in questo browser con quelle del backup. 
+Continuare?")) {
+                          // Merge logic: Add imported notes avoiding exact ID duplicates or generating new IDs
+                          importedTabs.forEach(t => {
+                              const existing = tabs.find(localTab => localTab.id === t.id);
+                              if (existing) {
+                                  // If id conflict but different name/content, append as new
+                                  if (existing.content !== t.content) {
+                                      t.id = t.id + "_imported";
+                                      t.name = t.name + " (Backup)";
+                                      tabs.push(t);
+                                  }
+                              } else {
+                                  tabs.push(t);
+                              }
+                          });
+                          await saveToStorage();
+                          renderSidebar();
+                          alert("Backup importato con successo!");
+                      }
+                  } else {
+                      alert("File di backup non valido o vuoto.");
+                  }
+              } catch (err) {
+                  alert("Errore nella lettura del file JSON di backup.");
+              }
+              e.target.value = ''; // reset
+              toggleFileMenu();
+          }
+  
+          function exportPDF() { promptExport('pdf'); toggleFileMenu(); }
+          function exportHTML() { promptExport('html'); toggleFileMenu(); }
+          function exportMD() { promptExport('md'); toggleFileMenu(); }
+          function exportTXT() { promptExport('txt'); toggleFileMenu(); }
+          function exportTEX() { promptExport('tex'); toggleFileMenu(); }
+          function saveNow() { saveToStorage(); showSavedIndicator(); }
+  
+          /* --- EDITING --- */
+          function insertMarkdown(start, end) {
+              const field = document.getElementById('editor');
+              const sStart = field.selectionStart;
+              const sEnd = field.selectionEnd;
+              const val = field.value;
+              const selected = val.substring(sStart, sEnd);
+              field.value = val.substring(0, sStart) + start + selected + end + val.substring(sEnd);
+              field.focus();
+              field.selectionStart = sStart + start.length;
+              field.selectionEnd = sEnd + start.length;
+              handleInput();
+          }
+  
+          function insertColor(prop, color) {
+              const field = document.getElementById('editor');
+              let start = field.selectionStart;
+              let end = field.selectionEnd;
+              if (savedSelection && start === end) {
+                  start = savedSelection.start;
+                  end = savedSelection.end;
+              }
+              const val = field.value;
+              let selected = val.substring(start, end);
+              if (!selected) selected = "Testo";
+  
+              const insertText = `<span style="${prop}:${color}">` + selected + `</span>`;
+              field.value = val.substring(0, start) + insertText + val.substring(end);
+  
+              savedSelection = null;
+  
+              setTimeout(() => {
+                  field.focus();
+                  field.setSelectionRange(start, start + insertText.length);
+              }, 10);
+  
+              handleInput();
+          }
+  
+          /* --- DIAGRAM LOGIC UPDATED --- */
+          function initDiagramGrid() {
+              const grid = document.getElementById('diagram-grid');
+              grid.innerHTML = '';
+  
+              // Use expanded templates
+              const extendedTemplates = [
+                  ...diagramTemplates,
+                  { title: "Mappa Mentale (Mindmap)", code: "mindmap\n  root((Mindmap))\n    Idee\n      Origini\n     
+ Sviluppi\n    Prodotti\n      Web\n      App" },
+                  { title: "Timeline", code: "timeline\n    title History\n    2020 : Pandemic\n    2022 : Recovery\n  
+  2024 : Growth" },
+                  { title: "Quadrante", code: "quadrantChart\n    title Reach vs Engagement\n    x-axis Low Reach --> 
+High Reach\n    y-axis Low Engagement --> High Engagement\n    Quadrant 1: [0.3, 0.6]\n    Quadrant 2: [0.4, 0.23]\n   
+ Quadrant 3: [0.57, 0.69]\n    Quadrant 4: [0.78, 0.34]" }
+              ];
+  
+              extendedTemplates.forEach((item, index) => {
+                  const card = document.createElement('div');
+                  card.className = 'diagram-card';
+                  card.onclick = () => insertDiagram(item.code);
+  
+                  // Create Preview 
+                  const preview = document.createElement('div');
+                  preview.className = 'diagram-preview';
+                  const pid = 'preview-tmpl-' + index;
+                  preview.id = pid;
+  
+                  const title = document.createElement('div');
+                  title.className = 'diagram-title';
+                  title.textContent = item.title;
+  
+                  card.appendChild(title);
+                  card.appendChild(preview);
+                  grid.appendChild(card);
+  
+                  // Render async
+                  setTimeout(async () => {
+                      try {
+                          const { svg } = await mermaid.render(pid + '-svg', item.code);
+                          preview.innerHTML = svg;
+                          // Adjust SVG style to fit
+                          const svgEl = preview.querySelector('svg');
+                          if (svgEl) { svgEl.style.width = '100%'; svgEl.style.height = '100%'; svgEl.style.maxHeight 
+= '80px'; }
+                      } catch (e) {
+                          preview.innerHTML = "<small>Anteprima non disp.</small>";
+                      }
+                  }, 100);
+              });
+          }
+  
+          /* --- OLD FUNCTIONS REMOVED (Replaced above) --- */
+  
+          /* --- CORE NOTES LOGIC (SIDEBAR) --- */
+          let sidebarVisible = false;
+  
+          // Auto-collapse on load
+          window.addEventListener('DOMContentLoaded', () => {
+              if (!sidebarVisible && !document.getElementById('sidebar').classList.contains('collapsed')) {
+                  document.getElementById('sidebar').classList.add('collapsed');
+              }
+          });
+  
+          function toggleSidebar() {
+              const sidebar = document.getElementById('sidebar');
+              sidebarVisible = !sidebarVisible;
+              if (sidebarVisible) {
+                  sidebar.classList.remove('collapsed');
+              } else {
+                  sidebar.classList.add('collapsed');
+              }
+          }
+  
+          async function createNote(name, content) {
+              const id = Date.now().toString();
+              const dateStr = new Date().toLocaleString(currentLang === 'it' ? 'it-IT' : 'en-US', { day: '2-digit', 
+month: 'short', hour: '2-digit', minute: '2-digit' });
+              tabs.push({ id, name, content, updatedAt: dateStr });
+              await saveToStorage();
+              switchNote(id);
+          }
+  
+          function newNote() {
+              createNote(getStr('new_tab_name'), "");
+              toggleFileMenu();
+          }
+  
+          function switchNote(id) {
+              activeTabId = id;
+              const tab = tabs.find(t => t.id === id);
+              if (tab) document.getElementById('editor').value = tab.content;
+              renderSidebar();
+              updatePreview();
+              updateStats();
+          }
+  
+          function renderSidebar() {
+              const list = document.getElementById('tabs-list'); // Changed from sidebar-list to tabs-list
+              const searchEl = document.getElementById('sidebar-search');
+              const query = searchEl ? searchEl.value.toLowerCase() : '';
+              if (!list) return;
+              list.innerHTML = '';
+  
+              // Sort by most recent if possible, though currently keeping array order is fine
+              // We'll iterate backwards to show newest first
+              const sortedTabs = [...tabs].reverse();
+  
+              sortedTabs.forEach(tab => {
+                  // Filter by search query
+                  if (query && !tab.name.toLowerCase().includes(query) && !tab.content.toLowerCase().includes(query)) {
+                      return;
+                  }
+  
+                  const div = document.createElement('div');
+                  div.className = `sidebar-item ${tab.id === activeTabId ? 'active' : ''}`;
+                  div.onclick = () => switchNote(tab.id);
+  
+                  const leftDiv = document.createElement('div');
+                  leftDiv.style.display = 'flex';
+                  leftDiv.style.flexDirection = 'column';
+                  leftDiv.style.flex = '1';
+                  leftDiv.style.overflow = 'hidden';
+  
+                  const nameSpan = document.createElement('span');
+                  nameSpan.textContent = tab.name;
+                  nameSpan.style.whiteSpace = 'nowrap';
+                  nameSpan.style.overflow = 'hidden';
+                  nameSpan.style.textOverflow = 'ellipsis';
+                  nameSpan.title = getStr('tab_rename_prompt');
+                  nameSpan.ondblclick = (e) => {
+                      e.stopPropagation();
+                      const newName = prompt(getStr('tab_rename_prompt'), tab.name);
+                      if (newName && newName.trim()) {
+                          tab.name = newName.trim().substring(0, 30);
+                          saveToStorage();
+                          renderSidebar();
+                      }
+                  };
+  
+                  const dateSpan = document.createElement('span');
+                  dateSpan.className = 'sidebar-item-date';
+                  dateSpan.textContent = tab.updatedAt || 'Ora';
+  
+                  leftDiv.appendChild(nameSpan);
+                  leftDiv.appendChild(dateSpan);
+  
+                  const closeBtn = document.createElement('div');
+                  closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" 
+stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" 
+y2="18"></line></svg>';
+                  closeBtn.style.opacity = '0.5';
+                  closeBtn.style.cursor = 'pointer';
+                  closeBtn.style.marginLeft = '8px';
+                  closeBtn.onmouseenter = () => closeBtn.style.color = '#e81123';
+                  closeBtn.onmouseleave = () => closeBtn.style.color = '';
+                  closeBtn.onclick = (e) => deleteNote(e, tab.id);
+  
+                  div.appendChild(leftDiv);
+                  div.appendChild(closeBtn);
+                  list.appendChild(div);
+              });
+          }
+  
+          function deleteNote(e, id) {
+              e.stopPropagation();
+              if (tabs.length === 1) {
+                  if (!confirm(getStr('tab_close_confirm'))) return;
+                  tabs[0].content = "";
+                  tabs[0].name = getStr('tab_untitled');
+                  switchNote(tabs[0].id);
+                  return;
+              }
+              if (!confirm("Eliminare definitivamente questa nota?")) return;
+              tabs = tabs.filter(t => t.id !== id);
+              saveToStorage();
+              if (activeTabId === id) switchNote(tabs[tabs.length - 1].id);
+              else renderSidebar();
+          }
+  
+          // --- AI PASTE INTERCEPTOR ---
+          document.getElementById('editor').addEventListener('paste', function (e) {
+              let pasteText = (e.clipboardData || window.clipboardData).getData('text');
+  
+              // Check if it contains typical AI math blocks \[ ... \] or \( ... \)
+              if (pasteText.includes('\\[') || pasteText.includes('\\(')) {
+                  e.preventDefault();
+                  // Replace block math \[ ... \] with $$ ... $$
+                  pasteText = pasteText.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
+                  // Replace inline math \( ... \) with $ ... $
+                  pasteText = pasteText.replace(/\\\((.*?)\\\)/g, '$$$1$$');
+  
+                  const start = this.selectionStart;
+                  const val = this.value;
+                  this.value = val.substring(0, start) + pasteText + val.substring(this.selectionEnd);
+                  this.selectionStart = this.selectionEnd = start + pasteText.length;
+                  handleInput();
+  
+                  const indicator = document.getElementById('save-indicator');
+                  const orig = indicator.getAttribute('data-original') || 'Salvato';
+                  indicator.textContent = "AI Mod";
+                  indicator.style.opacity = '1';
+                  clearTimeout(window.saveIndicatorTimeout);
+                  window.saveIndicatorTimeout = setTimeout(() => { indicator.style.opacity = '0'; setTimeout(() => 
+indicator.textContent = orig, 300); }, 1500);
+              }
+          });
+  
+          function handleInput() {
+              const tab = tabs.find(t => t.id === activeTabId);
+              if (tab) {
+                  tab.content = document.getElementById('editor').value;
+                  const lines = tab.content.split('\n');
+                  for (let line of lines) if (line.trim().startsWith('#')) { tab.name = line.replace(/#/g, 
+'').trim().substring(0, 20); break; }
+                  if (!tab.name || tab.name === "") tab.name = lines[0].substring(0, 15) || getStr('tab_untitled');
+                  tab.updatedAt = new Date().toLocaleString(currentLang === 'it' ? 'it-IT' : 'en-US', { day: 
+'2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+              }
+              clearTimeout(autoSaveTimeout);
+              autoSaveTimeout = setTimeout(() => { saveToStorage(); showSavedIndicator(); }, 1000);
+  
+              clearTimeout(previewTimeout);
+              previewTimeout = setTimeout(() => { updatePreview(); }, 300);
+  
+              updateStats();
+          }
+          async function saveToStorage() {
+              try {
+                  await idbKeyval.set('minipad_tabs', tabs);
+              } catch (e) {
+                  console.error("Save failed", e);
+              }
+          }
+          function showSavedIndicator() {
+              const el = document.getElementById('save-indicator');
+              el.style.opacity = '1';
+              clearTimeout(window.saveIndicatorTimeout);
+              window.saveIndicatorTimeout = setTimeout(() => el.style.opacity = '0', 2000);
+          }
+  
+          function toggleView(mode) {
+              const eP = document.getElementById('editor-pane');
+              const pP = document.getElementById('preview-pane');
+              if (mode === 'split') {
+                  eP.classList.remove('hidden'); pP.classList.remove('hidden');
+                  eP.style.width = '50%'; pP.style.width = '50%';
+              } else if (mode === 'editor') {
+                  eP.classList.remove('hidden'); pP.classList.add('hidden');
+                  eP.style.width = '100%';
+              } else if (mode === 'preview') {
+                  eP.classList.add('hidden'); pP.classList.remove('hidden');
+                  pP.style.width = '100%';
+              }
+              // Highlight the active view button
+              ['view-editor-btn', 'view-split-btn', 'view-preview-btn'].forEach(id => {
+                  const btn = document.getElementById(id);
+                  if (btn) btn.style.background = '';
+              });
+              const activeId = `view-${mode}-btn`;
+              const activeBtn = document.getElementById(activeId);
+              if (activeBtn) activeBtn.style.background = 'var(--hover-color)';
+          }
+  
+          const baseThemes = ['', 'sepia', 'hacker'];
+          function toggleDarkMode() {
+              const isDark = document.body.classList.toggle('dark-mode');
+              try { localStorage.setItem('minipad_dark_mode', isDark); } catch (e) { }
+              showToast(`ModalitÃ : ${isDark ? 'Scura' : 'Chiara'}`);
+          }
+  
+          function cycleTheme() {
+              let current = document.body.getAttribute('data-theme') || '';
+              let nextIndex = (baseThemes.indexOf(current) + 1) % baseThemes.length;
+              let nextTheme = baseThemes[nextIndex];
+              document.body.setAttribute('data-theme', nextTheme);
+              try { localStorage.setItem('minipad_theme', nextTheme); } catch (e) { }
+              showToast(`Tema: ${nextTheme === '' ? 'Default' : nextTheme.charAt(0).toUpperCase() + 
+nextTheme.slice(1)}`);
+          }
+  
+          function showToast(msg) {
+              const el = document.getElementById('save-indicator');
+              const original = el.getAttribute('data-original') || 'Salvato';
+              if (!el.hasAttribute('data-original')) el.setAttribute('data-original', original);
+              el.textContent = msg;
+              el.style.opacity = '1';
+              clearTimeout(window.toastTimeout);
+              window.toastTimeout = setTimeout(() => {
+                  el.style.opacity = '0';
+                  setTimeout(() => el.textContent = original, 300);
+              }, 1500);
+          }
+  
+          function insertLink() {
+              const field = document.getElementById('editor');
+              const start = field.selectionStart, end = field.selectionEnd;
+              const val = field.value;
+              const selected = val.substring(start, end);
+              const url = prompt('URL del link:', 'https://');
+              if (!url) return;
+              const linkText = selected || 'Testo del link';
+              const md = `[${linkText}](${url})`;
+              field.value = val.substring(0, start) + md + val.substring(end);
+              field.focus();
+              field.setSelectionRange(start, start + md.length);
+              handleInput();
+          }
+  
+          function insertHR() {
+              const field = document.getElementById('editor');
+              const start = field.selectionStart;
+              const val = field.value;
+              const hr = '\n---\n';
+              field.value = val.substring(0, start) + hr + val.substring(start);
+              field.focus();
+              field.setSelectionRange(start + hr.length, start + hr.length);
+              handleInput();
+          }
+  
+          function toggleZenMode() {
+              const isZen = document.body.classList.toggle('zen-mode');
+              if (isZen) {
+                  document.documentElement.requestFullscreen().catch(() => { });
+              } else {
+                  if (document.fullscreenElement) {
+                      document.exitFullscreen().catch(() => { });
+                  }
+              }
+          }
+  
+          document.addEventListener("fullscreenchange", () => {
+              if (!document.fullscreenElement) {
+                  document.body.classList.remove('zen-mode');
+              }
+          });
+  
+          function openHelp() {
+              const m = document.getElementById('help-modal');
+              m.style.display = 'flex';
+              m.style.zIndex = '3001'; // Above diagram modal
+          }
+          function closeHelp() { document.getElementById('help-modal').style.display = 'none'; }
+          function handleShortcuts(e) {
+              const field = document.getElementById('editor');
+              const val = field.value;
+              const start = field.selectionStart;
+              const end = field.selectionEnd;
+  
+              // Ctrl+S: Save
+              if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveNow(); return; }
+  
+              // Ctrl+B: Bold
+              if ((e.ctrlKey || e.metaKey) && e.key === 'b') { e.preventDefault(); insertMarkdown('**', '**'); return; 
+}
+  
+              // Ctrl+I: Italic
+              if ((e.ctrlKey || e.metaKey) && e.key === 'i') { e.preventDefault(); insertMarkdown('*', '*'); return; }
+  
+              // Ctrl+K: Insert link
+              if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                  e.preventDefault();
+                  const selected = val.substring(start, end);
+                  const url = prompt('URL link:', 'https://');
+                  if (url) {
+                      const linkText = selected || 'Testo del link';
+                      const md = `[${linkText}](${url})`;
+                      field.value = val.substring(0, start) + md + val.substring(end);
+                      field.focus();
+                      field.setSelectionRange(start, start + md.length);
+                      handleInput();
+                  }
+                  return;
+              }
+  
+              // ESC: Exit Zen Mode only (don't exit fullscreen)
+              if (e.key === 'Escape') {
+                  if (document.body.classList.contains('zen-mode')) {
+                      e.preventDefault();
+                      document.body.classList.remove('zen-mode');
+                      // fullscreen stays until user manually toggles
+                  }
+                  return;
+              }
+  
+              // TAB + SHIFT+TAB: Indent/dedent list items or insert spaces
+              if (e.key === 'Tab') {
+                  e.preventDefault();
+                  const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+                  const lineContent = val.substring(lineStart, start);
+                  const listMatch = lineContent.match(/^(\s*)([-*]\s|\d+\.\s|\[\s?[xX]?\]\s)/);
+                  if (listMatch) {
+                      // Indent/dedent the list item
+                      const lineEnd = val.indexOf('\n', start);
+                      const fullLineEnd = lineEnd === -1 ? val.length : lineEnd;
+                      const fullLine = val.substring(lineStart, fullLineEnd);
+                      if (!e.shiftKey) {
+                          const newLine = '  ' + fullLine;
+                          field.value = val.substring(0, lineStart) + newLine + val.substring(fullLineEnd);
+                          field.setSelectionRange(start + 2, start + 2);
+                      } else {
+                          // Dedent: remove up to 2 leading spaces
+                          const newLine = fullLine.replace(/^\s{1,2}/, '');
+                          const removed = fullLine.length - newLine.length;
+                          field.value = val.substring(0, lineStart) + newLine + val.substring(fullLineEnd);
+                          field.setSelectionRange(Math.max(start - removed, lineStart), Math.max(start - removed, 
+lineStart));
+                      }
+                      handleInput();
+                  } else {
+                      // Insert 2 spaces for code indentation
+                      field.value = val.substring(0, start) + '  ' + val.substring(end);
+                      field.setSelectionRange(start + 2, start + 2);
+                      handleInput();
+                  }
+                  return;
+              }
+  
+              // ENTER: Continue list items automatically
+              if (e.key === 'Enter') {
+                  const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+                  const lineContent = val.substring(lineStart, start);
+  
+                  // Check for ordered list: e.g. "1. " or "  2. "
+                  const orderedMatch = lineContent.match(/^(\s*)(\d+)(\.\s)(.*)/);
+                  if (orderedMatch) {
+                      const indent = orderedMatch[1];
+                      const num = parseInt(orderedMatch[2]);
+                      const itemContent = orderedMatch[4].trim();
+                      if (!itemContent) {
+                          // Empty item: exit list
+                          const removeLen = lineContent.length;
+                          e.preventDefault();
+                          field.value = val.substring(0, lineStart) + '\n' + val.substring(start);
+                          field.setSelectionRange(lineStart + 1, lineStart + 1);
+                          handleInput();
+                      } else {
+                          e.preventDefault();
+                          const nextLine = `\n${indent}${num + 1}. `;
+                          field.value = val.substring(0, start) + nextLine + val.substring(end);
+                          field.setSelectionRange(start + nextLine.length, start + nextLine.length);
+                          handleInput();
+                      }
+                      return;
+                  }
+  
+                  // Check for unordered list (- , * , - [ ] )
+                  const unorderedMatch = lineContent.match(/^(\s*)([-*]\s(?:\[[ xX]?\]\s)?)(.*)/);
+                  if (unorderedMatch) {
+                      const indent = unorderedMatch[1];
+                      const prefix = unorderedMatch[2];
+                      const itemContent = unorderedMatch[3].trim();
+                      const cleanPrefix = prefix.replace(/\[[ xX]?\]\s/, '[ ] '); // Reset checkbox
+                      if (!itemContent) {
+                          // Empty item: exit list
+                          e.preventDefault();
+                          field.value = val.substring(0, lineStart) + '\n' + val.substring(start);
+                          field.setSelectionRange(lineStart + 1, lineStart + 1);
+                          handleInput();
+                      } else {
+                          e.preventDefault();
+                          const nextLine = `\n${indent}${cleanPrefix}`;
+                          field.value = val.substring(0, start) + nextLine + val.substring(end);
+                          field.setSelectionRange(start + nextLine.length, start + nextLine.length);
+                          handleInput();
+                      }
+                      return;
+                  }
+              }
+          }
+  
+          function toggleFullScreen() { !document.fullscreenElement ? document.documentElement.requestFullscreen() : 
+document.exitFullscreen(); }
+  
+          function updateStats() {
+              const text = document.getElementById('editor').value;
+              const chars = text.length;
+              const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+              const lines = text.split('\n').length;
+              const pages = Math.max(1, Math.ceil(chars / 1800)); // â‰ˆ1800 chars per page
+  
+              document.getElementById('status-left').textContent = `Caratteri: ${chars} | Parole: ${words} | Righe: 
+${lines} | ~${pages} pag.`;
+          }
+  
+          init();
+  
+          // PWA Service Worker Registration
+          if ('serviceWorker' in navigator) {
+              window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('./sw.js')
+                      .then(registration => {
+                          console.log('SW registered: ', registration);
+                      })
+                      .catch(registrationError => {
+                          console.log('SW registration failed: ', registrationError);
+                      });
+              });
+          }
+  
+          // PWA Install Logic
+          let deferredPrompt;
+          window.addEventListener('beforeinstallprompt', (e) => {
+              e.preventDefault();
+              deferredPrompt = e;
+              const installBtn = document.getElementById('install-btn');
+              const installDiv = document.getElementById('install-divider');
+              if (installBtn && installDiv) {
+                  installBtn.style.display = 'block';
+                  installDiv.style.display = 'block';
+              }
+          });
+  
+          function installPWA() {
+              if (!deferredPrompt) return;
+              deferredPrompt.prompt();
+              deferredPrompt.userChoice.then((choiceResult) => {
+                  if (choiceResult.outcome === 'accepted') {
+                      const installBtn = document.getElementById('install-btn');
+                      const installDiv = document.getElementById('install-divider');
+                      if (installBtn) installBtn.style.display = 'none';
+                      if (installDiv) installDiv.style.display = 'none';
+                  }
+                  deferredPrompt = null;
+              });
+          }
+  
+      </script>
+  </body>
+  
+  </html>
+  <script>window.onerror = function (msg, url, line, col, error) { console.error("GLOBAL ERROR:", msg, line, col); 
+fetch("http://localhost:5555/err?msg=" + encodeURIComponent(msg) + "&line=" + line); };</script>
+
+

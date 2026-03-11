@@ -1,0 +1,1922 @@
+// marked.setOptions is removed because it causes errors in newer marked.js versions.
+        if (window.mermaid) {
+            mermaid.initialize({ startOnLoad: false, theme: 'default' });
+        }
+
+        let currentLang = 'it';
+        const i18n = {
+            'it': {
+                'file': 'File',
+                'new': 'Nuovo',
+                'open': 'Apri...',
+                'save_as': 'Salva con nome...',
+                'export_pdf': 'Esporta PDF',
+                'export_html': 'Esporta HTML',
+                'export_md': 'Esporta Markdown (.md)',
+                'export_tex': 'Esporta LaTeX (.tex)',
+                'save_title': 'Salva Ora',
+                'saved_indicator': 'Salvato',
+                'find_label': 'Cerca:',
+                'replace_label': 'Sostituisci:',
+                'btn_replace': 'Sostituisci tutto',
+                'find_placeholder': 'Testo da cercare...',
+                'replace_placeholder': 'Sostituisci con...',
+                'diagram_title': 'Inserisci Diagramma',
+                'tooltip_bold': 'Grassetto (Ctrl+B)',
+                'tooltip_italic': 'Corsivo (Ctrl+I)',
+                'tooltip_underline': 'Sottolineato',
+                'tooltip_strikethrough': 'Barrato',
+                'status_ready': 'Pronto',
+                'placeholder': 'Scrivi qui... Usa $$ ... $$ per formule.',
+                'new_tab_name': 'Nuova Nota',
+                'tab_rename_prompt': 'Rinomina scheda:',
+                'tab_untitled': 'Senza nome',
+                'tab_close_confirm': "Chiudere l'ultima scheda?",
+                'btn_guida': 'Guida',
+                'btn_find': 'Cerca (Ctrl+F)',
+                'btn_toc': 'Genera Indice (TOC)'
+            },
+            'en': {
+                'file': 'File',
+                'new': 'New',
+                'open': 'Open...',
+                'save_as': 'Save as...',
+                'export_pdf': 'Export PDF',
+                'export_html': 'Export HTML',
+                'export_md': 'Export Markdown (.md)',
+                'export_tex': 'Export LaTeX (.tex)',
+                'save_title': 'Save Now',
+                'saved_indicator': 'Saved',
+                'find_label': 'Find:',
+                'replace_label': 'Replace:',
+                'btn_replace': 'Replace All',
+                'find_placeholder': 'Search text...',
+                'replace_placeholder': 'Replace with...',
+                'diagram_title': 'Insert Diagram',
+                'tooltip_bold': 'Bold (Ctrl+B)',
+                'tooltip_italic': 'Italic (Ctrl+I)',
+                'tooltip_underline': 'Underline',
+                'tooltip_strikethrough': 'Strikethrough',
+                'status_ready': 'Ready',
+                'placeholder': 'Type here... Use $$ ... $$ for math.',
+                'new_tab_name': 'New Note',
+                'tab_rename_prompt': 'Rename tab:',
+                'tab_untitled': 'Untitled',
+                'tab_close_confirm': "Close the last tab?",
+                'btn_guida': 'Help',
+                'btn_find': 'Find (Ctrl+F)',
+                'btn_toc': 'Generate TOC'
+            }
+        };
+
+        function getStr(key) {
+            return i18n[currentLang][key] || key;
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'it' ? 'en' : 'it';
+            document.getElementById('lang-label').textContent = currentLang.toUpperCase();
+            try { localStorage.setItem('minipad_lang', currentLang); } catch (e) { }
+            applyLanguage();
+            renderSidebar(); // Redraw UI tabs
+        }
+
+        function applyLanguage() {
+            // Dropdowns
+            const fileMenu = document.getElementById('file-menu').children;
+            if (fileMenu.length > 5) {
+                fileMenu[0].textContent = getStr('new');
+                fileMenu[1].textContent = getStr('open');
+                fileMenu[3].textContent = getStr('save_as');
+                fileMenu[5].textContent = getStr('export_pdf');
+                fileMenu[6].textContent = getStr('export_html');
+                fileMenu[7].textContent = getStr('export_md');
+                fileMenu[8].textContent = getStr('export_tex');
+            }
+
+            // UI elements
+            const bFile = document.getElementById('file-btn').querySelector('span');
+            if (bFile) bFile.textContent = getStr('file');
+
+            const diagTitle = document.querySelector('#diagram-modal h2');
+            if (diagTitle) diagTitle.childNodes[0].nodeValue = getStr('diagram_title');
+
+            const sInd = document.getElementById('save-indicator');
+            if (sInd && sInd.textContent === i18n['it']['saved_indicator'] || sInd.textContent === i18n['en']['saved_indicator']) sInd.textContent = getStr('saved_indicator');
+
+            const btnGuida = document.getElementById('btn-guida');
+            if (btnGuida) btnGuida.title = getStr('btn_guida');
+            const btnFind = document.getElementById('btn-find');
+            if (btnFind) btnFind.title = getStr('btn_find');
+            const btnToc = document.getElementById('btn-toc');
+            if (btnToc) btnToc.title = getStr('btn_toc');
+
+            document.getElementById('editor').placeholder = getStr('placeholder');
+
+            // Find bar
+            document.getElementById('find-label').textContent = getStr('find_label');
+            document.getElementById('replace-label').textContent = getStr('replace_label');
+            document.getElementById('find-input').placeholder = getStr('find_placeholder');
+            document.getElementById('replace-input').placeholder = getStr('replace_placeholder');
+            document.getElementById('replace-btn').textContent = getStr('btn_replace');
+            const sLeft = document.getElementById('status-left');
+            if (sLeft.textContent === i18n['it']['status_ready'] || sLeft.textContent === i18n['en']['status_ready']) sLeft.textContent = getStr('status_ready');
+
+            const helpIt = document.getElementById('help-it');
+            const helpEn = document.getElementById('help-en');
+            if (helpIt && helpEn) {
+                if (currentLang === 'it') {
+                    helpIt.style.display = 'block';
+                    helpEn.style.display = 'none';
+                } else {
+                    helpIt.style.display = 'none';
+                    helpEn.style.display = 'block';
+                }
+            }
+        }
+
+        let tabs = [];
+        let activeTabId = null;
+        let autoSaveTimeout = null;
+        let previewTimeout = null;
+        let savedSelection = null;
+
+        // --- DIAGRAM DATA TEMPLATES ---
+        const diagramTemplates = [
+            { title: "Flusso", code: "graph TD;\n  A[Inizio] --> B[Processo];\n  B --> C{Scelta?};\n  C -- Sì --> D[Fine];\n  C -- No --> E[Errore];" },
+            { title: "Sequenza", code: "sequenceDiagram\n  part Alice->>Bob: Ciao\n  Bob->>Alice: Tutto bene?" },
+            { title: "Gantt", code: "gantt\n  title Un Progetto\n  dateFormat  YYYY-MM-DD\n  section Design\n  Design :a1, 2022-01-01, 30d\n  section Implementazione\n  Codice :crit, after a1, 2022-02-01, 30d\n  Test      :crit, after a2, 2022-03-01, 30d" },
+            { title: "Classe (UML)", code: "classDiagram\n  Animal <|-- Duck\n  Animal <|-- Fish\n  Animal <|-- Zebra\n  Animal :o-- Carnivore" },
+            { title: "Stato", code: "stateDiagram-v2\n  [*] Ancora\n  [*] Attiva\n  Attiva --> Sospesa\n  Sospesa --> Attiva" },
+            { title: "ER", code: "erDiagram\n  CUSTOMER ||--o{ ORDINE } : places\n  ORDINE ||--|{ DELIVERY } : includes" },
+            { title: "Torta", code: "pie title Pets\n  Dogs : 386\n  Cats : 85\n  Fish : 142" }
+        ];
+
+        // --- MATH DATA (EXHAUSTIVE - 28 CATEGORIES) ---
+        const mathCategories = {
+            // ── GREEK ──
+            "Greco min.": [
+                { cmd: "\\alpha", html: "\\alpha" }, { cmd: "\\beta", html: "\\beta" },
+                { cmd: "\\gamma", html: "\\gamma" }, { cmd: "\\delta", html: "\\delta" },
+                { cmd: "\\epsilon", html: "\\epsilon" }, { cmd: "\\zeta", html: "\\zeta" },
+                { cmd: "\\eta", html: "\\eta" }, { cmd: "\\theta", html: "\\theta" },
+                { cmd: "\\iota", html: "\\iota" }, { cmd: "\\kappa", html: "\\kappa" },
+                { cmd: "\\lambda", html: "\\lambda" }, { cmd: "\\mu", html: "\\mu" },
+                { cmd: "\\nu", html: "\\nu" }, { cmd: "\\xi", html: "\\xi" },
+                { cmd: "\\pi", html: "\\pi" }, { cmd: "\\rho", html: "\\rho" },
+                { cmd: "\\sigma", html: "\\sigma" }, { cmd: "\\tau", html: "\\tau" },
+                { cmd: "\\upsilon", html: "\\upsilon" }, { cmd: "\\phi", html: "\\phi" },
+                { cmd: "\\chi", html: "\\chi" }, { cmd: "\\psi", html: "\\psi" },
+                { cmd: "\\omega", html: "\\omega" }
+            ],
+            "Greco mai.": [
+                { cmd: "\\Gamma", html: "\\Gamma" }, { cmd: "\\Delta", html: "\\Delta" },
+                { cmd: "\\Theta", html: "\\Theta" }, { cmd: "\\Lambda", html: "\\Lambda" },
+                { cmd: "\\Xi", html: "\\Xi" }, { cmd: "\\Pi", html: "\\Pi" },
+                { cmd: "\\Sigma", html: "\\Sigma" }, { cmd: "\\Upsilon", html: "\\Upsilon" },
+                { cmd: "\\Phi", html: "\\Phi" }, { cmd: "\\Psi", html: "\\Psi" },
+                { cmd: "\\Omega", html: "\\Omega" }
+            ],
+            "Greco var.": [
+                { cmd: "\\varepsilon", html: "\\varepsilon" }, { cmd: "\\varphi", html: "\\varphi" },
+                { cmd: "\\varpi", html: "\\varpi" }, { cmd: "\\varrho", html: "\\varrho" },
+                { cmd: "\\varsigma", html: "\\varsigma" }, { cmd: "\\vartheta", html: "\\vartheta" },
+                { cmd: "\\varkappa", html: "\\varkappa" }
+            ],
+            // ── INTEGRALI ──
+            "Integrali": [
+                { cmd: "\\int", html: "\\int" },
+                { cmd: "\\int_{a}^{b}", html: "\\int_{a}^{b}" },
+                { cmd: "\\int_{a}^{b} f(x)\\,dx", html: "\\int_{a}^{b} f(x)\\,dx" },
+                { cmd: "\\int_{0}^{\\infty} f(x)\\,dx", html: "\\int_{0}^{\\infty} f(x)\\,dx" },
+                { cmd: "\\int_{-\\infty}^{+\\infty} f(x)\\,dx", html: "\\int_{-\\infty}^{+\\infty} f(x)\\,dx" },
+                { cmd: "\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}", html: "\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}" },
+                { cmd: "\\iint_{D}", html: "\\iint_{D}" },
+                { cmd: "\\iint_{D} f(x,y)\\,dA", html: "\\iint_{D} f(x,y)\\,dA" },
+                { cmd: "\\iiint_{V}", html: "\\iiint_{V}" },
+                { cmd: "\\iiint_{V} f(x,y,z)\\,dV", html: "\\iiint_{V} f(x,y,z)\\,dV" },
+                { cmd: "\\oint_{C}", html: "\\oint_{C}" },
+                { cmd: "\\oint_{C} \\mathbf{F} \\cdot d\\mathbf{r}", html: "\\oint_{C} \\mathbf{F} \\cdot d\\mathbf{r}" },
+                { cmd: "\\int_0^{2\\pi}", html: "\\int_0^{2\\pi}" },
+                { cmd: "\\int_0^1", html: "\\int_0^1" },
+                { cmd: "\\int_C f\\,ds", html: "\\int_C f\\,ds" },
+                { cmd: "\\int_a^b u\\,dv = [uv]_a^b - \\int_a^b v\\,du", html: "\\int_a^b u\\,dv = [uv]_a^b - \\int_a^b v\\,du" }
+            ],
+            // ── DERIVATE ──
+            "Derivate": [
+                { cmd: "\\frac{d}{dx}", html: "\\frac{d}{dx}" },
+                { cmd: "\\frac{dy}{dx}", html: "\\frac{dy}{dx}" },
+                { cmd: "\\frac{d^2y}{dx^2}", html: "\\frac{d^2y}{dx^2}" },
+                { cmd: "\\frac{d^n y}{dx^n}", html: "\\frac{d^n y}{dx^n}" },
+                { cmd: "\\frac{d}{dx}\\left[f(x)\\right]", html: "\\frac{d}{dx}\\left[f(x)\\right]" },
+                { cmd: "\\frac{\\partial}{\\partial x}", html: "\\frac{\\partial}{\\partial x}" },
+                { cmd: "\\frac{\\partial f}{\\partial x}", html: "\\frac{\\partial f}{\\partial x}" },
+                { cmd: "\\frac{\\partial^2 f}{\\partial x^2}", html: "\\frac{\\partial^2 f}{\\partial x^2}" },
+                { cmd: "\\frac{\\partial^2 f}{\\partial x \\partial y}", html: "\\frac{\\partial^2 f}{\\partial x \\partial y}" },
+                { cmd: "\\frac{\\partial^n f}{\\partial x^n}", html: "\\frac{\\partial^n f}{\\partial x^n}" },
+                { cmd: "f'(x)", html: "f'(x)" }, { cmd: "f''(x)", html: "f''(x)" },
+                { cmd: "f^{(n)}(x)", html: "f^{(n)}(x)" },
+                { cmd: "\\dot{x}", html: "\\dot{x}" }, { cmd: "\\ddot{x}", html: "\\ddot{x}" },
+                { cmd: "\\nabla f", html: "\\nabla f" }, { cmd: "\\nabla^2 f", html: "\\nabla^2 f" },
+                { cmd: "\\frac{Df}{Dt}", html: "\\frac{Df}{Dt}" },
+                { cmd: "\\left. \\frac{df}{dx} \\right|_{x=a}", html: "\\left. \\frac{df}{dx} \\right|_{x=a}" }
+            ],
+            // ── LIMITI ──
+            "Limiti": [
+                { cmd: "\\lim_{x \\to a}", html: "\\lim_{x \\to a}" },
+                { cmd: "\\lim_{x \\to 0}", html: "\\lim_{x \\to 0}" },
+                { cmd: "\\lim_{x \\to \\infty}", html: "\\lim_{x \\to \\infty}" },
+                { cmd: "\\lim_{x \\to -\\infty}", html: "\\lim_{x \\to -\\infty}" },
+                { cmd: "\\lim_{n \\to \\infty}", html: "\\lim_{n \\to \\infty}" },
+                { cmd: "\\lim_{h \\to 0} \\frac{f(x+h)-f(x)}{h}", html: "\\lim_{h \\to 0} \\frac{f(x+h)-f(x)}{h}" },
+                { cmd: "\\lim_{x \\to a^+}", html: "\\lim_{x \\to a^+}" },
+                { cmd: "\\lim_{x \\to a^-}", html: "\\lim_{x \\to a^-}" },
+                { cmd: "\\limsup_{n \\to \\infty}", html: "\\limsup_{n \\to \\infty}" },
+                { cmd: "\\liminf_{n \\to \\infty}", html: "\\liminf_{n \\to \\infty}" },
+                { cmd: "\\lim_{(x,y) \\to (0,0)}", html: "\\lim_{(x,y) \\to (0,0)}" },
+                { cmd: "\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1", html: "\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1" },
+                { cmd: "\\lim_{n \\to \\infty} \\left(1+\\frac{1}{n}\\right)^n = e", html: "\\lim_{n \\to \\infty} \\left(1+\\frac{1}{n}\\right)^n = e" }
+            ],
+            // ── SERIE ──
+            "Serie": [
+                { cmd: "\\sum_{n=0}^{\\infty} a_n", html: "\\sum_{n=0}^{\\infty} a_n" },
+                { cmd: "\\sum_{n=1}^{N} a_n", html: "\\sum_{n=1}^{N} a_n" },
+                { cmd: "\\sum_{n=0}^{\\infty} \\frac{x^n}{n!}", html: "\\sum_{n=0}^{\\infty} \\frac{x^n}{n!}" },
+                { cmd: "\\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6}", html: "\\sum_{n=1}^{\\infty} \\frac{1}{n^2} = \\frac{\\pi^2}{6}" },
+                { cmd: "\\sum_{n=0}^{\\infty} r^n = \\frac{1}{1-r}", html: "\\sum_{n=0}^{\\infty} r^n = \\frac{1}{1-r}" },
+                { cmd: "f(x) = \\sum_{n=0}^{\\infty} \\frac{f^{(n)}(a)}{n!}(x-a)^n", html: "f(x) = \\sum_{n=0}^{\\infty} \\frac{f^{(n)}(a)}{n!}(x-a)^n" },
+                { cmd: "e^x = \\sum_{n=0}^{\\infty} \\frac{x^n}{n!}", html: "e^x = \\sum_{n=0}^{\\infty} \\frac{x^n}{n!}" },
+                { cmd: "\\sin x = \\sum_{n=0}^{\\infty} \\frac{(-1)^n x^{2n+1}}{(2n+1)!}", html: "\\sin x = \\sum_{n=0}^{\\infty} \\frac{(-1)^n x^{2n+1}}{(2n+1)!}" },
+                { cmd: "\\prod_{i=1}^{n} a_i", html: "\\prod_{i=1}^{n} a_i" },
+                { cmd: "\\sum_{k=0}^{n} \\binom{n}{k} a^k b^{n-k}", html: "\\sum_{k=0}^{n} \\binom{n}{k} a^k b^{n-k}" }
+            ],
+            // ── TRIGONOMETRIA ──
+            "Trigon.": [
+                { cmd: "\\sin(x)", html: "\\sin(x)" }, { cmd: "\\cos(x)", html: "\\cos(x)" },
+                { cmd: "\\tan(x)", html: "\\tan(x)" }, { cmd: "\\cot(x)", html: "\\cot(x)" },
+                { cmd: "\\sec(x)", html: "\\sec(x)" }, { cmd: "\\csc(x)", html: "\\csc(x)" },
+                { cmd: "\\arcsin(x)", html: "\\arcsin(x)" }, { cmd: "\\arccos(x)", html: "\\arccos(x)" },
+                { cmd: "\\arctan(x)", html: "\\arctan(x)" },
+                { cmd: "\\sinh(x)", html: "\\sinh(x)" }, { cmd: "\\cosh(x)", html: "\\cosh(x)" },
+                { cmd: "\\tanh(x)", html: "\\tanh(x)" }, { cmd: "\\coth(x)", html: "\\coth(x)" },
+                { cmd: "\\sin^2 x + \\cos^2 x = 1", html: "\\sin^2 x + \\cos^2 x = 1" },
+                { cmd: "\\sin(A \\pm B) = \\sin A\\cos B \\pm \\cos A\\sin B", html: "\\sin(A \\pm B) = \\sin A\\cos B \\pm \\cos A\\sin B" },
+                { cmd: "\\cos(A \\pm B) = \\cos A\\cos B \\mp \\sin A\\sin B", html: "\\cos(A \\pm B) = \\cos A\\cos B \\mp \\sin A\\sin B" },
+                { cmd: "\\tan(A+B) = \\frac{\\tan A + \\tan B}{1 - \\tan A\\tan B}", html: "\\tan(A+B) = \\frac{\\tan A + \\tan B}{1 - \\tan A\\tan B}" }
+            ],
+            // ── FUNZIONI SPECIALI ──
+            "Funz. Spec.": [
+                { cmd: "\\Gamma(n) = (n-1)!", html: "\\Gamma(n) = (n-1)!" },
+                { cmd: "\\Gamma(z) = \\int_0^{\\infty} t^{z-1} e^{-t}\\,dt", html: "\\Gamma(z) = \\int_0^{\\infty} t^{z-1} e^{-t}\\,dt" },
+                { cmd: "B(x,y) = \\frac{\\Gamma(x)\\Gamma(y)}{\\Gamma(x+y)}", html: "B(x,y) = \\frac{\\Gamma(x)\\Gamma(y)}{\\Gamma(x+y)}" },
+                { cmd: "\\zeta(s) = \\sum_{n=1}^{\\infty} \\frac{1}{n^s}", html: "\\zeta(s) = \\sum_{n=1}^{\\infty} \\frac{1}{n^s}" },
+                { cmd: "\\text{erf}(x) = \\frac{2}{\\sqrt{\\pi}}\\int_0^x e^{-t^2}\\,dt", html: "\\text{erf}(x) = \\frac{2}{\\sqrt{\\pi}}\\int_0^x e^{-t^2}\\,dt" },
+                { cmd: "\\text{erfc}(x) = 1 - \\text{erf}(x)", html: "\\text{erfc}(x) = 1 - \\text{erf}(x)" },
+                { cmd: "J_n(x)", html: "J_n(x)" },
+                { cmd: "P_n(x)", html: "P_n(x)" },
+                { cmd: "H_n(x)", html: "H_n(x)" },
+                { cmd: "\\text{Li}_2(x) = -\\int_0^x \\frac{\\ln(1-t)}{t}\\,dt", html: "\\text{Li}_2(x) = -\\int_0^x \\frac{\\ln(1-t)}{t}\\,dt" },
+                { cmd: "\\psi(x) = \\frac{\\Gamma'(x)}{\\Gamma(x)}", html: "\\psi(x) = \\frac{\\Gamma'(x)}{\\Gamma(x)}" }
+            ],
+            // ── PROBABILITÀ ──
+            "Probabilità": [
+                { cmd: "P(A)", html: "P(A)" },
+                { cmd: "P(A \\mid B)", html: "P(A \\mid B)" },
+                { cmd: "P(A \\cap B) = P(A)P(B\\mid A)", html: "P(A \\cap B) = P(A)P(B\\mid A)" },
+                { cmd: "P(A \\cup B) = P(A)+P(B)-P(A\\cap B)", html: "P(A \\cup B) = P(A)+P(B)-P(A\\cap B)" },
+                { cmd: "\\mathbb{E}[X]", html: "\\mathbb{E}[X]" },
+                { cmd: "\\mathbb{E}[X] = \\sum_x x\\, P(X=x)", html: "\\mathbb{E}[X] = \\sum_x x\\, P(X=x)" },
+                { cmd: "\\operatorname{Var}(X) = \\mathbb{E}[X^2] - (\\mathbb{E}[X])^2", html: "\\operatorname{Var}(X) = \\mathbb{E}[X^2] - (\\mathbb{E}[X])^2" },
+                { cmd: "\\bar{X} = \\frac{1}{n}\\sum_{i=1}^n X_i", html: "\\bar{X} = \\frac{1}{n}\\sum_{i=1}^n X_i" },
+                { cmd: "X \\sim \\mathcal{N}(\\mu, \\sigma^2)", html: "X \\sim \\mathcal{N}(\\mu, \\sigma^2)" },
+                { cmd: "f(x) = \\frac{1}{\\sigma\\sqrt{2\\pi}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}", html: "f(x) = \\frac{1}{\\sigma\\sqrt{2\\pi}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}" },
+                { cmd: "X \\sim \\text{Bin}(n,p)", html: "X \\sim \\text{Bin}(n,p)" },
+                { cmd: "X \\sim \\text{Pois}(\\lambda)", html: "X \\sim \\text{Pois}(\\lambda)" },
+                { cmd: "\\rho_{XY} = \\frac{\\operatorname{Cov}(X,Y)}{\\sigma_X \\sigma_Y}", html: "\\rho_{XY} = \\frac{\\operatorname{Cov}(X,Y)}{\\sigma_X \\sigma_Y}" }
+            ],
+            // ── FISICA ──
+            "Fisica": [
+                { cmd: "\\nabla \\cdot \\mathbf{F}", html: "\\nabla \\cdot \\mathbf{F}" },
+                { cmd: "\\nabla \\times \\mathbf{F}", html: "\\nabla \\times \\mathbf{F}" },
+                { cmd: "\\nabla^2 f", html: "\\nabla^2 f" },
+                { cmd: "\\mathbf{F} = m\\mathbf{a}", html: "\\mathbf{F} = m\\mathbf{a}" },
+                { cmd: "\\mathbf{v} = \\frac{d\\mathbf{r}}{dt}", html: "\\mathbf{v} = \\frac{d\\mathbf{r}}{dt}" },
+                { cmd: "\\mathcal{L} = T - V", html: "\\mathcal{L} = T - V" },
+                { cmd: "\\mathcal{H} = T + V", html: "\\mathcal{H} = T + V" },
+                { cmd: "E = mc^2", html: "E = mc^2" },
+                { cmd: "\\hbar = \\frac{h}{2\\pi}", html: "\\hbar = \\frac{h}{2\\pi}" },
+                { cmd: "\\frac{d}{dt}\\frac{\\partial \\mathcal{L}}{\\partial \\dot{q}} - \\frac{\\partial \\mathcal{L}}{\\partial q} = 0", html: "\\frac{d}{dt}\\frac{\\partial \\mathcal{L}}{\\partial \\dot{q}} - \\frac{\\partial \\mathcal{L}}{\\partial q} = 0" },
+                { cmd: "\\oint \\mathbf{E} \\cdot d\\mathbf{A} = \\frac{Q}{\\varepsilon_0}", html: "\\oint \\mathbf{E} \\cdot d\\mathbf{A} = \\frac{Q}{\\varepsilon_0}" },
+                { cmd: "\\nabla \\times \\mathbf{E} = -\\frac{\\partial \\mathbf{B}}{\\partial t}", html: "\\nabla \\times \\mathbf{E} = -\\frac{\\partial \\mathbf{B}}{\\partial t}" }
+            ],
+            // ── QUANTISTICA ──
+            "Quantistica": [
+                { cmd: "|\\psi\\rangle", html: "|\\psi\\rangle" },
+                { cmd: "\\langle\\psi|", html: "\\langle\\psi|" },
+                { cmd: "\\langle\\phi|\\psi\\rangle", html: "\\langle\\phi|\\psi\\rangle" },
+                { cmd: "\\hat{H}|\\psi\\rangle = E|\\psi\\rangle", html: "\\hat{H}|\\psi\\rangle = E|\\psi\\rangle" },
+                { cmd: "i\\hbar\\frac{\\partial}{\\partial t}|\\psi\\rangle = \\hat{H}|\\psi\\rangle", html: "i\\hbar\\frac{\\partial}{\\partial t}|\\psi\\rangle = \\hat{H}|\\psi\\rangle" },
+                { cmd: "[\\hat{x},\\hat{p}] = i\\hbar", html: "[\\hat{x},\\hat{p}] = i\\hbar" },
+                { cmd: "\\langle\\hat{A}\\rangle = \\langle\\psi|\\hat{A}|\\psi\\rangle", html: "\\langle\\hat{A}\\rangle = \\langle\\psi|\\hat{A}|\\psi\\rangle" },
+                { cmd: "\\Delta x \\Delta p \\geq \\frac{\\hbar}{2}", html: "\\Delta x \\Delta p \\geq \\frac{\\hbar}{2}" }
+            ],
+            // ── EQ. DIFFERENZIALI ──
+            "Eq. Diff.": [
+                { cmd: "y' + p(x)y = q(x)", html: "y' + p(x)y = q(x)" },
+                { cmd: "y'' + py' + qy = 0", html: "y'' + py' + qy = 0" },
+                { cmd: "\\frac{d^2y}{dx^2} + \\omega^2 y = 0", html: "\\frac{d^2y}{dx^2} + \\omega^2 y = 0" },
+                { cmd: "y(x) = C_1 e^{r_1 x} + C_2 e^{r_2 x}", html: "y(x) = C_1 e^{r_1 x} + C_2 e^{r_2 x}" },
+                { cmd: "\\frac{\\partial u}{\\partial t} = k\\frac{\\partial^2 u}{\\partial x^2}", html: "\\frac{\\partial u}{\\partial t} = k\\frac{\\partial^2 u}{\\partial x^2}" },
+                { cmd: "\\nabla^2 u = 0", html: "\\nabla^2 u = 0" },
+                { cmd: "\\frac{\\partial^2 u}{\\partial t^2} = c^2\\nabla^2 u", html: "\\frac{\\partial^2 u}{\\partial t^2} = c^2\\nabla^2 u" },
+                { cmd: "\\begin{cases} \\dot{x} = f(x,y) \\\\ \\dot{y} = g(x,y) \\end{cases}", html: "\\begin{cases} \\dot{x} = f(x,y) \\\\ \\dot{y} = g(x,y) \\end{cases}" }
+            ],
+            // ── ALGEBRA LINEARE ──
+            "Algebra Lin.": [
+                { cmd: "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}", html: "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}" },
+                { cmd: "\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}", html: "\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}" },
+                { cmd: "\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}", html: "\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}" },
+                { cmd: "\\det(A) = ad - bc", html: "\\det(A) = ad - bc" },
+                { cmd: "\\operatorname{tr}(A)", html: "\\operatorname{tr}(A)" },
+                { cmd: "A^{-1}", html: "A^{-1}" }, { cmd: "A^T", html: "A^T" }, { cmd: "A^\\dagger", html: "A^\\dagger" },
+                { cmd: "Av = \\lambda v", html: "Av = \\lambda v" },
+                { cmd: "\\det(A - \\lambda I) = 0", html: "\\det(A - \\lambda I) = 0" },
+                { cmd: "\\ker(A)", html: "\\ker(A)" }, { cmd: "\\operatorname{rank}(A)", html: "\\operatorname{rank}(A)" },
+                { cmd: "\\langle u, v \\rangle", html: "\\langle u, v \\rangle" },
+                { cmd: "\\|u\\|", html: "\\|u\\|" },
+                { cmd: "u \\cdot v = \\|u\\|\\|v\\|\\cos\\theta", html: "u \\cdot v = \\|u\\|\\|v\\|\\cos\\theta" },
+                { cmd: "\\begin{pmatrix} a_{11} & \\cdots & a_{1n} \\\\ \\vdots & \\ddots & \\vdots \\\\ a_{m1} & \\cdots & a_{mn} \\end{pmatrix}", html: "\\begin{pmatrix} a_{11} & \\cdots & a_{1n} \\\\ \\vdots & \\ddots & \\vdots \\\\ a_{m1} & \\cdots & a_{mn} \\end{pmatrix}" }
+            ],
+            // ── ANALISI COMPLESSA ──
+            "Analisi Compl.": [
+                { cmd: "z = a + bi", html: "z = a + bi" },
+                { cmd: "\\bar{z} = a - bi", html: "\\bar{z} = a - bi" },
+                { cmd: "|z| = \\sqrt{a^2+b^2}", html: "|z| = \\sqrt{a^2+b^2}" },
+                { cmd: "e^{i\\theta} = \\cos\\theta + i\\sin\\theta", html: "e^{i\\theta} = \\cos\\theta + i\\sin\\theta" },
+                { cmd: "e^{i\\pi} + 1 = 0", html: "e^{i\\pi} + 1 = 0" },
+                { cmd: "\\operatorname{Re}(z)", html: "\\operatorname{Re}(z)" }, { cmd: "\\operatorname{Im}(z)", html: "\\operatorname{Im}(z)" },
+                { cmd: "\\frac{1}{2\\pi i} \\oint_\\gamma \\frac{f(z)}{z-a}\\,dz = f(a)", html: "\\frac{1}{2\\pi i} \\oint_\\gamma \\frac{f(z)}{z-a}\\,dz = f(a)" },
+                { cmd: "\\text{Res}(f, a)", html: "\\text{Res}(f, a)" },
+                { cmd: "\\sum_{n=-\\infty}^{\\infty} c_n z^n", html: "\\sum_{n=-\\infty}^{\\infty} c_n z^n" }
+            ],
+            // ── STRUTTURE ──
+            "Strutture": [
+                { cmd: "\\frac{a}{b}", html: "\\frac{a}{b}" }, { cmd: "\\dfrac{a}{b}", html: "\\dfrac{a}{b}" },
+                { cmd: "\\sqrt{x}", html: "\\sqrt{x}" }, { cmd: "\\sqrt[n]{x}", html: "\\sqrt[n]{x}" },
+                { cmd: "\\binom{n}{k}", html: "\\binom{n}{k}" },
+                { cmd: "\\begin{cases} x & \\text{se } x \\geq 0 \\\\ -x & \\text{se } x < 0 \\end{cases}", html: "\\begin{cases} x & \\text{se } x \\geq 0 \\\\ -x & \\text{se } x < 0 \\end{cases}" },
+                { cmd: "\\underbrace{a+b}_{\\text{etich.}}", html: "\\underbrace{a+b}_{\\text{etich.}}" },
+                { cmd: "\\overbrace{a+b}^{\\text{etich.}}", html: "\\overbrace{a+b}^{\\text{etich.}}" },
+                { cmd: "\\overline{AB}", html: "\\overline{AB}" }, { cmd: "\\underline{abc}", html: "\\underline{abc}" },
+                { cmd: "\\widehat{abc}", html: "\\widehat{abc}" }, { cmd: "\\widetilde{abc}", html: "\\widetilde{abc}" },
+                { cmd: "\\overrightarrow{AB}", html: "\\overrightarrow{AB}" }, { cmd: "\\boxed{x}", html: "\\boxed{x}" }
+            ],
+            // ── COMBINATORIA ──
+            "Combinatoria": [
+                { cmd: "n!", html: "n!" }, { cmd: "\\binom{n}{k}", html: "\\binom{n}{k}" },
+                { cmd: "P(n,k) = \\frac{n!}{(n-k)!}", html: "P(n,k) = \\frac{n!}{(n-k)!}" },
+                { cmd: "\\sum_{k=0}^{n} \\binom{n}{k} = 2^n", html: "\\sum_{k=0}^{n} \\binom{n}{k} = 2^n" },
+                { cmd: "(a+b)^n = \\sum_{k=0}^{n} \\binom{n}{k} a^k b^{n-k}", html: "(a+b)^n = \\sum_{k=0}^{n} \\binom{n}{k} a^k b^{n-k}" },
+                { cmd: "\\left\\lfloor x \\right\\rfloor", html: "\\left\\lfloor x \\right\\rfloor" },
+                { cmd: "\\left\\lceil x \\right\\rceil", html: "\\left\\lceil x \\right\\rceil" },
+                { cmd: "a \\equiv b \\pmod{n}", html: "a \\equiv b \\pmod{n}" },
+                { cmd: "\\gcd(a,b)", html: "\\gcd(a,b)" },
+                { cmd: "\\phi(n)", html: "\\phi(n)" }, { cmd: "\\mu(n)", html: "\\mu(n)" }
+            ],
+            // ── LOGICA ──
+            "Logica": [
+                { cmd: "\\forall", html: "\\forall" }, { cmd: "\\exists", html: "\\exists" },
+                { cmd: "\\nexists", html: "\\nexists" }, { cmd: "\\neg", html: "\\neg" },
+                { cmd: "\\land", html: "\\land" }, { cmd: "\\lor", html: "\\lor" },
+                { cmd: "\\implies", html: "\\implies" }, { cmd: "\\iff", html: "\\iff" },
+                { cmd: "\\therefore", html: "\\therefore" }, { cmd: "\\because", html: "\\because" },
+                { cmd: "\\top", html: "\\top" }, { cmd: "\\bot", html: "\\bot" },
+                { cmd: "A \\cup B", html: "A \\cup B" }, { cmd: "A \\cap B", html: "A \\cap B" },
+                { cmd: "A \\setminus B", html: "A \\setminus B" }, { cmd: "\\emptyset", html: "\\emptyset" },
+                { cmd: "\\mathcal{P}(A)", html: "\\mathcal{P}(A)" },
+                { cmd: "A \\times B", html: "A \\times B" }, { cmd: "\\aleph_0", html: "\\aleph_0" }
+            ],
+            // ── RELAZIONI ──
+            "Relazioni": [
+                { cmd: "<", html: "<" }, { cmd: ">", html: ">" },
+                { cmd: "\\le", html: "\\le" }, { cmd: "\\ge", html: "\\ge" },
+                { cmd: "\\ll", html: "\\ll" }, { cmd: "\\gg", html: "\\gg" },
+                { cmd: "\\ne", html: "\\ne" }, { cmd: "\\approx", html: "\\approx" },
+                { cmd: "\\equiv", html: "\\equiv" }, { cmd: "\\sim", html: "\\sim" },
+                { cmd: "\\simeq", html: "\\simeq" }, { cmd: "\\cong", html: "\\cong" },
+                { cmd: "\\propto", html: "\\propto" }, { cmd: "\\perp", html: "\\perp" },
+                { cmd: "\\parallel", html: "\\parallel" }, { cmd: "\\mid", html: "\\mid" },
+                { cmd: "\\prec", html: "\\prec" }, { cmd: "\\succ", html: "\\succ" },
+                { cmd: "\\preceq", html: "\\preceq" }, { cmd: "\\succeq", html: "\\succeq" },
+                { cmd: "\\models", html: "\\models" }, { cmd: "\\vdash", html: "\\vdash" },
+                { cmd: "\\subset", html: "\\subset" }, { cmd: "\\supset", html: "\\supset" },
+                { cmd: "\\subseteq", html: "\\subseteq" }, { cmd: "\\in", html: "\\in" }, { cmd: "\\notin", html: "\\notin" }
+            ],
+            // ── FRECCE ──
+            "Frecce": [
+                { cmd: "\\rightarrow", html: "\\rightarrow" }, { cmd: "\\leftarrow", html: "\\leftarrow" },
+                { cmd: "\\leftrightarrow", html: "\\leftrightarrow" },
+                { cmd: "\\Rightarrow", html: "\\Rightarrow" }, { cmd: "\\Leftarrow", html: "\\Leftarrow" },
+                { cmd: "\\Leftrightarrow", html: "\\Leftrightarrow" },
+                { cmd: "\\mapsto", html: "\\mapsto" }, { cmd: "\\to", html: "\\to" },
+                { cmd: "\\longrightarrow", html: "\\longrightarrow" },
+                { cmd: "\\xrightarrow{f}", html: "\\xrightarrow{f}" },
+                { cmd: "\\xrightarrow[a]{b}", html: "\\xrightarrow[a]{b}" },
+                { cmd: "\\hookleftarrow", html: "\\hookleftarrow" }, { cmd: "\\hookrightarrow", html: "\\hookrightarrow" },
+                { cmd: "\\twoheadrightarrow", html: "\\twoheadrightarrow" },
+                { cmd: "\\nearrow", html: "\\nearrow" }, { cmd: "\\nwarrow", html: "\\nwarrow" },
+                { cmd: "\\searrow", html: "\\searrow" }, { cmd: "\\swarrow", html: "\\swarrow" },
+                { cmd: "\\uparrow", html: "\\uparrow" }, { cmd: "\\downarrow", html: "\\downarrow" },
+                { cmd: "\\circlearrowleft", html: "\\circlearrowleft" }, { cmd: "\\circlearrowright", html: "\\circlearrowright" }
+            ],
+            // ── OPERATORI ──
+            "Operatori": [
+                { cmd: "\\pm", html: "\\pm" }, { cmd: "\\mp", html: "\\mp" },
+                { cmd: "\\times", html: "\\times" }, { cmd: "\\div", html: "\\div" },
+                { cmd: "\\cdot", html: "\\cdot" }, { cmd: "\\circ", html: "\\circ" },
+                { cmd: "\\oplus", html: "\\oplus" }, { cmd: "\\otimes", html: "\\otimes" },
+                { cmd: "\\ominus", html: "\\ominus" }, { cmd: "\\oslash", html: "\\oslash" },
+                { cmd: "\\odot", html: "\\odot" }, { cmd: "\\wedge", html: "\\wedge" }, { cmd: "\\vee", html: "\\vee" },
+                { cmd: "\\cap", html: "\\cap" }, { cmd: "\\cup", html: "\\cup" },
+                { cmd: "\\star", html: "\\star" }, { cmd: "\\bullet", html: "\\bullet" },
+                { cmd: "\\bigcup_{i=1}^n", html: "\\bigcup_{i=1}^n" },
+                { cmd: "\\bigcap_{i=1}^n", html: "\\bigcap_{i=1}^n" },
+                { cmd: "\\bigoplus_{i=1}^n", html: "\\bigoplus_{i=1}^n" }
+            ],
+            // ── PARENTESI ──
+            "Parentesi": [
+                { cmd: "\\left( \\right)", html: "\\left( \\right)" },
+                { cmd: "\\left[ \\right]", html: "\\left[ \\right]" },
+                { cmd: "\\left\\{ \\right\\}", html: "\\left\\{ \\right\\}" },
+                { cmd: "\\left| \\right|", html: "\\left| \\right|" },
+                { cmd: "\\left\\| \\right\\|", html: "\\left\\| \\right\\|" },
+                { cmd: "\\langle \\rangle", html: "\\langle \\rangle" },
+                { cmd: "\\lfloor \\rfloor", html: "\\lfloor \\rfloor" },
+                { cmd: "\\lceil \\rceil", html: "\\lceil \\rceil" },
+                { cmd: "\\big( \\big)", html: "\\big( \\big)" },
+                { cmd: "\\Big( \\Big)", html: "\\Big( \\Big)" },
+                { cmd: "\\bigg( \\bigg)", html: "\\bigg( \\bigg)" },
+                { cmd: "\\Bigg( \\Bigg)", html: "\\Bigg( \\Bigg)" },
+                { cmd: "\\left. \\frac{df}{dx} \\right|_{x=0}", html: "\\left. \\frac{df}{dx} \\right|_{x=0}" }
+            ],
+            // ── INSIEMI NUMERICI ──
+            "Insiemi Num.": [
+                { cmd: "\\mathbb{N}", html: "\\mathbb{N}" }, { cmd: "\\mathbb{Z}", html: "\\mathbb{Z}" },
+                { cmd: "\\mathbb{Q}", html: "\\mathbb{Q}" }, { cmd: "\\mathbb{R}", html: "\\mathbb{R}" },
+                { cmd: "\\mathbb{C}", html: "\\mathbb{C}" }, { cmd: "\\mathbb{H}", html: "\\mathbb{H}" },
+                { cmd: "\\mathbb{R}^n", html: "\\mathbb{R}^n" },
+                { cmd: "\\mathbb{R}^{m \\times n}", html: "\\mathbb{R}^{m \\times n}" },
+                { cmd: "\\mathbb{Z}/n\\mathbb{Z}", html: "\\mathbb{Z}/n\\mathbb{Z}" },
+                { cmd: "\\mathbb{F}_q", html: "\\mathbb{F}_q" },
+                { cmd: "\\mathbb{P}", html: "\\mathbb{P}" }
+            ],
+            // ── STILI FONT ──
+            "Font": [
+                { cmd: "\\mathbf{v}", html: "\\mathbf{v}" }, { cmd: "\\mathit{x}", html: "\\mathit{x}" },
+                { cmd: "\\mathrm{d}", html: "\\mathrm{d}" }, { cmd: "\\mathsf{A}", html: "\\mathsf{A}" },
+                { cmd: "\\mathtt{x}", html: "\\mathtt{x}" }, { cmd: "\\mathbb{R}", html: "\\mathbb{R}" },
+                { cmd: "\\mathcal{A}", html: "\\mathcal{A}" }, { cmd: "\\mathcal{L}", html: "\\mathcal{L}" },
+                { cmd: "\\mathcal{F}", html: "\\mathcal{F}" }, { cmd: "\\mathcal{H}", html: "\\mathcal{H}" },
+                { cmd: "\\mathfrak{g}", html: "\\mathfrak{g}" }, { cmd: "\\mathfrak{h}", html: "\\mathfrak{h}" },
+                { cmd: "\\text{parola}", html: "\\text{parola}" },
+                { cmd: "\\boldsymbol{\\alpha}", html: "\\boldsymbol{\\alpha}" }
+            ],
+            // ── DECORATORI ──
+            "Decoratori": [
+                { cmd: "\\hat{x}", html: "\\hat{x}" }, { cmd: "\\check{x}", html: "\\check{x}" },
+                { cmd: "\\tilde{x}", html: "\\tilde{x}" }, { cmd: "\\acute{x}", html: "\\acute{x}" },
+                { cmd: "\\grave{x}", html: "\\grave{x}" }, { cmd: "\\breve{x}", html: "\\breve{x}" },
+                { cmd: "\\dot{x}", html: "\\dot{x}" }, { cmd: "\\ddot{x}", html: "\\ddot{x}" },
+                { cmd: "\\dddot{x}", html: "\\dddot{x}" }, { cmd: "\\vec{x}", html: "\\vec{x}" },
+                { cmd: "\\bar{x}", html: "\\bar{x}" }, { cmd: "\\widehat{abc}", html: "\\widehat{abc}" },
+                { cmd: "\\widetilde{abc}", html: "\\widetilde{abc}" },
+                { cmd: "\\overrightarrow{AB}", html: "\\overrightarrow{AB}" },
+                { cmd: "\\overline{abc}", html: "\\overline{abc}" }, { cmd: "\\underline{abc}", html: "\\underline{abc}" },
+                { cmd: "\\overleftrightarrow{ABC}", html: "\\overleftrightarrow{ABC}" },
+                { cmd: "\\boxed{x}", html: "\\boxed{x}" }
+            ],
+            // ── SPAZIATURA ──
+            "Spaziatura": [
+                { cmd: "\\quad", html: "\\quad" }, { cmd: "\\qquad", html: "\\qquad" },
+                { cmd: "\\,", html: "\\," }, { cmd: "\\;", html: "\\;" },
+                { cmd: "\\:", html: "\\:" }, { cmd: "\\!", html: "\\!" },
+                { cmd: "\\ldots", html: "\\ldots" }, { cmd: "\\cdots", html: "\\cdots" },
+                { cmd: "\\vdots", html: "\\vdots" }, { cmd: "\\ddots", html: "\\ddots" },
+                { cmd: "\\ast", html: "\\ast" }, { cmd: "\\dagger", html: "\\dagger" },
+                { cmd: "\\ddagger", html: "\\ddagger" }, { cmd: "\\prime", html: "\\prime" },
+                { cmd: "^{\\circ}", html: "^{\\circ}" }
+            ]
+        };
+
+        async function init() {
+            initMathToolbar();
+            initDiagramGrid();
+            initTableGrid(); // New
+
+            try {
+                const savedLang = localStorage.getItem('minipad_lang');
+                if (savedLang === 'en' || savedLang === 'it') currentLang = savedLang;
+            } catch (e) { }
+            document.getElementById('lang-label').textContent = currentLang.toUpperCase();
+            applyLanguage();
+
+            // PERSISTENCE FIX: Ensure we read from IndexedDB
+            let savedData = null;
+            try {
+                savedData = await idbKeyval.get('minipad_tabs');
+            } catch (e) {
+                console.warn("Failed to read from IndexedDB, falling back:", e);
+            }
+
+            // Fallback to localStorage if idb is empty but localstorage has data (migration)
+            if (!savedData) {
+                const legacyData = localStorage.getItem('minipad_tabs');
+                if (legacyData && legacyData !== "[]") {
+                    savedData = legacyData;
+                }
+            }
+
+            if (savedData && savedData !== "[]") {
+                try {
+                    tabs = typeof savedData === 'string' ? JSON.parse(savedData) : savedData;
+                    // Ensure at least one tab
+                    if (tabs.length === 0) throw new Error("No tabs");
+                } catch (e) {
+                    // Fallback
+                    await createNote(getStr('new_tab_name'), "# " + getStr('new_tab_name') + "\n\n" + getStr('placeholder'));
+                }
+            } else {
+                await createNote(getStr('new_tab_name'), "# " + getStr('new_tab_name') + "\n\n" + getStr('placeholder'));
+            }
+
+            renderSidebar();
+
+            // Restore active tab
+            if (tabs.length > 0) {
+                const lastActive = tabs[tabs.length - 1].id; // Default to last
+                switchNote(lastActive);
+            }
+
+            document.getElementById('editor').addEventListener('input', handleInput);
+            document.getElementById('editor').addEventListener('keydown', handleShortcuts);
+
+            // Image Drag & Drop
+            const editorEl = document.getElementById('editor');
+            editorEl.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            editorEl.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    const file = e.dataTransfer.files[0];
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const base64 = event.target.result;
+                            insertMarkdown(`\n![${file.name}](${base64})\n`, '');
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
+
+            // Sync scroll
+            const editorPane = document.getElementById('editor');
+            const previewPane = document.getElementById('preview-pane');
+            let isSyncingLeft = false;
+            let isSyncingRight = false;
+
+            editorPane.addEventListener('scroll', function () {
+                if (!isSyncingLeft) {
+                    isSyncingRight = true;
+                    // Calculate percentage
+                    const percentage = this.scrollTop / (this.scrollHeight - this.clientHeight);
+                    previewPane.scrollTop = percentage * (previewPane.scrollHeight - previewPane.clientHeight);
+                }
+                isSyncingLeft = false;
+            });
+
+            previewPane.addEventListener('scroll', function () {
+                if (!isSyncingRight) {
+                    isSyncingLeft = true;
+                    const percentage = this.scrollTop / (this.scrollHeight - this.clientHeight);
+                    editorPane.scrollTop = percentage * (editorPane.scrollHeight - editorPane.clientHeight);
+                }
+                isSyncingRight = false;
+            });
+
+            // Relying exclusively on 100dvh for mobile keyboard handling.
+
+            updatePreview();
+
+            // Global Ctrl+F to open find bar
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                    e.preventDefault();
+                    toggleFindBar();
+                }
+                if (e.key === 'Escape') {
+                    if (findBarVisible) { closeFindBar(); return; }
+                    if (document.body.classList.contains('zen-mode')) {
+                        document.body.classList.remove('zen-mode');
+                    }
+                }
+            });
+
+            // Enter key in find-input to jump to next
+            document.getElementById('find-input')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); highlightFind(); }
+                if (e.key === 'Escape') { closeFindBar(); }
+            });
+
+        }
+
+        /* --- DIAGRAM LOGIC --- */
+        /* --- DIAGRAM LOGIC REMOVED (Redefined below) --- */
+        function openDiagramModal() {
+            document.getElementById('diagram-modal').style.display = 'flex';
+            document.getElementById('diagram-modal').classList.add('active'); // Add active class to CSS to handle z-index
+        }
+
+        // Helper to handle z-index of modals correctly
+        document.querySelectorAll('.modal').forEach(m => {
+            m.addEventListener('click', (e) => {
+                if (e.target === m) m.style.display = 'none';
+            });
+        });
+
+        /* --- MATH TOOLBAR LOGIC --- */
+        function initMathToolbar() {
+            const tabsContainer = document.getElementById('math-tabs-container');
+            Object.keys(mathCategories).forEach((catName, index) => {
+                const btn = document.createElement('div');
+                btn.className = `math-tab ${index === 0 ? 'active' : ''}`;
+                btn.textContent = catName;
+                btn.onclick = () => switchMathTab(catName, btn);
+                tabsContainer.appendChild(btn);
+            });
+            loadMathCategory(Object.keys(mathCategories)[0]);
+        }
+
+        function switchMathTab(catName, clickedTab) {
+            document.querySelectorAll('.math-tab').forEach(t => t.classList.remove('active'));
+            clickedTab.classList.add('active');
+            loadMathCategory(catName);
+        }
+
+        function loadMathCategory(catName) {
+            const grid = document.getElementById('math-grid');
+            grid.innerHTML = '';
+            mathCategories[catName].forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'math-btn';
+                btn.title = item.cmd; // tooltip shows LaTeX command
+
+                // Try rendering the full cmd expression with KaTeX for a real math preview
+                // If the cmd is complex (long formula), fall back to a shortened label
+                const renderTarget = item.cmd.length < 60 ? item.cmd : item.html;
+                let rendered = false;
+
+                if (!renderTarget.trim().startsWith('<')) {
+                    try {
+                        btn.innerHTML = katex.renderToString(renderTarget, {
+                            throwOnError: true,
+                            displayMode: false,
+                            strict: false
+                        });
+                        rendered = true;
+                    } catch (e) {
+                        try {
+                            // Try rendering just the html alias (simpler)
+                            btn.innerHTML = katex.renderToString(item.html, {
+                                throwOnError: true, displayMode: false, strict: false
+                            });
+                            rendered = true;
+                        } catch (e2) { /* fall through to label */ }
+                    }
+                } else {
+                    btn.innerHTML = renderTarget;
+                    rendered = true;
+                }
+
+                if (!rendered) {
+                    // Use a short text fallback showing the key symbol
+                    const label = document.createElement('span');
+                    label.className = 'math-label';
+                    label.textContent = item.html.replace(/\\/g, '').substring(0, 12);
+                    btn.appendChild(label);
+                }
+
+                // HOVER PREVIEW
+                btn.addEventListener('mouseenter', (e) => showTooltip(e, item));
+                btn.addEventListener('mousemove', moveTooltip);
+                btn.addEventListener('mouseleave', hideTooltip);
+
+                btn.onclick = () => insertLatex(item.cmd);
+                grid.appendChild(btn);
+            });
+        }
+
+        function toggleMathBar() {
+            document.getElementById('math-toolbar').classList.toggle('show');
+        }
+
+        function insertLatex(code) {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            const val = field.value;
+
+            let cursorPos = start + code.length;
+            if (code.includes('\\frac{a}{b}') || code.includes('\\dfrac{a}{b}')) cursorPos = start + code.indexOf('{a}') + 1;
+            else if (code.includes('\\tfrac')) cursorPos = start + code.indexOf('{a}') + 1;
+            else if (code.includes('\\sqrt{x}')) cursorPos = start + code.indexOf('{x}') + 1;
+            else if (code.includes('\\binom{n}{k}')) cursorPos = start + code.indexOf('{n}') + 1;
+            else if (code.includes('\\begin{pmatrix}')) cursorPos = start + code.indexOf('{a}') + 1;
+            else if (code.includes('\\lim_{x \\to 0}')) cursorPos = start + code.indexOf('x');
+
+            field.value = val.substring(0, start) + code + val.substring(end);
+            field.focus();
+            field.setSelectionRange(cursorPos, cursorPos);
+            handleInput();
+        }
+
+        function insertDiagram(code) {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            const val = field.value;
+
+            // Insert as Markdown code block
+            const block = "```mermaid\n" + code + "\n```";
+            field.value = val.substring(0, start) + block + val.substring(end);
+
+            document.getElementById('diagram-modal').style.display = 'none';
+            handleInput();
+        }
+
+        /* --- TOOLTIP FUNCTIONS --- */
+        const tooltip = document.getElementById('math-tooltip');
+
+        function showTooltip(e, item) {
+            tooltip.innerHTML = '';
+            // Render the FULL cmd expression for the preview
+            const previewDiv = document.createElement('div');
+            previewDiv.style.cssText = 'font-size:16px; padding: 4px 0 8px 0;';
+
+            if (item.html.trim().startsWith('<')) {
+                previewDiv.innerHTML = item.html;
+                const svg = previewDiv.querySelector('svg');
+                if (svg) { svg.style.width = '40px'; svg.style.height = '40px'; }
+            } else {
+                try {
+                    // Render the full cmd in display mode for maximum clarity
+                    previewDiv.innerHTML = katex.renderToString(
+                        item.cmd.length < 120 ? item.cmd : item.html,
+                        { throwOnError: false, displayMode: true, strict: false }
+                    );
+                } catch (ex) {
+                    try {
+                        previewDiv.innerHTML = katex.renderToString(item.html, { throwOnError: false, displayMode: true });
+                    } catch (ex2) {
+                        previewDiv.textContent = item.cmd;
+                    }
+                }
+            }
+            tooltip.appendChild(previewDiv);
+
+            // Show the raw LaTeX command below
+            const cmdDiv = document.createElement('div');
+            cmdDiv.style.cssText = 'font-family:monospace; font-size:10px; color:#aaa; border-top:1px solid #444; padding-top:4px; margin-top:2px; word-break:break-all;';
+            cmdDiv.textContent = item.cmd;
+            tooltip.appendChild(cmdDiv);
+
+            tooltip.style.display = 'block';
+            moveTooltip(e);
+        }
+
+        function moveTooltip(e) {
+            const x = e.clientX + 15;
+            const y = e.clientY + 15;
+
+            const rect = tooltip.getBoundingClientRect();
+            const winWidth = window.innerWidth;
+            const winHeight = window.innerHeight;
+
+            let finalX = x;
+            let finalY = y;
+
+            if (x + rect.width > winWidth) finalX = x - rect.width - 10;
+            if (y + rect.height > winHeight) finalY = y - rect.height - 10;
+
+            tooltip.style.left = finalX + 'px';
+            tooltip.style.top = finalY + 'px';
+        }
+
+        function hideTooltip() {
+            tooltip.style.display = 'none';
+        }
+
+        /* --- CORE PREVIEW LOGIC --- */
+        async function updatePreview() {
+            let rawMarkdown = document.getElementById('editor').value;
+
+            // 1. Normalize Gemini LaTeX syntax to standard $ and $$
+            rawMarkdown = rawMarkdown.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
+            rawMarkdown = rawMarkdown.replace(/\\\((.*?)\\\)/g, '$$$1$$');
+
+            // 2. Extract Math to prevent marked.js from destroying symbols (e.g. < to &lt;)
+            const mathBlocks = [];
+            // Extract Block Math $$...$$
+            rawMarkdown = rawMarkdown.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
+                mathBlocks.push({ type: 'display', math: math });
+                return `%%MATH_BLOCK_${mathBlocks.length - 1}%%`;
+            });
+            // Extract Inline Math $...$
+            rawMarkdown = rawMarkdown.replace(/\$(.*?)\$/g, (match, math) => {
+                mathBlocks.push({ type: 'inline', math: math });
+                return `%%MATH_INLINE_${mathBlocks.length - 1}%%`;
+            });
+
+            // 3. Parse Markdown
+            let html = '';
+            try {
+                if (typeof marked.parse === 'function') {
+                    html = marked.parse(rawMarkdown, { gfm: true, breaks: true });
+                } else if (typeof marked === 'function') {
+                    html = marked(rawMarkdown, { gfm: true, breaks: true });
+                } else {
+                    html = rawMarkdown;
+                }
+            } catch(e) {
+                html = rawMarkdown;
+            }
+
+            // 4. Sanitize HTML
+            html = DOMPurify.sanitize(html, {
+                ADD_TAGS: ['svg', 'path', 'circle', 'rect', 'line', 'polyline', 'polygon', 'defs', 'marker', 'text', 'tspan', 'g', 'style'],
+                ADD_ATTR: ['cx', 'cy', 'r', 'x', 'y', 'width', 'height', 'rx', 'ry', 'd', 'fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-linecap', 'stroke-linejoin', 'transform', 'marker-end', 'marker-start', 'text-anchor', 'class', 'style', 'viewBox']
+            });
+
+            // 5. Restore and Render Math via KaTeX
+            html = html.replace(/%%MATH_(BLOCK|INLINE)_(\d+)%%/g, (match, type, index) => {
+                const item = mathBlocks[index];
+                if (!item) return match;
+                const isDisplay = item.type === 'display';
+                try {
+                    return katex.renderToString(item.math.trim(), { throwOnError: false, displayMode: isDisplay });
+                } catch (e) {
+                    return match; // Fallback
+                }
+            });
+
+            document.getElementById('preview-content').innerHTML = html;
+
+            // 6. Resilient Mermaid Initialization
+            if (window.mermaid) {
+                mermaid.initialize({ startOnLoad: false, suppressErrorRendering: true });
+            }
+
+            document.querySelectorAll('#preview-content .mermaid, #preview-content code.language-mermaid').forEach(async (element, index) => {
+                // If it's a code block, grab the parent pre to inject the svg
+                const isCodeBlock = element.tagName.toLowerCase() === 'code';
+                const targetElement = isCodeBlock ? element.parentElement : element;
+
+                const id = 'mermaid-' + index;
+                const code = element.textContent.trim();
+
+                if (!code) return; // Skip empty matches
+
+                try {
+                    if (window.mermaid) {
+                        const result = await mermaid.render(id, code);
+                        // Gestione retrocompatibile: v9 restituisce string, v10+ restituisce {svg: string}
+                        const svgText = typeof result === 'string' ? result : (result && result.svg ? result.svg : '');
+                        
+                        const lowerSvg = svgText.toLowerCase();
+                        if (!svgText || lowerSvg.includes('error-icon') || lowerSvg.includes('syntax error') || lowerSvg.includes('mermaid version')) {
+                            targetElement.style.display = 'none';
+                        } else {
+                            targetElement.style.display = 'block'; // Restore visibility if it was hidden
+                            targetElement.innerHTML = svgText;
+                            targetElement.style.border = "none";
+                            targetElement.style.background = "transparent";
+                            targetElement.style.padding = "0";
+                        }
+                    } else {
+                        targetElement.style.display = 'none';
+                    }
+                } catch (e) {
+                    // Silent: hide the broken code block, show nothing
+                    targetElement.style.display = 'none';
+                }
+            });
+
+            // Cleanup: Mermaid 11.x can leave orphaned temporary error divs at the bottom of the body. 
+            // We must completely REMOVE them from the DOM to avoid phantom whitespace at the bottom.
+            setTimeout(() => {
+                document.querySelectorAll('body > div[id^="dmermaid"]').forEach(el => el.remove());
+            }, 100);
+        }
+
+        /* --- MENU TOGGLE HELPERS (position:fixed dropdowns need viewport coords) --- */
+        function positionDropdown(menuId, btnEl) {
+            const menu = document.getElementById(menuId);
+            if (!menu || !btnEl) return;
+            // Force display block first to get accurate rects if needed, though they are fixed
+            const rect = btnEl.getBoundingClientRect();
+            menu.style.top = (rect.bottom + 2) + 'px';
+            menu.style.left = Math.min(rect.left, window.innerWidth - 210) + 'px';
+            menu.classList.add('show');
+        }
+
+        function toggleFileMenu(e) {
+            if (e) e.stopPropagation();
+            const btn = document.getElementById('file-btn');
+            const menu = document.getElementById('file-menu');
+            if (!menu) return;
+            const isShowing = menu.classList.contains('show');
+            closeAllMenus();
+            if (!isShowing) positionDropdown('file-menu', btn);
+        }
+
+        function toggleFormulaMenu(e) {
+            // Disabled: formula menu has been replaced by the Math Toolbar.
+            console.log("toggleFormulaMenu disabled in latest version.");
+        }
+
+        function toggleTableMenu(e) {
+            if (e) e.stopPropagation();
+            const btn = e && e.currentTarget ? e.currentTarget : document.querySelector('[onclick*="toggleTableMenu"]');
+            const menu = document.getElementById('table-menu');
+            if (!menu) return;
+            const isShowing = menu.classList.contains('show');
+            closeAllMenus();
+            if (!isShowing) positionDropdown('table-menu', btn);
+        }
+
+        function closeAllMenus() {
+            ['file-menu', 'table-menu'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('show');
+            });
+        }
+
+        function closeOtherMenus(exceptId) {
+            ['file-menu', 'table-menu'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && id !== exceptId) el.classList.remove('show');
+            });
+        }
+
+        // Updated Insert Formula Logic (Smart Inline / Block)
+        function insertSpecialFormula(borderStr, offset) {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            const val = field.value;
+            const selected = val.substring(start, end);
+
+            let newText = "";
+            if (selected.length > 0) {
+                newText = borderStr + " " + selected + " " + borderStr;
+                field.value = val.substring(0, start) + newText + val.substring(end);
+                field.selectionStart = start;
+                field.selectionEnd = start + newText.length;
+            } else {
+                newText = borderStr + "  " + borderStr;
+                field.value = val.substring(0, start) + newText + val.substring(end);
+                field.selectionStart = start + offset + 1;
+                field.selectionEnd = start + offset + 1;
+            }
+            field.focus();
+            handleInput();
+        }
+
+        function insertFormulaInline() {
+            insertSpecialFormula('$', 1);
+        }
+
+        function insertFormulaBlock() {
+            insertSpecialFormula('$$', 2);
+        }
+
+        /* --- FONT & COLOR with Span --- */
+        function applyStyle(styleStart, styleEnd) {
+            insertMarkdown(styleStart, styleEnd);
+        }
+
+        function changeFont() {
+            const font = document.getElementById('font-family').value;
+            applyStyle(`<span style="font-family:${font}">`, `</span>`);
+        }
+
+        function changeFontSize() {
+            const size = document.getElementById('font-size').value;
+            applyStyle(`<span style="font-size:${size}px">`, `</span>`);
+        }
+
+        /* --- TABLE BUILDER --- */
+        function initTableGrid() {
+            const grid = document.getElementById('table-grid');
+            const label = document.getElementById('table-size-label');
+            if (!grid || !label) return;
+            grid.innerHTML = '';
+
+            for (let r = 1; r <= 8; r++) {
+                for (let c = 1; c <= 8; c++) {
+                    const cell = document.createElement('div');
+                    cell.style.width = '12px';
+                    cell.style.height = '12px';
+                    cell.style.border = '1px solid #ccc';
+                    cell.style.background = '#fff';
+                    cell.style.cursor = 'pointer';
+
+                    cell.onmouseenter = () => highlightGrid(r, c);
+                    cell.onclick = () => insertTable(r, c);
+
+                    grid.appendChild(cell);
+                }
+            }
+
+            grid.onmouseleave = () => {
+                const cells = grid.children;
+                for (let cell of cells) cell.style.background = '#fff';
+                label.textContent = "0 x 0";
+            };
+        }
+
+        function highlightGrid(rows, cols) {
+            const grid = document.getElementById('table-grid');
+            Array.from(grid.children).forEach((cell, index) => {
+                const r = Math.floor(index / 8) + 1;
+                const c = (index % 8) + 1;
+                if (r <= rows && c <= cols) cell.style.background = 'var(--accent-color)';
+                else cell.style.background = '#fff';
+            });
+            document.getElementById('table-size-label').textContent = `${rows} x ${cols}`;
+        }
+
+        function buildTableMd(rows, cols) {
+            let table = '\n|';
+            for (let c = 0; c < cols; c++) table += ` Intestazione ${c + 1} |`;
+            table += '\n|';
+            for (let c = 0; c < cols; c++) table += ' --- |';
+            table += '\n';
+            for (let r = 0; r < rows; r++) {
+                table += '|';
+                for (let c = 0; c < cols; c++) table += '   |';
+                table += '\n';
+            }
+            return table;
+        }
+
+        function insertTable(rows, cols) {
+            const table = buildTableMd(rows, cols);
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const val = field.value;
+            field.value = val.substring(0, start) + table + val.substring(start);
+            // Put cursor inside first data cell
+            const firstCellPos = table.indexOf('\n| ') + 3;
+            field.focus();
+            field.setSelectionRange(start + firstCellPos, start + firstCellPos);
+            handleInput();
+            closeAllMenus();
+        }
+
+        function insertTableFromInputs() {
+            const rows = parseInt(document.getElementById('table-rows-input').value) || 3;
+            const cols = parseInt(document.getElementById('table-cols-input').value) || 3;
+            insertTable(rows, cols);
+        }
+
+
+        /* --- FILE MENU FIX --- */
+        window.addEventListener('click', (e) => {
+            // Don't close if clicking inside a dropdown menu or on a designated menu toggle button
+            const insideMenu = e.target.closest('.dropdown-menu');
+            const isMenuToggle = e.target.closest('#file-btn') || e.target.closest('#table-menu-btn');
+            if (!insideMenu && !isMenuToggle) {
+                closeAllMenus();
+            }
+        });
+
+        /* --- HEADING HELPERS --- */
+        function applyHeading(level) {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const val = field.value;
+            const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+            const lineEnd = val.indexOf('\n', start);
+            const end = lineEnd === -1 ? val.length : lineEnd;
+            let line = val.substring(lineStart, end).replace(/^#+\s*/, '');
+            const prefix = level > 0 ? '#'.repeat(level) + ' ' : '';
+            const newLine = prefix + line;
+            field.value = val.substring(0, lineStart) + newLine + val.substring(end);
+            field.focus();
+            field.setSelectionRange(lineStart + newLine.length, lineStart + newLine.length);
+            handleInput();
+        }
+
+        function saveSelection() {
+            const field = document.getElementById('editor');
+            savedSelection = { start: field.selectionStart, end: field.selectionEnd };
+        }
+
+        // Restore saved theme
+        try {
+            const savedTheme = localStorage.getItem('minipad_theme');
+            if (savedTheme) {
+                document.body.setAttribute('data-theme', savedTheme);
+            }
+            if (localStorage.getItem('minipad_dark_mode') === 'true') {
+                document.body.classList.add('dark-mode');
+            }
+        } catch (e) { }
+
+        /* ─── FIND / REPLACE ─────────────────────────────────────────────── */
+        let findBarVisible = false;
+        function toggleFindBar() {
+            const bar = document.getElementById('find-bar');
+            findBarVisible = !findBarVisible;
+            bar.style.display = findBarVisible ? 'flex' : 'none';
+            if (findBarVisible) setTimeout(() => document.getElementById('find-input').focus(), 50);
+            else document.getElementById('find-count').textContent = '';
+        }
+        function closeFindBar() {
+            findBarVisible = false;
+            document.getElementById('find-bar').style.display = 'none';
+            document.getElementById('find-count').textContent = '';
+        }
+        function highlightFind() {
+            const query = document.getElementById('find-input').value;
+            const countEl = document.getElementById('find-count');
+            if (!query) { countEl.textContent = ''; return; }
+            const text = document.getElementById('editor').value;
+            const re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            const matches = [...text.matchAll(re)];
+            countEl.textContent = matches.length > 0
+                ? `${matches.length} risultat${matches.length === 1 ? 'o' : 'i'}`
+                : 'Nessun risultato';
+        }
+        function findAndReplace() {
+            const query = document.getElementById('find-input').value;
+            const replace = document.getElementById('replace-input').value;
+            if (!query) return;
+            const field = document.getElementById('editor');
+            const re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            const matches = (field.value.match(re) || []).length;
+            if (matches === 0) { alert('Nessuna occorrenza trovata.'); return; }
+            field.value = field.value.replace(re, replace);
+            handleInput();
+            document.getElementById('find-count').textContent =
+                `${matches} sostituzion${matches === 1 ? 'e' : 'i'} effettuate`;
+        }
+
+        /* ─── TOC GENERATOR ──────────────────────────────────────────────── */
+        function generateTOC() {
+            const field = document.getElementById('editor');
+            const lines = field.value.split('\n');
+            const headings = lines.filter(l => /^#{1,6}\s/.test(l));
+            if (headings.length === 0) { alert('Nessun titolo trovato nel documento.'); return; }
+            let toc = '## Indice\n\n';
+            headings.forEach(h => {
+                const level = h.match(/^(#+)/)[1].length;
+                const text = h.replace(/^#+\s*/, '').trim();
+                const anchor = text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+                const indent = '  '.repeat(level - 1);
+                toc += `${indent}- [${text}](#${anchor})\n`;
+            });
+            toc += '\n';
+            const start = field.selectionStart;
+            field.value = field.value.substring(0, start) + toc + field.value.substring(start);
+            field.focus();
+            field.setSelectionRange(start, start + toc.length);
+            handleInput();
+        }
+
+        /* ─── IMPROVED STATS ─────────────────────────────────────────────── */
+        function updateStats() {
+            const t = document.getElementById('editor').value;
+            const chars = t.length;
+            const words = t.split(/\s+/).filter(w => w).length;
+            const lines = t.split('\n').length;
+            const pages = Math.max(1, Math.ceil(words / 500));
+            document.getElementById('status-left').textContent =
+                `Caratteri: ${chars.toLocaleString('it')} | Parole: ${words.toLocaleString('it')} | Righe: ${lines} | ~${pages} pag.`;
+        }
+
+        function applyList(prefix) {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            const val = field.value;
+            const selected = val.substring(start, end);
+
+            if (selected.length > 0) {
+                const lines = selected.split('\n');
+                const isOrdered = /^\d+\./.test(prefix);
+                const newLines = lines.map((l, i) => {
+                    const clean = l.replace(/^(\s*)(- \[[ xX]\] |[-*]\s|\d+\.\s)/, '$1');
+                    return isOrdered ? `${i + 1}. ${clean}` : prefix + clean;
+                });
+                const joined = newLines.join('\n');
+                field.value = val.substring(0, start) + joined + val.substring(end);
+                field.setSelectionRange(start, start + joined.length);
+            } else {
+                const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+                const newVal = val.substring(0, lineStart) + prefix + val.substring(lineStart);
+                field.value = newVal;
+                field.setSelectionRange(lineStart + prefix.length, lineStart + prefix.length);
+            }
+            field.focus();
+            handleInput();
+        }
+
+
+        /* --- IMPORT/EXPORT --- */
+        function importFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                const name = file.name.replace(/\.[^/.]+$/, ""); // strip extension
+                createTab(name, text);
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // reset input
+            toggleFileMenu();
+        }
+
+        function promptExport(type) {
+            const t = tabs.find(x => x.id === activeTabId);
+            if (!t) return;
+            const name = prompt("Inserisci il nome del file:", t.name || "documento");
+            if (!name) return;
+
+            if (type === 'md') downloadFile(name + ".md", t.content, "text/markdown");
+            if (type === 'txt') downloadFile(name + ".txt", t.content, "text/plain");
+            if (type === 'tex') {
+                const texStr = t.content
+                    .replace(/^# (.+)$/gm, '\\section{$1}')
+                    .replace(/^## (.+)$/gm, '\\subsection{$1}')
+                    .replace(/^### (.+)$/gm, '\\subsubsection{$1}')
+                    .replace(/\*\*(.+?)\*\*/g, '\\textbf{$1}')
+                    .replace(/\*(.+?)\*/g, '\\textit{$1}')
+                    .replace(/`(.+?)`/g, '\\texttt{$1}')
+                    .replace(/\$\$(.+?)\$\$/gs, '\\[\n$1\n\\]')
+                    .replace(/\$(.+?)\$/g, '$$$1$$');
+                const fullTex = `\\documentclass{article}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amsmath, amssymb}\n\\begin{document}\n\n${texStr}\n\n\\end{document}`;
+                downloadFile(name + ".tex", fullTex, "text/plain");
+            }
+            if (type === 'html') {
+                const c = document.getElementById('preview-content').innerHTML;
+                const html = `<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>${name}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+    <style>
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            max-width: 800px; 
+            margin: 40px auto; 
+            padding: 20px; 
+            background: #fff;
+        }
+        h1, h2, h3 { border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #f8f8f8; padding: 15px; border-radius: 8px; overflow-x: auto; border: 1px solid #ddd; }
+        blockquote { border-left: 4px solid #0067c0; margin: 0; padding-left: 15px; color: #555; }
+        img { max-width: 100%; border-radius: 4px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+${c}
+</body>
+</html>`;
+                downloadFile(name + ".html", html, "text/html");
+            }
+            if (type === 'pdf') window.print();
+        }
+
+        function downloadFile(filename, content, type) {
+            const blob = new Blob([content], { type: type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        /* --- BACKUP LOGIC --- */
+        function exportBackup() {
+            const dataStr = JSON.stringify(tabs, null, 2);
+            const dateStr = new Date().toISOString().split('T')[0];
+            downloadFile(`minipad_backup_${dateStr}.json`, dataStr, "application/json");
+            toggleFileMenu();
+        }
+
+        async function importBackup(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const text = await file.text();
+            try {
+                const importedTabs = JSON.parse(text);
+                if (Array.isArray(importedTabs) && importedTabs.length > 0) {
+                    if (confirm("Questo unirà le note salvate in questo browser con quelle del backup. Continuare?")) {
+                        // Merge logic: Add imported notes avoiding exact ID duplicates or generating new IDs
+                        importedTabs.forEach(t => {
+                            const existing = tabs.find(localTab => localTab.id === t.id);
+                            if (existing) {
+                                // If id conflict but different name/content, append as new
+                                if (existing.content !== t.content) {
+                                    t.id = t.id + "_imported";
+                                    t.name = t.name + " (Backup)";
+                                    tabs.push(t);
+                                }
+                            } else {
+                                tabs.push(t);
+                            }
+                        });
+                        await saveToStorage();
+                        renderSidebar();
+                        alert("Backup importato con successo!");
+                    }
+                } else {
+                    alert("File di backup non valido o vuoto.");
+                }
+            } catch (err) {
+                alert("Errore nella lettura del file JSON di backup.");
+            }
+            e.target.value = ''; // reset
+            toggleFileMenu();
+        }
+
+        function exportPDF() { promptExport('pdf'); toggleFileMenu(); }
+        function exportHTML() { promptExport('html'); toggleFileMenu(); }
+        function exportMD() { promptExport('md'); toggleFileMenu(); }
+        function exportTXT() { promptExport('txt'); toggleFileMenu(); }
+        function exportTEX() { promptExport('tex'); toggleFileMenu(); }
+        function saveNow() { saveToStorage(); showSavedIndicator(); }
+
+        /* --- EDITING --- */
+        function insertMarkdown(start, end) {
+            const field = document.getElementById('editor');
+            const sStart = field.selectionStart;
+            const sEnd = field.selectionEnd;
+            const val = field.value;
+            const selected = val.substring(sStart, sEnd);
+            field.value = val.substring(0, sStart) + start + selected + end + val.substring(sEnd);
+            field.focus();
+            field.selectionStart = sStart + start.length;
+            field.selectionEnd = sEnd + start.length;
+            handleInput();
+        }
+
+        function insertColor(prop, color) {
+            const field = document.getElementById('editor');
+            let start = field.selectionStart;
+            let end = field.selectionEnd;
+            if (savedSelection && start === end) {
+                start = savedSelection.start;
+                end = savedSelection.end;
+            }
+            const val = field.value;
+            let selected = val.substring(start, end);
+            if (!selected) selected = "Testo";
+
+            const insertText = `<span style="${prop}:${color}">` + selected + `</span>`;
+            field.value = val.substring(0, start) + insertText + val.substring(end);
+
+            savedSelection = null;
+
+            setTimeout(() => {
+                field.focus();
+                field.setSelectionRange(start, start + insertText.length);
+            }, 10);
+
+            handleInput();
+        }
+
+        /* --- DIAGRAM LOGIC UPDATED --- */
+        function initDiagramGrid() {
+            const grid = document.getElementById('diagram-grid');
+            grid.innerHTML = '';
+
+            // Use expanded templates
+            const extendedTemplates = [
+                ...diagramTemplates,
+                { title: "Mappa Mentale (Mindmap)", code: "mindmap\n  root((Mindmap))\n    Idee\n      Origini\n      Sviluppi\n    Prodotti\n      Web\n      App" },
+                { title: "Timeline", code: "timeline\n    title History\n    2020 : Pandemic\n    2022 : Recovery\n    2024 : Growth" },
+                { title: "Quadrante", code: "quadrantChart\n    title Reach vs Engagement\n    x-axis Low Reach --> High Reach\n    y-axis Low Engagement --> High Engagement\n    Quadrant 1: [0.3, 0.6]\n    Quadrant 2: [0.4, 0.23]\n    Quadrant 3: [0.57, 0.69]\n    Quadrant 4: [0.78, 0.34]" }
+            ];
+
+            extendedTemplates.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'diagram-card';
+                card.onclick = () => insertDiagram(item.code);
+
+                // Create Preview 
+                const preview = document.createElement('div');
+                preview.className = 'diagram-preview';
+                const pid = 'preview-tmpl-' + index;
+                preview.id = pid;
+
+                const title = document.createElement('div');
+                title.className = 'diagram-title';
+                title.textContent = item.title;
+
+                card.appendChild(title);
+                card.appendChild(preview);
+                grid.appendChild(card);
+
+                // Render async
+                setTimeout(async () => {
+                    try {
+                        const { svg } = await mermaid.render(pid + '-svg', item.code);
+                        preview.innerHTML = svg;
+                        // Adjust SVG style to fit
+                        const svgEl = preview.querySelector('svg');
+                        if (svgEl) { svgEl.style.width = '100%'; svgEl.style.height = '100%'; svgEl.style.maxHeight = '80px'; }
+                    } catch (e) {
+                        preview.innerHTML = "<small>Anteprima non disp.</small>";
+                    }
+                }, 100);
+            });
+        }
+
+        /* --- OLD FUNCTIONS REMOVED (Replaced above) --- */
+
+        /* --- CORE NOTES LOGIC (SIDEBAR) --- */
+        let sidebarVisible = false;
+
+        // Auto-collapse on load
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!sidebarVisible && !document.getElementById('sidebar').classList.contains('collapsed')) {
+                document.getElementById('sidebar').classList.add('collapsed');
+            }
+        });
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebarVisible = !sidebarVisible;
+            if (sidebarVisible) {
+                sidebar.classList.remove('collapsed');
+            } else {
+                sidebar.classList.add('collapsed');
+            }
+        }
+
+        async function createNote(name, content) {
+            const id = Date.now().toString();
+            const dateStr = new Date().toLocaleString(currentLang === 'it' ? 'it-IT' : 'en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+            tabs.push({ id, name, content, updatedAt: dateStr });
+            await saveToStorage();
+            switchNote(id);
+        }
+
+        function newNote() {
+            createNote(getStr('new_tab_name'), "");
+            toggleFileMenu();
+        }
+
+        function switchNote(id) {
+            activeTabId = id;
+            const tab = tabs.find(t => t.id === id);
+            if (tab) document.getElementById('editor').value = tab.content;
+            renderSidebar();
+            updatePreview();
+            updateStats();
+        }
+
+        function renderSidebar() {
+            const list = document.getElementById('tabs-list'); // Changed from sidebar-list to tabs-list
+            const searchEl = document.getElementById('sidebar-search');
+            const query = searchEl ? searchEl.value.toLowerCase() : '';
+            if (!list) return;
+            list.innerHTML = '';
+
+            // Sort by most recent if possible, though currently keeping array order is fine
+            // We'll iterate backwards to show newest first
+            const sortedTabs = [...tabs].reverse();
+
+            sortedTabs.forEach(tab => {
+                // Filter by search query
+                if (query && !tab.name.toLowerCase().includes(query) && !tab.content.toLowerCase().includes(query)) {
+                    return;
+                }
+
+                const div = document.createElement('div');
+                div.className = `sidebar-item ${tab.id === activeTabId ? 'active' : ''}`;
+                div.onclick = () => switchNote(tab.id);
+
+                const leftDiv = document.createElement('div');
+                leftDiv.style.display = 'flex';
+                leftDiv.style.flexDirection = 'column';
+                leftDiv.style.flex = '1';
+                leftDiv.style.overflow = 'hidden';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = tab.name;
+                nameSpan.style.whiteSpace = 'nowrap';
+                nameSpan.style.overflow = 'hidden';
+                nameSpan.style.textOverflow = 'ellipsis';
+                nameSpan.title = getStr('tab_rename_prompt');
+                nameSpan.ondblclick = (e) => {
+                    e.stopPropagation();
+                    const newName = prompt(getStr('tab_rename_prompt'), tab.name);
+                    if (newName && newName.trim()) {
+                        tab.name = newName.trim().substring(0, 30);
+                        saveToStorage();
+                        renderSidebar();
+                    }
+                };
+
+                const dateSpan = document.createElement('span');
+                dateSpan.className = 'sidebar-item-date';
+                dateSpan.textContent = tab.updatedAt || 'Ora';
+
+                leftDiv.appendChild(nameSpan);
+                leftDiv.appendChild(dateSpan);
+
+                const closeBtn = document.createElement('div');
+                closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+                closeBtn.style.opacity = '0.5';
+                closeBtn.style.cursor = 'pointer';
+                closeBtn.style.marginLeft = '8px';
+                closeBtn.onmouseenter = () => closeBtn.style.color = '#e81123';
+                closeBtn.onmouseleave = () => closeBtn.style.color = '';
+                closeBtn.onclick = (e) => deleteNote(e, tab.id);
+
+                div.appendChild(leftDiv);
+                div.appendChild(closeBtn);
+                list.appendChild(div);
+            });
+        }
+
+        function deleteNote(e, id) {
+            e.stopPropagation();
+            if (tabs.length === 1) {
+                if (!confirm(getStr('tab_close_confirm'))) return;
+                tabs[0].content = "";
+                tabs[0].name = getStr('tab_untitled');
+                switchNote(tabs[0].id);
+                return;
+            }
+            if (!confirm("Eliminare definitivamente questa nota?")) return;
+            tabs = tabs.filter(t => t.id !== id);
+            saveToStorage();
+            if (activeTabId === id) switchNote(tabs[tabs.length - 1].id);
+            else renderSidebar();
+        }
+
+        // --- AI PASTE INTERCEPTOR ---
+        document.getElementById('editor').addEventListener('paste', function (e) {
+            let pasteText = (e.clipboardData || window.clipboardData).getData('text');
+
+            // Check if it contains typical AI math blocks \[ ... \] or \( ... \)
+            if (pasteText.includes('\\[') || pasteText.includes('\\(')) {
+                e.preventDefault();
+                // Replace block math \[ ... \] with $$ ... $$
+                pasteText = pasteText.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
+                // Replace inline math \( ... \) with $ ... $
+                pasteText = pasteText.replace(/\\\((.*?)\\\)/g, '$$$1$$');
+
+                const start = this.selectionStart;
+                const val = this.value;
+                this.value = val.substring(0, start) + pasteText + val.substring(this.selectionEnd);
+                this.selectionStart = this.selectionEnd = start + pasteText.length;
+                handleInput();
+
+                const indicator = document.getElementById('save-indicator');
+                const orig = indicator.getAttribute('data-original') || 'Salvato';
+                indicator.textContent = "AI Mod";
+                indicator.style.opacity = '1';
+                clearTimeout(window.saveIndicatorTimeout);
+                window.saveIndicatorTimeout = setTimeout(() => { indicator.style.opacity = '0'; setTimeout(() => indicator.textContent = orig, 300); }, 1500);
+            }
+        });
+
+        function handleInput() {
+            const tab = tabs.find(t => t.id === activeTabId);
+            if (tab) {
+                tab.content = document.getElementById('editor').value;
+                const lines = tab.content.split('\n');
+                for (let line of lines) if (line.trim().startsWith('#')) { tab.name = line.replace(/#/g, '').trim().substring(0, 20); break; }
+                if (!tab.name || tab.name === "") tab.name = lines[0].substring(0, 15) || getStr('tab_untitled');
+                tab.updatedAt = new Date().toLocaleString(currentLang === 'it' ? 'it-IT' : 'en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+            }
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => { saveToStorage(); showSavedIndicator(); }, 1000);
+
+            clearTimeout(previewTimeout);
+            previewTimeout = setTimeout(() => { updatePreview(); }, 300);
+
+            updateStats();
+        }
+        async function saveToStorage() {
+            try {
+                await idbKeyval.set('minipad_tabs', tabs);
+            } catch (e) {
+                console.error("Save failed", e);
+            }
+        }
+        function showSavedIndicator() {
+            const el = document.getElementById('save-indicator');
+            el.style.opacity = '1';
+            clearTimeout(window.saveIndicatorTimeout);
+            window.saveIndicatorTimeout = setTimeout(() => el.style.opacity = '0', 2000);
+        }
+
+        function toggleView(mode) {
+            const eP = document.getElementById('editor-pane');
+            const pP = document.getElementById('preview-pane');
+            if (mode === 'split') {
+                eP.classList.remove('hidden'); pP.classList.remove('hidden');
+                eP.style.width = '50%'; pP.style.width = '50%';
+            } else if (mode === 'editor') {
+                eP.classList.remove('hidden'); pP.classList.add('hidden');
+                eP.style.width = '100%';
+            } else if (mode === 'preview') {
+                eP.classList.add('hidden'); pP.classList.remove('hidden');
+                pP.style.width = '100%';
+            }
+            // Highlight the active view button
+            ['view-editor-btn', 'view-split-btn', 'view-preview-btn'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.style.background = '';
+            });
+            const activeId = `view-${mode}-btn`;
+            const activeBtn = document.getElementById(activeId);
+            if (activeBtn) activeBtn.style.background = 'var(--hover-color)';
+        }
+
+        const baseThemes = ['', 'sepia', 'hacker'];
+        function toggleDarkMode() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            try { localStorage.setItem('minipad_dark_mode', isDark); } catch (e) { }
+            showToast(`Modalità: ${isDark ? 'Scura' : 'Chiara'}`);
+        }
+
+        function cycleTheme() {
+            let current = document.body.getAttribute('data-theme') || '';
+            let nextIndex = (baseThemes.indexOf(current) + 1) % baseThemes.length;
+            let nextTheme = baseThemes[nextIndex];
+            document.body.setAttribute('data-theme', nextTheme);
+            try { localStorage.setItem('minipad_theme', nextTheme); } catch (e) { }
+            showToast(`Tema: ${nextTheme === '' ? 'Default' : nextTheme.charAt(0).toUpperCase() + nextTheme.slice(1)}`);
+        }
+
+        function showToast(msg) {
+            const el = document.getElementById('save-indicator');
+            const original = el.getAttribute('data-original') || 'Salvato';
+            if (!el.hasAttribute('data-original')) el.setAttribute('data-original', original);
+            el.textContent = msg;
+            el.style.opacity = '1';
+            clearTimeout(window.toastTimeout);
+            window.toastTimeout = setTimeout(() => {
+                el.style.opacity = '0';
+                setTimeout(() => el.textContent = original, 300);
+            }, 1500);
+        }
+
+        function insertLink() {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart, end = field.selectionEnd;
+            const val = field.value;
+            const selected = val.substring(start, end);
+            const url = prompt('URL del link:', 'https://');
+            if (!url) return;
+            const linkText = selected || 'Testo del link';
+            const md = `[${linkText}](${url})`;
+            field.value = val.substring(0, start) + md + val.substring(end);
+            field.focus();
+            field.setSelectionRange(start, start + md.length);
+            handleInput();
+        }
+
+        function insertHR() {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const val = field.value;
+            const hr = '\n---\n';
+            field.value = val.substring(0, start) + hr + val.substring(start);
+            field.focus();
+            field.setSelectionRange(start + hr.length, start + hr.length);
+            handleInput();
+        }
+
+        function toggleZenMode() {
+            const isZen = document.body.classList.toggle('zen-mode');
+            if (isZen) {
+                document.documentElement.requestFullscreen().catch(() => { });
+            } else {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(() => { });
+                }
+            }
+        }
+
+        document.addEventListener("fullscreenchange", () => {
+            if (!document.fullscreenElement) {
+                document.body.classList.remove('zen-mode');
+            }
+        });
+
+        function openHelp() {
+            const m = document.getElementById('help-modal');
+            m.style.display = 'flex';
+            m.style.zIndex = '3001'; // Above diagram modal
+        }
+        function closeHelp() { document.getElementById('help-modal').style.display = 'none'; }
+        function handleShortcuts(e) {
+            const field = document.getElementById('editor');
+            const val = field.value;
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+
+            // Ctrl+S: Save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveNow(); return; }
+
+            // Ctrl+B: Bold
+            if ((e.ctrlKey || e.metaKey) && e.key === 'b') { e.preventDefault(); insertMarkdown('**', '**'); return; }
+
+            // Ctrl+I: Italic
+            if ((e.ctrlKey || e.metaKey) && e.key === 'i') { e.preventDefault(); insertMarkdown('*', '*'); return; }
+
+            // Ctrl+K: Insert link
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                const selected = val.substring(start, end);
+                const url = prompt('URL link:', 'https://');
+                if (url) {
+                    const linkText = selected || 'Testo del link';
+                    const md = `[${linkText}](${url})`;
+                    field.value = val.substring(0, start) + md + val.substring(end);
+                    field.focus();
+                    field.setSelectionRange(start, start + md.length);
+                    handleInput();
+                }
+                return;
+            }
+
+            // ESC: Exit Zen Mode only (don't exit fullscreen)
+            if (e.key === 'Escape') {
+                if (document.body.classList.contains('zen-mode')) {
+                    e.preventDefault();
+                    document.body.classList.remove('zen-mode');
+                    // fullscreen stays until user manually toggles
+                }
+                return;
+            }
+
+            // TAB + SHIFT+TAB: Indent/dedent list items or insert spaces
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+                const lineContent = val.substring(lineStart, start);
+                const listMatch = lineContent.match(/^(\s*)([-*]\s|\d+\.\s|\[\s?[xX]?\]\s)/);
+                if (listMatch) {
+                    // Indent/dedent the list item
+                    const lineEnd = val.indexOf('\n', start);
+                    const fullLineEnd = lineEnd === -1 ? val.length : lineEnd;
+                    const fullLine = val.substring(lineStart, fullLineEnd);
+                    if (!e.shiftKey) {
+                        const newLine = '  ' + fullLine;
+                        field.value = val.substring(0, lineStart) + newLine + val.substring(fullLineEnd);
+                        field.setSelectionRange(start + 2, start + 2);
+                    } else {
+                        // Dedent: remove up to 2 leading spaces
+                        const newLine = fullLine.replace(/^\s{1,2}/, '');
+                        const removed = fullLine.length - newLine.length;
+                        field.value = val.substring(0, lineStart) + newLine + val.substring(fullLineEnd);
+                        field.setSelectionRange(Math.max(start - removed, lineStart), Math.max(start - removed, lineStart));
+                    }
+                    handleInput();
+                } else {
+                    // Insert 2 spaces for code indentation
+                    field.value = val.substring(0, start) + '  ' + val.substring(end);
+                    field.setSelectionRange(start + 2, start + 2);
+                    handleInput();
+                }
+                return;
+            }
+
+            // ENTER: Continue list items automatically
+            if (e.key === 'Enter') {
+                const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+                const lineContent = val.substring(lineStart, start);
+
+                // Check for ordered list: e.g. "1. " or "  2. "
+                const orderedMatch = lineContent.match(/^(\s*)(\d+)(\.\s)(.*)/);
+                if (orderedMatch) {
+                    const indent = orderedMatch[1];
+                    const num = parseInt(orderedMatch[2]);
+                    const itemContent = orderedMatch[4].trim();
+                    if (!itemContent) {
+                        // Empty item: exit list
+                        const removeLen = lineContent.length;
+                        e.preventDefault();
+                        field.value = val.substring(0, lineStart) + '\n' + val.substring(start);
+                        field.setSelectionRange(lineStart + 1, lineStart + 1);
+                        handleInput();
+                    } else {
+                        e.preventDefault();
+                        const nextLine = `\n${indent}${num + 1}. `;
+                        field.value = val.substring(0, start) + nextLine + val.substring(end);
+                        field.setSelectionRange(start + nextLine.length, start + nextLine.length);
+                        handleInput();
+                    }
+                    return;
+                }
+
+                // Check for unordered list (- , * , - [ ] )
+                const unorderedMatch = lineContent.match(/^(\s*)([-*]\s(?:\[[ xX]?\]\s)?)(.*)/);
+                if (unorderedMatch) {
+                    const indent = unorderedMatch[1];
+                    const prefix = unorderedMatch[2];
+                    const itemContent = unorderedMatch[3].trim();
+                    const cleanPrefix = prefix.replace(/\[[ xX]?\]\s/, '[ ] '); // Reset checkbox
+                    if (!itemContent) {
+                        // Empty item: exit list
+                        e.preventDefault();
+                        field.value = val.substring(0, lineStart) + '\n' + val.substring(start);
+                        field.setSelectionRange(lineStart + 1, lineStart + 1);
+                        handleInput();
+                    } else {
+                        e.preventDefault();
+                        const nextLine = `\n${indent}${cleanPrefix}`;
+                        field.value = val.substring(0, start) + nextLine + val.substring(end);
+                        field.setSelectionRange(start + nextLine.length, start + nextLine.length);
+                        handleInput();
+                    }
+                    return;
+                }
+            }
+        }
+
+        function toggleFullScreen() { !document.fullscreenElement ? document.documentElement.requestFullscreen() : document.exitFullscreen(); }
+
+        function updateStats() {
+            const text = document.getElementById('editor').value;
+            const chars = text.length;
+            const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+            const lines = text.split('\n').length;
+            const pages = Math.max(1, Math.ceil(chars / 1800)); // ≈1800 chars per page
+
+            document.getElementById('status-left').textContent = `Caratteri: ${chars} | Parole: ${words} | Righe: ${lines} | ~${pages} pag.`;
+        }
+
+        init();
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+
+        // PWA Install Logic
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('install-btn');
+            const installDiv = document.getElementById('install-divider');
+            if (installBtn && installDiv) {
+                installBtn.style.display = 'block';
+                installDiv.style.display = 'block';
+            }
+        });
+
+        function installPWA() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    const installBtn = document.getElementById('install-btn');
+                    const installDiv = document.getElementById('install-divider');
+                    if (installBtn) installBtn.style.display = 'none';
+                    if (installDiv) installDiv.style.display = 'none';
+                }
+                deferredPrompt = null;
+            });
+        }
