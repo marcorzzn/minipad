@@ -3,10 +3,6 @@
 
 *🇬🇧 **minipad** is an advanced, free, and feather-light text editor that runs entirely locally within your browser. It combines the simplicity of a notepad with the power of Markdown, LaTeX, and Mermaid to create rich documents, math notes, and diagrams on the fly.*
 
-🔗 **[Prova la Demo Online / Try the Live Demo](https://tuo-username.github.io/minipad)** <!-- Sostituisci questo link al rilascio -->
-
-![Anteprima Minipad](https://via.placeholder.com/800x400?text=Screenshot+Minipad)
-
 ## ✨ Funzionalità Principali / Main Features
 
 - 🌍 **Supporto Bilingue (IT/EN)**: Cambia lingua dell'interfaccia al volo con l'apposito pulsante in alto a destra. *(Bilingual Support: Switch UI language instantly on the fly).*
