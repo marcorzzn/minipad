@@ -1,7 +1,7 @@
 # minipad 📝
-**minipad** è un editor di testo avanzato, gratuito e leggerissimo che gira interamente in locale nel tuo browser. Combina la semplicità di un blocco note con la potenza di **Markdown**, **LaTeX** e **Mermaid** per creare documenti ricchi, appunti matematici e diagrammi istantanei.
+**minipad** è un editor di testo avanzato, gratuito e leggerissimo che gira interamente in locale nel tuo browser. Combina la semplicità di un blocco note con la potenza di **Markdown** e **LaTeX** e per creare documenti, appunti matematici e diagrammi.
 
-*🇬🇧 **minipad** is an advanced, free, and feather-light text editor that runs entirely locally within your browser. It combines the simplicity of a notepad with the power of Markdown, LaTeX, and Mermaid to create rich documents, math notes, and diagrams on the fly.*
+*🇬🇧 **minipad** is an advanced, free, and feather-light text editor that runs entirely locally within your browser. It combines the simplicity of a notepad with the power of Markdown and LaTeX to create documents, math notes, and diagrams.*
 
 ## ✨ Funzionalità Principali / Main Features
 
@@ -10,7 +10,7 @@
 - 🤖 **Incolla Perfetto dalle AI (Copia & Incolla)**: Incolla risposte e testi generati dalle Intelligenze Artificiali (es. ChatGPT, Gemini, Claude). Minipad riconosce e renderizza automaticamente le espressioni matematiche esportate nei formati `\[ \]` e `\( \)`, mostrandoti subito la formula corretta senza farti impazzire tra sintassi rotte! *(AI Seamless Pasting: easily paste ChatGPT/Gemini/Claude answers and Minipad will automatically render mathematical expressions exported as `\[ \]` or `\( \)`).*
 - 📝 **Editor Markdown Completo**: Formattazione veloce, tabelle avanzate ed evidenziazione, affiancati a un'anteprima in tempo reale ultra veloce. *(Full Markdown Editor with live parsing and advanced tables).*
 - 🧮 **Matematica Avanzata e Simboli (LaTeX)**: Supporto nativo integrato a KaTeX. Usa i blocchi `$$ ... $$` o seleziona dal vasto menu a discesa per digitare matrici, frazioni ed equazioni senza sforzo. *(Advanced Math with LaTeX support using KaTeX).*
-- 📊 **Diagrammi Integrati**: Crea grafici di flusso, diagrammi di sequenza e mentali usando istantaneamente la sintassi testuale **Mermaid**. *(Built-in Mermaid Diagrams: create flowcharts, sequence and mindmaps from text).*
+- 📊 **Diagrammi Integrati**: Crea grafici di flusso, diagrammi di sequenza e mentali usando istantaneamente la sintassi testuale 
 - 💾 **Gestione File & Backup**: Puoi importare o esportare liberamente i file Markdown (.md), LaTeX (.tex) e HTML. Inoltre c'è un potente sistema di Backup/Ripristino per non perdere mai le tue sessioni su dispositivi diversi. *(File Management & Backup: export PDF, MD, HTML, TEX, and use the full JSON backup/restore tool).*
 - 🔄 **Salvataggio & Esplora Note**: Nessuna scheda persa! Puoi passare da una nota all'altra dalla pratica barra laterale (Sidebar). Il salvataggio dei tuoi documenti è automatico fin dal primo carattere (tramite IndexedDB). *(Autosave & Note Explorer: switch notes seamlessly from the sidebar).*
 - 🧘 **Interfaccia Zen & Temi Scuri**: Scegli tra la comoda Visualizzazione Divisa (Editor/Preview), oppure concentrati con la "Modalità Zen" a Schermo Intero. Disponibili i temi: Chiaro, Scuro, Sepia e Hacker. *(Zen Interface & Dark Themes: choose split view or Full-Screen Zen mode. Available themes: Default, Dark, Sepia, Hacker).*
