@@ -304,19 +304,9 @@
             border-bottom: 1px solid var(--border-color);
             background: var(--bg-color);
             gap: 4px;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            scrollbar-width: none;
-            /* Firefox */
-            -ms-overflow-style: none;
-            /* IE/Edge */
+            flex-wrap: wrap;
             position: relative;
             flex-shrink: 0;
-        }
-
-        #toolbar::-webkit-scrollbar {
-            display: none;
-            /* Chrome/Safari */
         }
 
         .tool-group {
@@ -865,13 +855,15 @@
             }
 
             #toolbar {
-                overflow-x: auto;
-                flex-wrap: nowrap;
-                padding-bottom: 2px;
+                flex-wrap: wrap;
+                overflow: visible;
+                height: auto;
+                padding-bottom: 4px;
             }
 
             .tool-group {
                 flex-shrink: 0;
+                margin-bottom: 2px;
             }
 
             .modal-content {

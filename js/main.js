@@ -94,7 +94,7 @@
         // --- DIAGRAM DATA TEMPLATES ---
         async function init() {
             initMathToolbar();
-            initDiagramGrid();
+            // initDiagramGrid(); // Not defined, removed
             initTableGrid(); // New
 
             try {
