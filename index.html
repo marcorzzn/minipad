@@ -4,24 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>minipad</title>
+    <title>Minipad</title>
 
     <!-- SEO & Meta Tags -->
     <meta name="description"
-        content="minipad: Editor Markdown e LaTeX gratuito online | Free online Markdown & LaTeX editor with live preview, mermaid charts and math tools.">
-    <meta property="og:site_name" content="minipad">
-    <meta property="og:title" content="minipad">
+        content="Minipad: Editor Markdown e LaTeX gratuito online con anteprima live, supporto matematico avanzato e strumenti di disegno in formato testuale.">
+    <meta property="og:site_name" content="Minipad">
+    <meta property="og:title" content="Minipad">
     <meta name="keywords"
-        content="markdown editor, latex editor, online text editor, mermaid charts, math formulas, writing tool, minipad, graph plotter">
+        content="markdown editor, latex editor, online text editor, math formulas, writing tool, minipad, ascii charts">
     <meta name="author" content="Marco">
     <meta name="google-site-verification" content="V1dmn62hrnxnnXdHHqBkHLo-e3tioJs1SNoBUBllfEU" />
     <meta name="robots" content="index, follow">
     <link rel="manifest" href="./manifest.json">
     <!-- Favicon: minimal notepad icon -->
-    <link rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='4' width='20' height='24' rx='2' fill='%23fff' stroke='%23000' stroke-width='2'/%3E%3Crect x='10' y='10' width='12' height='2' rx='1' fill='%23000'/%3E%3Crect x='10' y='15' width='9' height='2' rx='1' fill='%23000'/%3E%3Crect x='10' y='20' width='10' height='2' rx='1' fill='%23000'/%3E%3C/svg%3E">
-    <link rel="apple-touch-icon"
-        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='4' width='20' height='24' rx='2' fill='%23fff' stroke='%23000' stroke-width='2'/%3E%3Crect x='10' y='10' width='12' height='2' rx='1' fill='%23000'/%3E%3Crect x='10' y='15' width='9' height='2' rx='1' fill='%23000'/%3E%3Crect x='10' y='20' width='10' height='2' rx='1' fill='%23000'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
 
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website">
@@ -29,15 +27,11 @@
     <meta property="og:description"
         content="Scrivi appunti, formule matematiche e crea diagrammi direttamente nel browser. Semplice, veloce e gratuito.">
 
-    <!-- Librerie esterne -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js"></script>
+    <!-- Librerie esterne CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
-    <script src="js/data.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/editor.js"></script>
-    <script src="js/preview.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
 
 <body>
 
@@ -463,17 +457,18 @@
 
     
     <!-- Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
 
     <!-- App Modules -->
     <script src="js/data.js"></script>
-    <script src="js/main.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/editor.js"></script>
     <script src="js/preview.js"></script>
+    <script src="js/main.js"></script>
 
 </body>
 
 </html>
-<script>window.onerror = function (msg, url, line, col, error) { console.error("GLOBAL ERROR:", msg, line, col); fetch("http://localhost:5555/err?msg=" + encodeURIComponent(msg) + "&line=" + line); };</script>
