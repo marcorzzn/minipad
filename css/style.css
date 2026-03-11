@@ -567,7 +567,7 @@
             box-shadow: none;
         }
 
-        /* --- DIAGRAM MODAL (NEW) --- */
+        /* --- HELP MODAL --- */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -620,49 +620,6 @@
             cursor: pointer;
             font-size: 20px;
             font-weight: bold;
-        }
-
-        .diagram-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            padding: 10px 0;
-        }
-
-        .diagram-card {
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 10px;
-            cursor: pointer;
-            text-align: center;
-            transition: background 0.2s;
-        }
-
-        .diagram-card:hover {
-            background-color: var(--sidebar-bg);
-            border-color: var(--accent-color);
-        }
-
-        .diagram-preview {
-            background: white;
-            border: 1px solid #eee;
-            padding: 10px;
-            margin-bottom: 10px;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        [data-theme="dark"] .diagram-preview {
-            background: #333;
-            border-color: #555;
-        }
-
-        .diagram-title {
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 5px;
         }
 
         /* --- TOOLTIP --- */

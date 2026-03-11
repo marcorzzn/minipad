@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minipad</title>
+    <title>minipad</title>
 
     <!-- SEO & Meta Tags -->
     <meta name="description"
-        content="Minipad: Editor Markdown e LaTeX gratuito online con anteprima live, supporto matematico avanzato e strumenti di disegno in formato testuale.">
-    <meta property="og:site_name" content="Minipad">
-    <meta property="og:title" content="Minipad">
+        content="minipad: Editor Markdown e LaTeX gratuito online con anteprima live, supporto matematico avanzato e strumenti di disegno in formato testuale.">
+    <meta property="og:site_name" content="minipad">
+    <meta property="og:title" content="minipad">
     <meta name="keywords"
         content="markdown editor, latex editor, online text editor, math formulas, writing tool, minipad, ascii charts">
     <meta name="author" content="Marco">
@@ -18,8 +18,9 @@
     <meta name="robots" content="index, follow">
     <link rel="manifest" href="./manifest.json">
     <!-- Favicon: minimal notepad icon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
-    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon-192.png">
 
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website">
@@ -37,14 +38,6 @@
 
     <!-- Tooltip Element -->
     <div id="math-tooltip"></div>
-
-    <!-- Diagram Modal -->
-    <div id="diagram-modal" class="modal">
-        <div class="modal-content">
-            <h2>Inserisci Diagramma</h2>
-            <div class="diagram-grid" id="diagram-grid"></div>
-        </div>
-    </div>
 
     <div id="app-root">
         <!-- Formatting Toolbar (Merged File + Formatting) -->
@@ -124,21 +117,16 @@
                     onchange="insertColor('background-color', this.value)" value="#ffff00">
             </div>
 
-            <!-- Headings Flat -->
+            <!-- Headings Menu -->
             <div class="tool-group">
-                <button class="format-btn" onclick="applyHeading(1)" title="Titolo H1"><strong
-                        style="font-size:14px">H1</strong></button>
-                <button class="format-btn" onclick="applyHeading(2)" title="Titolo H2"><strong
-                        style="font-size:13px">H2</strong></button>
-                <button class="format-btn" onclick="applyHeading(3)" title="Titolo H3"><strong
-                        style="font-size:12px">H3</strong></button>
-                <button class="format-btn" onclick="applyHeading(0)" title="Paragrafo Normale"
-                    style="font-size:11px;">¶</button>
+                <button id="headings-menu-btn" class="format-btn" onclick="toggleHeadingsMenu(event)" title="Testo e Titoli">
+                    <strong style="font-size:12px">H / ¶ ▾</strong>
+                </button>
             </div>
 
-            <!-- Lists Flat -->
+            <!-- Lists Menu -->
             <div class="tool-group">
-                <button class="format-btn" onclick="applyList('- ')" title="Elenco Puntato (•)">
+                <button id="list-menu-btn" class="format-btn" onclick="toggleListMenu(event)" title="Elenchi">
                     <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;">
                         <circle cx="5" cy="6" r="2" />
                         <circle cx="5" cy="12" r="2" />
@@ -147,17 +135,7 @@
                         <line x1="11" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2.5" />
                         <line x1="11" y1="18" x2="22" y2="18" stroke="currentColor" stroke-width="2.5" />
                     </svg>
-                    <span style="font-size:9px;margin-left:1px;">•—</span>
-                </button>
-                <button class="format-btn" onclick="applyList('1. ')" title="Elenco Numerato (1. 2. 3.)"
-                    style="font-size:10px; letter-spacing:-0.5px;">1.<br>2.</button>
-                <button class="format-btn" onclick="applyList('- [ ] ')" title="Checklist (☐)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                        style="width:14px;height:14px;">
-                        <rect x="3" y="3" width="18" height="18" rx="3" />
-                        <path d="M7 12l4 4 6-6" />
-                    </svg>
-                    <span style="font-size:9px;margin-left:1px;">☐</span>
+                    <span style="font-size:10px; margin-left:2px;">▾</span>
                 </button>
             </div>
 
@@ -169,6 +147,13 @@
                 </button>
                 <button class="format-btn" onclick="toggleMathBar()" title="Tavolozza Simboli Matematici">
                     <span style="font-family: 'Times New Roman', serif; font-size: 17px; line-height:1;">&pi;▾</span>
+                </button>
+            </div>
+
+            <!-- ASCII DIAGRAMS -->
+            <div class="tool-group">
+                <button class="format-btn" onclick="toggleDiagramMenu(event)" title="Schemi e Blocchi ASCII">
+                    <span style="font-size: 14px; line-height:1;">▦▾</span>
                 </button>
             </div>
 
@@ -271,23 +256,48 @@
 
         <!-- FILE DROPDOWN MENU -->
         <div id="file-menu" class="dropdown-menu">
-            <div class="dropdown-item" onclick="newNote(); closeAllMenus();">📄 Nuova Scheda</div>
-            <div class="dropdown-item" onclick="saveNow(); closeAllMenus();">💾 Salva (Ctrl+S)</div>
+            <div class="dropdown-item" data-i18n="new" onclick="newNote(); closeAllMenus();">📄 Nuova Scheda</div>
+            <div class="dropdown-item" data-i18n="save_title" onclick="saveNow(); closeAllMenus();">💾 Salva Ora (Ctrl+S)</div>
+            <div class="dropdown-item" data-i18n="clear_editor" onclick="clearEditor(); closeAllMenus();" style="color: #e81123;">🗑 Svuota Editor</div>
             <div class="dropdown-divider"></div>
-            <div class="dropdown-item" onclick="exportMarkdown(); closeAllMenus();">⬇ Esporta .md</div>
-            <div class="dropdown-item" onclick="exportHTML();">⬇ Esporta .html</div>
-            <div class="dropdown-item" onclick="exportTXT();">⬇ Esporta .txt</div>
-            <div class="dropdown-item" onclick="exportTeX();">⬇ Esporta .tex (LaTeX)</div>
+            <div class="dropdown-item" data-i18n="export_md" onclick="exportMarkdown(); closeAllMenus();">⬇ Esporta .md</div>
+            <div class="dropdown-item" data-i18n="export_html" onclick="exportHTML(); closeAllMenus();">⬇ Esporta .html</div>
+            <div class="dropdown-item" data-i18n="export_txt" onclick="exportTXT(); closeAllMenus();">⬇ Esporta .txt</div>
+            <div class="dropdown-item" data-i18n="export_tex" onclick="exportTeX(); closeAllMenus();">⬇ Esporta .tex (LaTeX)</div>
             <div class="dropdown-divider"></div>
-            <div class="dropdown-item" onclick="document.getElementById('import-file').click(); closeAllMenus();">⬆
-                Importa
-                File</div>
+            <div class="dropdown-item" data-i18n="open" onclick="document.getElementById('import-file').click(); closeAllMenus();">⬆ Apri/Importa File</div>
             <div class="dropdown-divider"></div>
-            <div class="dropdown-item" onclick="exportBackup(); closeAllMenus();">💾 Backup JSON</div>
-            <div class="dropdown-item" onclick="document.getElementById('import-backup').click(); closeAllMenus();">📥
-                Ripristina Backup</div>
+            <div class="dropdown-item" data-i18n="backup_json" onclick="exportBackup(); closeAllMenus();">💾 Backup JSON</div>
+            <div class="dropdown-item" data-i18n="restore_backup" onclick="document.getElementById('import-backup').click(); closeAllMenus();">📥 Ripristina Backup</div>
             <div class="dropdown-divider"></div>
-            <div class="dropdown-item" onclick="window.print(); closeAllMenus();">🖨 Stampa / Esporta PDF</div>
+            <div class="dropdown-item" data-i18n="export_pdf" onclick="window.print(); closeAllMenus();">🖨 Stampa / Esporta PDF</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" data-i18n="btn_guida" onclick="openHelp(); closeAllMenus();">ℹ️ Guida</div>
+        </div>
+
+        <!-- HEADINGS DROPDOWN MENU -->
+        <div id="headings-menu" class="dropdown-menu">
+            <div class="dropdown-item" onclick="applyHeading(1); closeAllMenus();"><strong style="font-size:18px;">Titolo H1</strong></div>
+            <div class="dropdown-item" onclick="applyHeading(2); closeAllMenus();"><strong style="font-size:16px;">Titolo H2</strong></div>
+            <div class="dropdown-item" onclick="applyHeading(3); closeAllMenus();"><strong style="font-size:14px;">Titolo H3</strong></div>
+            <div class="dropdown-item" onclick="applyHeading(4); closeAllMenus();"><strong style="font-size:12px;">Titolo H4</strong></div>
+            <div class="dropdown-item" onclick="applyHeading(5); closeAllMenus();"><strong style="font-size:11px;">Titolo H5</strong></div>
+            <div class="dropdown-item" onclick="applyHeading(6); closeAllMenus();"><strong style="font-size:10px;">Titolo H6</strong></div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" onclick="applyHeading(0); closeAllMenus();">¶ Paragrafo Normale</div>
+            <div class="dropdown-item" onclick="insertMarkdown('> ', ''); closeAllMenus();">❝ Citazione (Blockquote)</div>
+        </div>
+
+        <!-- LISTS DROPDOWN MENU -->
+        <div id="list-menu" class="dropdown-menu">
+            <div class="dropdown-item" onclick="applyList('- '); closeAllMenus();">• Elenco Puntato</div>
+            <div class="dropdown-item" onclick="applyList('* '); closeAllMenus();">★ Elenco con Asterisco</div>
+            <div class="dropdown-item" onclick="applyList('+ '); closeAllMenus();">+ Elenco con Più</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" onclick="applyList('1. '); closeAllMenus();">1. Elenco Numerato</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" onclick="applyList('- [ ] '); closeAllMenus();">☐ Checklist Vuota</div>
+            <div class="dropdown-item" onclick="applyList('- [x] '); closeAllMenus();">☑ Checklist Completata</div>
         </div>
 
         <!-- TABLE DROPDOWN MENU -->
@@ -296,6 +306,18 @@
             <div class="dropdown-item" onclick="insertTable(3,3); closeAllMenus();">3×3 Tabella</div>
             <div class="dropdown-item" onclick="insertTable(4,4); closeAllMenus();">4×4 Tabella</div>
             <div class="dropdown-item" onclick="insertTable(3,5); closeAllMenus();">3×5 Tabella</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" style="display:flex; gap:5px; align-items:center;">
+                <input type="number" id="custom-table-rows" value="4" min="1" max="20" style="width:40px; padding:2px; font-size:12px;">
+                <span>×</span>
+                <input type="number" id="custom-table-cols" value="4" min="1" max="20" style="width:40px; padding:2px; font-size:12px;">
+                <button onclick="insertCustomTable(); closeAllMenus();" style="padding:2px 5px; font-size:12px; cursor:pointer;">Ins</button>
+            </div>
+        </div>
+
+        <!-- DIAGRAM DROPDOWN MENU -->
+        <div id="diagram-dropdown-menu" class="dropdown-menu" style="width:250px;">
+            <!-- Content injected by JS -->
         </div>
 
         <!-- FIND/REPLACE BAR -->
