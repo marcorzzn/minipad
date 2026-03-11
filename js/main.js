@@ -138,7 +138,13 @@
 
             // Restore active tab
             if (tabs.length > 0) {
-                const lastActive = tabs[tabs.length - 1].id; // Default to last
+                let lastActive = tabs[tabs.length - 1].id; // Default to last
+                try {
+                    const savedActiveTab = localStorage.getItem('minipad_active_tab');
+                    if (savedActiveTab && tabs.find(t => t.id == savedActiveTab)) {
+                        lastActive = savedActiveTab;
+                    }
+                } catch(e) {}
                 switchNote(lastActive);
             }
 

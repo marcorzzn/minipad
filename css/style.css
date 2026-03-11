@@ -815,23 +815,42 @@
             #tabs-container,
             #editor-pane,
             #statusbar,
+            #sidebar,
+            #find-bar,
+            .zen-btn,
             .modal,
+            .dropdown-menu,
             #math-tooltip {
                 display: none !important;
             }
 
             #preview-pane {
                 width: 100% !important;
-                margin: 0;
-                padding: 0;
-                overflow: visible;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                display: block !important;
             }
 
-            body {
-                height: auto;
-                overflow: visible;
-                background: white;
-                color: black;
+            #workspace-wrapper, #main-container, #app-root {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+
+            body, html {
+                height: auto !important;
+                overflow: visible !important;
+                background: white !important;
+                color: black !important;
+            }
+
+            /* Adjust KaTeX for printing so it breaks less */
+            .katex-display {
+                page-break-inside: avoid;
+            }
+            pre, blockquote, table, img {
+                page-break-inside: avoid;
             }
         }
 

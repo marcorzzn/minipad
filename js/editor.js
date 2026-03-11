@@ -5,6 +5,9 @@ function newNote() {
 
         function switchNote(id) {
             activeTabId = id;
+            try {
+                localStorage.setItem('minipad_active_tab', id);
+            } catch(e) {}
             const tab = tabs.find(t => t.id === id);
             if (tab) document.getElementById('editor').value = tab.content;
             renderSidebar();
@@ -129,6 +132,7 @@ function newNote() {
                 if (!tab.name || tab.name === "") tab.name = lines[0].substring(0, 15) || getStr('tab_untitled');
                 tab.updatedAt = new Date().toLocaleString(currentLang === 'it' ? 'it-IT' : 'en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
             }
+
             clearTimeout(autoSaveTimeout);
             autoSaveTimeout = setTimeout(() => { saveToStorage(); showSavedIndicator(); }, 1000);
 
@@ -137,6 +141,14 @@ function newNote() {
 
             updateStats();
         }
+
+        // Ensure data is saved when the user refreshes or closes the page
+        window.addEventListener('beforeunload', () => {
+            // Save localstorage fallback
+            try {
+                localStorage.setItem('minipad_tabs', JSON.stringify(tabs));
+            } catch (e) {}
+        });
         async function saveToStorage() {
             try {
                 await idbKeyval.set('minipad_tabs', tabs);
@@ -380,4 +392,3 @@ function newNote() {
         }
 
         function toggleFullScreen() { !document.fullscreenElement ? document.documentElement.requestFullscreen() : document.exitFullscreen(); }
-
