@@ -1,23 +1,23 @@
 const diagramTemplates = [
     { 
         title: "Albero Cartelle", 
-        code: "```text\nRoot/\n ├── Src/\n │   ├── index.html\n │   └── style.css\n └── Assets/\n     └── logo.png\n```" 
+        code: "```text\nProgetto/\n ├── Src/\n │   ├── index.html\n │   └── style.css\n └── Assets/\n     └── logo.png\n```" 
     },
     { 
         title: "Flusso Dati", 
-        code: "```text\n[Client] --(Richiesta HTTP)--> [Server]\n   ^                              |\n   |-------(Risposta JSON)--------+\n```" 
+        code: "```text\n[Utente] --(Richiesta HTTP)--> [Server]\n   ^                              |\n   |-------(Risposta JSON)--------+\n```" 
     },
     { 
-        title: "Tabella Dati", 
-        code: "| ID  | Nome Utente | Ruolo     |\n|-----|-------------|-----------|\n| 01  | Admin       | Superuser |\n| 02  | Utente      | Lettore   |" 
+        title: "Tabella Semplice", 
+        code: "| ID  | Elemento | Stato   |\n|-----|----------|---------|\n| 01  | Server   | Online  |\n| 02  | Database | Standby |" 
     },
     {
-        title: "Timeline Testuale",
-        code: "```text\n2023: Inizio Progetto\n  |\n2024: Primo Rilascio\n  |\n2025: Espansione Globale\n```"
+        title: "Timeline",
+        code: "```text\n2024: Progettazione\n  |\n2025: Sviluppo Beta\n  |\n2026: Rilascio Stabile\n```"
     },
     {
-        title: "Mappa Mentale Ascii",
-        code: "```text\n          (Idea Centrale)\n            /         \\\n      (Sviluppo)   (Design)\n         /             \\\n     [Web]           [Logo]\n```"
+        title: "Mappa Concettuale",
+        code: "```text\n          (Applicazione)\n            /         \\\n      (Frontend)   (Backend)\n         /             \\\n      [UI]           [API]\n```"
     }
 ];
 
@@ -85,6 +85,7 @@ const i18n = {
         'btn_toc': 'Generate TOC'
     }
 };
+const mathCategories = {
             // ── GREEK ──
             "Greco min.": [
                 { cmd: "\\alpha", html: "\\alpha" }, { cmd: "\\beta", html: "\\beta" },

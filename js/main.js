@@ -201,7 +201,7 @@
         }
 
         // Initialize the app
-        init();
+        window.addEventListener('DOMContentLoaded', init);
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {

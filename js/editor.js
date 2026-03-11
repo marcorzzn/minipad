@@ -390,4 +390,4 @@ function newNote() {
             document.getElementById('status-left').textContent = `Caratteri: ${chars} | Parole: ${words} | Righe: ${lines} | ~${pages} pag.`;
         }
 
-        updateStats();
+

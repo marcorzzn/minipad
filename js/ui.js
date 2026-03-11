@@ -673,34 +673,38 @@ ${c}
             const grid = document.getElementById('diagram-grid');
             grid.innerHTML = '';
 
-            diagramTemplates.forEach((item, index) => {
-                const card = document.createElement('div');
-                card.className = 'diagram-card';
-                card.onclick = () => insertDiagram(item.code);
+function initDiagramGrid() {
+    const grid = document.getElementById('diagram-grid');
+    grid.innerHTML = '';
 
-                const title = document.createElement('div');
-                title.className = 'diagram-title';
-                title.textContent = item.title;
+    diagramTemplates.forEach((item) => {
+        const card = document.createElement('div');
+        card.className = 'diagram-card';
+        card.onclick = () => insertDiagram(item.code);
 
-                // Anteprima testuale "grezza"
-                const preview = document.createElement('div');
-                preview.className = 'diagram-preview';
-                preview.style.fontFamily = 'monospace';
-                preview.style.whiteSpace = 'pre';
-                preview.style.textAlign = 'left';
-                preview.style.fontSize = '10px';
-                preview.style.lineHeight = '1.2';
-                preview.style.overflow = 'hidden';
-                
-                // Pulisce l'anteprima dai markup del markdown testuale per pulizia visiva
-                const cleanText = item.code.replace(/```text/g, '').replace(/```/g, '').trim();
-                preview.textContent = cleanText;
+        const title = document.createElement('div');
+        title.className = 'diagram-title';
+        title.textContent = item.title;
 
-                card.appendChild(title);
-                card.appendChild(preview);
-                grid.appendChild(card);
-            });
-        }
+        const preview = document.createElement('div');
+        preview.className = 'diagram-preview';
+        preview.style.fontFamily = 'monospace';
+        preview.style.whiteSpace = 'pre';
+        preview.style.textAlign = 'left';
+        preview.style.fontSize = '10px';
+        preview.style.lineHeight = '1.2';
+        preview.style.overflow = 'hidden';
+        preview.style.color = 'var(--text-color)';
+        
+        // Pulizia dei markdown backticks per l'anteprima visiva
+        const cleanText = item.code.replace(/```text/g, '').replace(/```/g, '').trim();
+        preview.textContent = cleanText;
+
+        card.appendChild(title);
+        card.appendChild(preview);
+        grid.appendChild(card);
+    });
+}
 
         function insertDiagram(code) {
             const field = document.getElementById('editor');
