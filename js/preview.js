@@ -1,5 +1,8 @@
 function updatePreview() {
-    let rawMarkdown = document.getElementById('editor').value;
+    const editor = document.getElementById('editor');
+    if (!editor) return;
+
+    let rawMarkdown = editor.value;
 
     // 1. Normalizza la sintassi LaTeX delle AI
     rawMarkdown = rawMarkdown.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
@@ -33,17 +36,28 @@ function updatePreview() {
     } catch(e) {}
 
     // 5. Ripristina e compila la matematica con KaTeX
+    // Replace placeholder while avoiding issues if markdown wrapped it in a <p> or <code>
     html = html.replace(/%%MATH_(BLOCK|INLINE)_(\d+)%%/g, (match, type, index) => {
         const item = mathBlocks[index];
         if (!item) return match;
         const isDisplay = item.type === 'display';
         try {
-            return katex.renderToString(item.math.trim(), { throwOnError: false, displayMode: isDisplay });
+            return katex.renderToString(item.math.trim(), {
+                throwOnError: false,
+                displayMode: isDisplay,
+                strict: false // Prevent katex from throwing errors on non-strict syntax
+            });
         } catch (e) {
-            return match; 
+            // Se KaTeX fallisce, mostra il codice crudo come fallback visibile
+            return `<span style="color:red; font-family:monospace;">${item.math}</span>`;
         }
     });
 
-    // 6. Iniezione nel DOM
-    document.getElementById('preview-content').innerHTML = html;
+    // 6. Iniezione nel DOM (uso requestAnimationFrame per performance)
+    requestAnimationFrame(() => {
+        const previewEl = document.getElementById('preview-content');
+        if (previewEl) {
+            previewEl.innerHTML = html;
+        }
+    });
 }

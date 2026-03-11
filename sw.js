@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minipad-v3.1';
+const CACHE_NAME = 'minipad-v4.0';
 const urlsToCache = [
   './',
   './index.html',
@@ -12,8 +12,8 @@ const urlsToCache = [
   './js/main.js',
   'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
   'https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js',
-  'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css',
-  'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js',
+  'https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css',
+  'https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js',
   'https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js'
 ];
 
@@ -30,26 +30,42 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request).then(fetchRes => {
-          return caches.open(CACHE_NAME).then(cache => {
-            // Only cache valid standard GET requests
-            if (event.request.method === "GET" && event.request.url.startsWith("http")) {
-              cache.put(event.request, fetchRes.clone());
-            }
-            return fetchRes;
-          });
+  // Stale-while-revalidate strategy for same-origin requests
+  if (event.request.url.startsWith(self.location.origin)) {
+    event.respondWith(
+      caches.match(event.request).then(cachedResponse => {
+        const fetchPromise = fetch(event.request).then(networkResponse => {
+          if (networkResponse && networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, networkResponse.clone());
+            });
+          }
+          return networkResponse;
+        }).catch(() => {
+          // If network fails, just rely on cache
         });
-      }).catch(() => {
-        // Fallback for offline if not in cache (could be index.html)
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
+
+        event.waitUntil(fetchPromise);
+
+        // Return cached response immediately if available, while fetching in background
+        return cachedResponse || fetchPromise;
       })
-  );
+    );
+  } else {
+    // Cache First for CDNs
+    event.respondWith(
+      caches.match(event.request).then(response => {
+        return response || fetch(event.request).then(fetchRes => {
+          if (event.request.method === "GET" && event.request.url.startsWith("http")) {
+             caches.open(CACHE_NAME).then(cache => {
+                cache.put(event.request, fetchRes.clone());
+             });
+          }
+          return fetchRes;
+        });
+      })
+    );
+  }
 });
 
 self.addEventListener('activate', event => {
