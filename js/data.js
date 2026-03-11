@@ -1,15 +1,90 @@
 const diagramTemplates = [
-            { title: "Flusso", code: "graph TD;\n  A[Inizio] --> B[Processo];\n  B --> C{Scelta?};\n  C -- Sì --> D[Fine];\n  C -- No --> E[Errore];" },
-            { title: "Sequenza", code: "sequenceDiagram\n  part Alice->>Bob: Ciao\n  Bob->>Alice: Tutto bene?" },
-            { title: "Gantt", code: "gantt\n  title Un Progetto\n  dateFormat  YYYY-MM-DD\n  section Design\n  Design :a1, 2022-01-01, 30d\n  section Implementazione\n  Codice :crit, after a1, 2022-02-01, 30d\n  Test      :crit, after a2, 2022-03-01, 30d" },
-            { title: "Classe (UML)", code: "classDiagram\n  Animal <|-- Duck\n  Animal <|-- Fish\n  Animal <|-- Zebra\n  Animal :o-- Carnivore" },
-            { title: "Stato", code: "stateDiagram-v2\n  [*] Ancora\n  [*] Attiva\n  Attiva --> Sospesa\n  Sospesa --> Attiva" },
-            { title: "ER", code: "erDiagram\n  CUSTOMER ||--o{ ORDINE } : places\n  ORDINE ||--|{ DELIVERY } : includes" },
-            { title: "Torta", code: "pie title Pets\n  Dogs : 386\n  Cats : 85\n  Fish : 142" }
-        ];
+    { 
+        title: "Albero Cartelle", 
+        code: "```text\nRoot/\n ├── Src/\n │   ├── index.html\n │   └── style.css\n └── Assets/\n     └── logo.png\n```" 
+    },
+    { 
+        title: "Flusso Dati", 
+        code: "```text\n[Client] --(Richiesta HTTP)--> [Server]\n   ^                              |\n   |-------(Risposta JSON)--------+\n```" 
+    },
+    { 
+        title: "Tabella Dati", 
+        code: "| ID  | Nome Utente | Ruolo     |\n|-----|-------------|-----------|\n| 01  | Admin       | Superuser |\n| 02  | Utente      | Lettore   |" 
+    },
+    {
+        title: "Timeline Testuale",
+        code: "```text\n2023: Inizio Progetto\n  |\n2024: Primo Rilascio\n  |\n2025: Espansione Globale\n```"
+    },
+    {
+        title: "Mappa Mentale Ascii",
+        code: "```text\n          (Idea Centrale)\n            /         \\\n      (Sviluppo)   (Design)\n         /             \\\n     [Web]           [Logo]\n```"
+    }
+];
 
-        // --- MATH DATA (EXHAUSTIVE - 28 CATEGORIES) ---
-        const mathCategories = {
+const i18n = {
+    'it': {
+        'file': 'File',
+        'new': 'Nuovo',
+        'open': 'Apri...',
+        'save_as': 'Salva con nome...',
+        'export_pdf': 'Esporta PDF',
+        'export_html': 'Esporta HTML',
+        'export_md': 'Esporta Markdown (.md)',
+        'export_tex': 'Esporta LaTeX (.tex)',
+        'save_title': 'Salva Ora',
+        'saved_indicator': 'Salvato',
+        'find_label': 'Cerca:',
+        'replace_label': 'Sostituisci:',
+        'btn_replace': 'Sostituisci tutto',
+        'find_placeholder': 'Testo da cercare...',
+        'replace_placeholder': 'Sostituisci con...',
+        'diagram_title': 'Inserisci Diagramma',
+        'tooltip_bold': 'Grassetto (Ctrl+B)',
+        'tooltip_italic': 'Corsivo (Ctrl+I)',
+        'tooltip_underline': 'Sottolineato',
+        'tooltip_strikethrough': 'Barrato',
+        'status_ready': 'Pronto',
+        'placeholder': 'Scrivi qui... Usa $$ ... $$ per formule.',
+        'new_tab_name': 'Nuova Nota',
+        'tab_rename_prompt': 'Rinomina scheda:',
+        'tab_untitled': 'Senza nome',
+        'tab_close_confirm': "Chiudere l'ultima scheda?",
+        'btn_guida': 'Guida',
+        'btn_find': 'Cerca (Ctrl+F)',
+        'btn_toc': 'Genera Indice (TOC)'
+    },
+    'en': {
+        'file': 'File',
+        'new': 'New',
+        'open': 'Open...',
+        'save_as': 'Save as...',
+        'export_pdf': 'Export PDF',
+        'export_html': 'Export HTML',
+        'export_md': 'Export Markdown (.md)',
+        'export_tex': 'Export LaTeX (.tex)',
+        'save_title': 'Save Now',
+        'saved_indicator': 'Saved',
+        'find_label': 'Find:',
+        'replace_label': 'Replace:',
+        'btn_replace': 'Replace All',
+        'find_placeholder': 'Search text...',
+        'replace_placeholder': 'Replace with...',
+        'diagram_title': 'Insert Diagram',
+        'tooltip_bold': 'Bold (Ctrl+B)',
+        'tooltip_italic': 'Italic (Ctrl+I)',
+        'tooltip_underline': 'Underline',
+        'tooltip_strikethrough': 'Strikethrough',
+        'status_ready': 'Ready',
+        'placeholder': 'Type here... Use $$ ... $$ for math.',
+        'new_tab_name': 'New Note',
+        'tab_rename_prompt': 'Rename tab:',
+        'tab_untitled': 'Untitled',
+        'tab_close_confirm': "Close the last tab?",
+        'btn_guida': 'Help',
+        'btn_find': 'Find (Ctrl+F)',
+        'btn_toc': 'Generate TOC'
+    }
+};
             // ── GREEK ──
             "Greco min.": [
                 { cmd: "\\alpha", html: "\\alpha" }, { cmd: "\\beta", html: "\\beta" },

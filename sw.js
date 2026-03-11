@@ -12,7 +12,6 @@ const urlsToCache = [
   './js/main.js',
   'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
   'https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js',
-  'https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js',
   'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css',
   'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js',
   'https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js'

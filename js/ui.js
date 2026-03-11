@@ -112,10 +112,7 @@ function openDiagramModal() {
             const end = field.selectionEnd;
             const val = field.value;
 
-            // Insert as Markdown code block
-            const block = "```mermaid\n" + code + "\n```";
-            field.value = val.substring(0, start) + block + val.substring(end);
-
+            field.value = val.substring(0, start) + "\n" + code + "\n" + val.substring(end);
             document.getElementById('diagram-modal').style.display = 'none';
             handleInput();
         }
@@ -676,46 +673,44 @@ ${c}
             const grid = document.getElementById('diagram-grid');
             grid.innerHTML = '';
 
-            // Use expanded templates
-            const extendedTemplates = [
-                ...diagramTemplates,
-                { title: "Mappa Mentale (Mindmap)", code: "mindmap\n  root((Mindmap))\n    Idee\n      Origini\n      Sviluppi\n    Prodotti\n      Web\n      App" },
-                { title: "Timeline", code: "timeline\n    title History\n    2020 : Pandemic\n    2022 : Recovery\n    2024 : Growth" },
-                { title: "Quadrante", code: "quadrantChart\n    title Reach vs Engagement\n    x-axis Low Reach --> High Reach\n    y-axis Low Engagement --> High Engagement\n    Quadrant 1: [0.3, 0.6]\n    Quadrant 2: [0.4, 0.23]\n    Quadrant 3: [0.57, 0.69]\n    Quadrant 4: [0.78, 0.34]" }
-            ];
-
-            extendedTemplates.forEach((item, index) => {
+            diagramTemplates.forEach((item, index) => {
                 const card = document.createElement('div');
                 card.className = 'diagram-card';
                 card.onclick = () => insertDiagram(item.code);
-
-                // Create Preview 
-                const preview = document.createElement('div');
-                preview.className = 'diagram-preview';
-                const pid = 'preview-tmpl-' + index;
-                preview.id = pid;
 
                 const title = document.createElement('div');
                 title.className = 'diagram-title';
                 title.textContent = item.title;
 
+                // Anteprima testuale "grezza"
+                const preview = document.createElement('div');
+                preview.className = 'diagram-preview';
+                preview.style.fontFamily = 'monospace';
+                preview.style.whiteSpace = 'pre';
+                preview.style.textAlign = 'left';
+                preview.style.fontSize = '10px';
+                preview.style.lineHeight = '1.2';
+                preview.style.overflow = 'hidden';
+                
+                // Pulisce l'anteprima dai markup del markdown testuale per pulizia visiva
+                const cleanText = item.code.replace(/```text/g, '').replace(/```/g, '').trim();
+                preview.textContent = cleanText;
+
                 card.appendChild(title);
                 card.appendChild(preview);
                 grid.appendChild(card);
-
-                // Render async
-                setTimeout(async () => {
-                    try {
-                        const { svg } = await mermaid.render(pid + '-svg', item.code);
-                        preview.innerHTML = svg;
-                        // Adjust SVG style to fit
-                        const svgEl = preview.querySelector('svg');
-                        if (svgEl) { svgEl.style.width = '100%'; svgEl.style.height = '100%'; svgEl.style.maxHeight = '80px'; }
-                    } catch (e) {
-                        preview.innerHTML = "<small>Anteprima non disp.</small>";
-                    }
-                }, 100);
             });
+        }
+
+        function insertDiagram(code) {
+            const field = document.getElementById('editor');
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            const val = field.value;
+
+            field.value = val.substring(0, start) + "\n" + code + "\n" + val.substring(end);
+            document.getElementById('diagram-modal').style.display = 'none';
+            handleInput();
         }
 
         /* --- OLD FUNCTIONS REMOVED (Replaced above) --- */
