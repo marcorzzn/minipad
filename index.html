@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 
 <head>
@@ -1470,7 +1470,9 @@
 
     <script>
         // marked.setOptions is removed because it causes errors in newer marked.js versions.
-        mermaid.initialize({ startOnLoad: false, theme: 'default' });
+        if (window.mermaid) {
+            mermaid.initialize({ startOnLoad: false, theme: 'default' });
+        }
 
         let currentLang = 'it';
         const i18n = {
@@ -2310,7 +2312,18 @@
             });
 
             // 3. Parse Markdown
-            let html = marked.parse(rawMarkdown, { gfm: true, breaks: true });
+            let html = '';
+            try {
+                if (typeof marked.parse === 'function') {
+                    html = marked.parse(rawMarkdown, { gfm: true, breaks: true });
+                } else if (typeof marked === 'function') {
+                    html = marked(rawMarkdown, { gfm: true, breaks: true });
+                } else {
+                    html = rawMarkdown;
+                }
+            } catch(e) {
+                html = rawMarkdown;
+            }
 
             // 4. Sanitize HTML
             html = DOMPurify.sanitize(html, {
@@ -2333,7 +2346,9 @@
             document.getElementById('preview-content').innerHTML = html;
 
             // 6. Resilient Mermaid Initialization
-            mermaid.initialize({ startOnLoad: false, suppressErrorRendering: true });
+            if (window.mermaid) {
+                mermaid.initialize({ startOnLoad: false, suppressErrorRendering: true });
+            }
 
             document.querySelectorAll('#preview-content .mermaid, #preview-content code.language-mermaid').forEach(async (element, index) => {
                 // If it's a code block, grab the parent pre to inject the svg
@@ -2346,16 +2361,23 @@
                 if (!code) return; // Skip empty matches
 
                 try {
-                    const { svg } = await mermaid.render(id, code);
-                    const lowerSvg = svg.toLowerCase();
-                    if (lowerSvg.includes('error-icon') || lowerSvg.includes('syntax error') || lowerSvg.includes('mermaid version')) {
-                        targetElement.style.display = 'none';
+                    if (window.mermaid) {
+                        const result = await mermaid.render(id, code);
+                        // Gestione retrocompatibile: v9 restituisce string, v10+ restituisce {svg: string}
+                        const svgText = typeof result === 'string' ? result : (result && result.svg ? result.svg : '');
+                        
+                        const lowerSvg = svgText.toLowerCase();
+                        if (!svgText || lowerSvg.includes('error-icon') || lowerSvg.includes('syntax error') || lowerSvg.includes('mermaid version')) {
+                            targetElement.style.display = 'none';
+                        } else {
+                            targetElement.style.display = 'block'; // Restore visibility if it was hidden
+                            targetElement.innerHTML = svgText;
+                            targetElement.style.border = "none";
+                            targetElement.style.background = "transparent";
+                            targetElement.style.padding = "0";
+                        }
                     } else {
-                        targetElement.style.display = 'block'; // Restore visibility if it was hidden
-                        targetElement.innerHTML = svg;
-                        targetElement.style.border = "none";
-                        targetElement.style.background = "transparent";
-                        targetElement.style.padding = "0";
+                        targetElement.style.display = 'none';
                     }
                 } catch (e) {
                     // Silent: hide the broken code block, show nothing
