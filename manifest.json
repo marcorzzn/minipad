@@ -2,7 +2,7 @@
   "name": "minipad",
   "short_name": "minipad",
   "description": "Editor Markdown e LaTeX gratuito online. Free online Markdown and LaTeX editor with live preview.",
-  "start_url": "./index.html",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
