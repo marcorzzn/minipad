@@ -43,8 +43,7 @@
             const bFile = document.getElementById('file-btn').querySelector('span');
             if (bFile) bFile.textContent = getStr('file');
 
-            const diagTitle = document.querySelector('#diagram-modal h2');
-            if (diagTitle) diagTitle.childNodes[0].nodeValue = getStr('diagram_title');
+            // #diagram-modal has been removed, diagram_title is not used here anymore
 
             const sInd = document.getElementById('save-indicator');
             if (sInd && (sInd.textContent === i18n['it']['saved_indicator'] || sInd.textContent === i18n['en']['saved_indicator'])) sInd.textContent = getStr('saved_indicator');
@@ -237,7 +236,7 @@
                                         if (navigator.serviceWorker.controller) {
                                             // New update available, force reload
                                             console.log("New content is available; please refresh.");
-                                            window.location.reload();
+                                            // Don't auto-reload to avoid disrupting user workflow, but update next time
                                         }
                                     }
                                 };
@@ -251,10 +250,7 @@
 
             // Listen for claims
             navigator.serviceWorker.addEventListener('controllerchange', () => {
-                if (!window.isReloading) {
-                    window.isReloading = true;
-                    window.location.reload();
-                }
+                console.log("Service worker updated. Next refresh will load new content.");
             });
         }
 

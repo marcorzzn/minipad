@@ -12,8 +12,8 @@ const urlsToCache = [
   './js/main.js',
   'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
   'https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js',
-  'https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css',
-  'https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js',
+  'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css',
+  'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js',
   'https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js'
 ];
 
@@ -32,7 +32,7 @@ self.addEventListener('install', event => {
 self.addEventListener('fetch', event => {
   // Network-first strategy for index.html and style.css to ensure updates are visible
   const url = new URL(event.request.url);
-  if (url.pathname.endsWith('index.html') || url.pathname.endsWith('/') || url.pathname.endsWith('.css') || url.pathname.endsWith('.js')) {
+  if (event.request.method === "GET" && (url.pathname.endsWith('index.html') || url.pathname.endsWith('/') || url.pathname.endsWith('.css') || url.pathname.endsWith('.js'))) {
     event.respondWith(
       fetch(event.request).then(response => {
         return caches.open(CACHE_NAME).then(cache => {
