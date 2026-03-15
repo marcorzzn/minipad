@@ -401,17 +401,11 @@
         }
 
         function buildTableMd(rows, cols) {
-            let table = '\n|';
-            for (let c = 0; c < cols; c++) table += ` Intestazione ${c + 1} |`;
-            table += '\n|';
-            for (let c = 0; c < cols; c++) table += ' --- |';
-            table += '\n';
-            for (let r = 0; r < rows; r++) {
-                table += '|';
-                for (let c = 0; c < cols; c++) table += '   |';
-                table += '\n';
-            }
-            return table;
+            const headerRow = '\n|' + Array.from({ length: cols }, (_, i) => ` Intestazione ${i + 1} |`).join('');
+            const separatorRow = '\n|' + ' --- |'.repeat(cols);
+            const dataRow = '\n|' + '   |'.repeat(cols);
+
+            return headerRow + separatorRow + dataRow.repeat(rows) + '\n';
         }
 
         function insertTable(rows, cols) {
@@ -707,11 +701,10 @@ ${c}
             toggleFileMenu();
         }
 
-        function exportPDF() { promptExport('pdf'); toggleFileMenu(); }
         function exportHTML() { promptExport('html'); toggleFileMenu(); }
-        function exportMD() { promptExport('md'); toggleFileMenu(); }
+        function exportMarkdown() { promptExport('md'); toggleFileMenu(); }
         function exportTXT() { promptExport('txt'); toggleFileMenu(); }
-        function exportTEX() { promptExport('tex'); toggleFileMenu(); }
+        function exportTeX() { promptExport('tex'); toggleFileMenu(); }
         function saveNow() { saveToStorage(); showSavedIndicator(); }
 
         function clearEditor() {
