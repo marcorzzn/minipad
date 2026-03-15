@@ -832,7 +832,7 @@
                 display: block !important;
             }
 
-            #workspace-wrapper, #main-container, #app-root {
+            #workspace, #workspace-wrapper, #main-container, #app-root {
                 display: block !important;
                 height: auto !important;
                 overflow: visible !important;
