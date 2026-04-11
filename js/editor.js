@@ -305,18 +305,35 @@ function renderSidebar() {
         const groupHeader = document.createElement('div');
         groupHeader.className = 'sidebar-group-header';
         
+        let headerDragEvents = '';
+        if (group.id !== null) {
+            headerDragEvents = `
+                ondragover="event.preventDefault(); this.classList.add('drag-over');"
+                ondragleave="this.classList.remove('drag-over');"
+                ondrop="event.preventDefault(); this.classList.remove('drag-over'); moveTabToGroup(event.dataTransfer.getData('text/plain'), '${group.id}');"
+            `;
+        } else {
+            headerDragEvents = `
+                ondragover="event.preventDefault(); this.classList.add('drag-over');"
+                ondragleave="this.classList.remove('drag-over');"
+                ondrop="event.preventDefault(); this.classList.remove('drag-over'); moveTabToGroup(event.dataTransfer.getData('text/plain'), null);"
+            `;
+        }
+
         const isUncategorized = group.id === null;
         const collapseIcon = isUncategorized ? '' : (group.collapsed ? '▶' : '▼');
         
         groupHeader.innerHTML = `
-            <span class="group-toggle">${collapseIcon}</span>
-            <span class="group-name">${escapeHtml(group.name)}</span>
-            ${!isUncategorized ? `
-                <span class="group-actions">
-                    <button class="group-btn" title="Rinomina">✏️</button>
-                    <button class="group-btn" title="Elimina">🗑️</button>
-                </span>
-            ` : ''}
+            <div style="display:flex; width:100%; align-items:center;" ${headerDragEvents}>
+                <span class="group-toggle">${collapseIcon}</span>
+                <span class="group-name">${escapeHtml(group.name)}</span>
+                ${!isUncategorized ? `
+                    <span class="group-actions">
+                        <button class="group-btn" title="Rinomina">✏️</button>
+                        <button class="group-btn" title="Elimina">🗑️</button>
+                    </span>
+                ` : ''}
+            </div>
         `;
 
         // Toggle collapse
@@ -349,9 +366,6 @@ function renderSidebar() {
         // Render tabs if not collapsed
         const isCollapsed = isUncategorized ? false : group.collapsed;
         if (!isCollapsed) {
-            // Sort by most recent first
-            filteredTabs.sort((a, b) => b.updatedAt - a.updatedAt);
-
             filteredTabs.forEach(tab => {
                 const tabElement = createTabElement(tab);
                 list.appendChild(tabElement);
@@ -363,13 +377,62 @@ function renderSidebar() {
 function createTabElement(tab) {
     const div = document.createElement('div');
     div.className = `sidebar-item ${tab.id === activeTabId ? 'active' : ''}`;
+    div.draggable = true;
     div.onclick = () => switchNote(tab.id);
+
+    // Drag events for reordering
+    div.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', tab.id);
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => div.classList.add('dragging'), 0);
+    });
+
+    div.addEventListener('dragend', () => {
+        div.classList.remove('dragging');
+        document.querySelectorAll('.sidebar-item').forEach(el => {
+            el.classList.remove('drag-over-above', 'drag-over-below');
+        });
+    });
+
+    div.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const rect = div.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        if (e.clientY < midY) {
+            div.classList.add('drag-over-above');
+            div.classList.remove('drag-over-below');
+        } else {
+            div.classList.add('drag-over-below');
+            div.classList.remove('drag-over-above');
+        }
+    });
+
+    div.addEventListener('dragleave', () => {
+        div.classList.remove('drag-over-above', 'drag-over-below');
+    });
+
+    div.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // prevent group header from catching it
+        div.classList.remove('drag-over-above', 'drag-over-below');
+        
+        const draggedId = e.dataTransfer.getData('text/plain');
+        if (draggedId === tab.id) return;
+        
+        const rect = div.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        const insertAfter = e.clientY >= midY;
+
+        reorderTab(draggedId, tab.id, insertAfter, tab.groupId);
+    });
 
     const leftDiv = document.createElement('div');
     leftDiv.style.display = 'flex';
     leftDiv.style.flexDirection = 'column';
     leftDiv.style.flex = '1';
     leftDiv.style.overflow = 'hidden';
+    leftDiv.style.pointerEvents = 'none'; // so drag events hit the parent
 
     const nameSpan = document.createElement('span');
     nameSpan.textContent = tab.name;
@@ -377,12 +440,12 @@ function createTabElement(tab) {
     nameSpan.style.overflow = 'hidden';
     nameSpan.style.textOverflow = 'ellipsis';
     nameSpan.title = 'Doppio click per rinominare';
+    nameSpan.style.pointerEvents = 'auto';
     nameSpan.ondblclick = (e) => {
         e.stopPropagation();
         renameTab(tab.id);
     };
 
-    // Add indicator for manual title
     if (tab.isTitleManual) {
         nameSpan.style.fontWeight = 'bold';
     }
@@ -403,10 +466,9 @@ function createTabElement(tab) {
     closeBtn.onmouseleave = () => closeBtn.style.color = '';
     closeBtn.onclick = (e) => deleteNote(e, tab.id);
 
-    // Right-click context menu for moving to group
     div.oncontextmenu = (e) => {
         e.preventDefault();
-        showTabContextMenu(e, tab.id);
+        showTabContextMenu(e, tab.id, tab.name);
     };
 
     div.appendChild(leftDiv);
@@ -415,18 +477,79 @@ function createTabElement(tab) {
     return div;
 }
 
-function showTabContextMenu(e, tabId) {
-    // Simple prompt for now
-    const tab = tabs.find(t => t.id === tabId);
-    if (!tab) return;
-
-    const groupOptions = groups.map(g => `${g.name} (ID: ${g.id})`).join('\n');
-    const message = `Sposta "${tab.name}" in un gruppo:\n\n${groupOptions}\n\nInserisci l'ID del gruppo (lascia vuoto per "Senza Gruppo"):`;
-    const newGroupId = prompt(message, tab.groupId || '');
+function reorderTab(draggedId, targetId, insertAfter, targetGroupId) {
+    const draggedIndex = tabs.findIndex(t => t.id === draggedId);
+    let targetIndex = tabs.findIndex(t => t.id === targetId);
     
-    if (newGroupId !== null) {
-        moveTabToGroup(tabId, newGroupId || null);
+    if (draggedIndex === -1 || targetIndex === -1) return;
+    
+    const [draggedTab] = tabs.splice(draggedIndex, 1);
+    
+    // Update target index if it shifted during splice
+    targetIndex = tabs.findIndex(t => t.id === targetId);
+    
+    draggedTab.groupId = targetGroupId;
+    
+    if (insertAfter) {
+        tabs.splice(targetIndex + 1, 0, draggedTab);
+    } else {
+        tabs.splice(targetIndex, 0, draggedTab);
     }
+    
+    saveToStorage();
+    renderSidebar();
+}
+
+let contextMenuEl = null;
+
+function hideTabContextMenu() {
+    if (contextMenuEl) {
+        contextMenuEl.style.display = 'none';
+    }
+}
+
+document.addEventListener('click', hideTabContextMenu);
+
+function showTabContextMenu(e, tabId, tabName) {
+    if (!contextMenuEl) {
+        contextMenuEl = document.createElement('div');
+        contextMenuEl.id = 'custom-context-menu';
+        document.body.appendChild(contextMenuEl);
+    }
+    
+    const groupOptions = groups.map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+    
+    contextMenuEl.innerHTML = `
+        <div class="context-menu-item" id="ctx-rename">✏️ Rinomina</div>
+        <div class="context-menu-item" onclick="event.stopPropagation()">
+            📁 Sposta in: 
+            <select id="ctx-group-select" style="margin-left:5px; max-width:80px; font-size:12px;">
+                <option value="">(Senza Gruppo)</option>
+                ${groupOptions}
+            </select>
+        </div>
+        <div class="context-menu-item danger" id="ctx-delete">🗑️ Elimina</div>
+    `;
+    
+    contextMenuEl.style.left = `${e.pageX}px`;
+    contextMenuEl.style.top = `${e.pageY}px`;
+    contextMenuEl.style.display = 'block';
+    
+    document.getElementById('ctx-rename').onclick = () => {
+        hideTabContextMenu();
+        renameTab(tabId);
+    };
+    
+    const groupSelect = document.getElementById('ctx-group-select');
+    groupSelect.onchange = (e) => {
+        hideTabContextMenu();
+        moveTabToGroup(tabId, e.target.value || null);
+    };
+    
+    document.getElementById('ctx-delete').onclick = (ev) => {
+        hideTabContextMenu();
+        deleteNote(ev, tabId);
+    };
 }
 
 function escapeHtml(text) {
