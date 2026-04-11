@@ -1,4 +1,7 @@
 
+        // Stato sidebar — var per compatibilità cross-script
+        var sidebarVisible = false;
+
         // Helper to handle z-index of modals correctly
         document.querySelectorAll('.modal').forEach(m => {
             m.addEventListener('click', (e) => {
@@ -253,21 +256,7 @@
             });
         }
 
-        function insertDiagramAtCursor(code) {
-            const field = document.getElementById('editor');
-            const start = field.selectionStart;
-            const val = field.value;
-            // Check if we need to add a newline before
-            const prefix = (start > 0 && val[start-1] !== '\n') ? '\n' : '';
-            // Check if we need to add a newline after
-            const suffix = (start < val.length && val[start] !== '\n') ? '\n' : '';
-
-            const insertText = prefix + code + suffix;
-            field.value = val.substring(0, start) + insertText + val.substring(start);
-            field.focus();
-            field.setSelectionRange(start + insertText.length, start + insertText.length);
-            handleInput();
-        }
+        // insertDiagramAtCursor — rimossa: sovrascritta dalla versione EasyMDE in editor.js
 
         function insertCustomTable() {
             const rowsInput = document.getElementById('custom-table-rows');
@@ -295,11 +284,7 @@
             });
         }
 
-        // Updated Insert Formula Logic (Smart Inline / Block)
-
-        function insertFormulaBlock() {
-            insertSpecialFormula('$$', 2);
-        }
+        // insertFormulaBlock — rimossa: sovrascritta dalla versione EasyMDE in editor.js
 
         /* --- FONT & COLOR with Span --- */
         // applyStyle, changeFont, changeFontSize moved to editor.js to work with EasyMDE
@@ -310,16 +295,7 @@
             // Mantenuta come stub per compatibilità.
         }
 
-        function highlightGrid(rows, cols) {
-            const grid = document.getElementById('table-grid');
-            Array.from(grid.children).forEach((cell, index) => {
-                const r = Math.floor(index / 8) + 1;
-                const c = (index % 8) + 1;
-                if (r <= rows && c <= cols) cell.style.background = 'var(--accent-color)';
-                else cell.style.background = '#fff';
-            });
-            document.getElementById('table-size-label').textContent = `${rows} x ${cols}`;
-        }
+        // highlightGrid — rimossa: referenzia elementi DOM inesistenti (table-grid, table-size-label)
 
         function buildTableMd(rows, cols) {
             const headerRow = '\n|' + Array.from({ length: cols }, (_, i) => ` Intestazione ${i + 1} |`).join('');
@@ -344,11 +320,7 @@
             closeAllMenus();
         }
 
-        function insertTableFromInputs() {
-            const rows = parseInt(document.getElementById('table-rows-input').value) || 3;
-            const cols = parseInt(document.getElementById('table-cols-input').value) || 3;
-            insertTable(rows, cols);
-        }
+        // insertTableFromInputs — rimossa: referenzia elementi DOM inesistenti (table-rows-input, table-cols-input)
 
 
         /* --- MENU FIX --- */

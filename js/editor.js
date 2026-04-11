@@ -570,7 +570,7 @@ function showToast(msg) {
 // ===== Link and HR Insertion =====
 function insertLink() {
     if (!easyMDE) return;
-    const selected = easyMDE.valueSelection();
+    const selected = easyMDE.codemirror.getSelection();
     const linkText = selected || 'Testo del link';
     const url = prompt('URL del link:', 'https://');
     if (!url) return;
@@ -830,7 +830,7 @@ function insertMarkdown(start, end) {
 
 function insertColor(prop, color) {
     if (!easyMDE) return;
-    const selection = easyMDE.valueSelection() || "Testo";
+    const selection = easyMDE.codemirror.getSelection() || "Testo";
     const insertText = `<span style="${prop}:${color}">` + selection + `</span>`;
     easyMDE.codemirror.replaceSelection(insertText);
     easyMDE.codemirror.focus();
