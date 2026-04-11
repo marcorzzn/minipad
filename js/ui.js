@@ -291,8 +291,8 @@
             const colsInput = document.getElementById('custom-table-cols');
             let r = parseInt(rowsInput ? rowsInput.value : 4);
             let c = parseInt(colsInput ? colsInput.value : 4);
-            if (isNaN(r) || r < 1) r = 1;
-            if (isNaN(c) || c < 1) c = 1;
+            if (isNaN(r) || r < 1 || r > 50) r = 4;
+            if (isNaN(c) || c < 1 || c > 50) c = 4;
             insertTable(r, c);
         }
 
@@ -409,8 +409,13 @@
         }
 
         function insertTable(rows, cols) {
+            if (!rows || !cols || rows < 1 || cols > 50 || rows < 1 || cols > 50) {
+                console.warn("Invalid table dimensions");
+                return;
+            }
             const table = buildTableMd(rows, cols);
             const field = document.getElementById('editor');
+            if (!field) return;
             const start = field.selectionStart;
             const val = field.value;
             field.value = val.substring(0, start) + table + val.substring(start);
@@ -442,6 +447,11 @@
         /* --- HEADING HELPERS --- */
         function applyHeading(level) {
             const field = document.getElementById('editor');
+            if (!field) return;
+            if (typeof level !== 'number' || level < 0 || level > 6) {
+                console.warn("Invalid heading level");
+                return;
+            }
             const start = field.selectionStart;
             const val = field.value;
             const lineStart = val.lastIndexOf('\n', start - 1) + 1;
@@ -679,8 +689,9 @@ ${c}
                             if (existing) {
                                 // If id conflict but different name/content, append as new
                                 if (existing.content !== t.content) {
-                                    t.id = t.id + "_imported";
-                                    t.name = t.name + " (Backup)";
+                                    const timestamp = Date.now();
+                                    t.id = t.id + "_imported_" + timestamp;
+                                    t.name = t.name + " (Backup " + new Date().toLocaleDateString() + ")";
                                     tabs.push(t);
                                 }
                             } else {

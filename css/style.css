@@ -412,7 +412,7 @@
             /* Below dropdowns, above editor */
         }
 
-        [data-theme="dark"] #math-toolbar {
+        body.dark-mode #math-toolbar {
             background: #252525;
         }
 
@@ -429,7 +429,7 @@
             overflow-x: auto;
         }
 
-        [data-theme="dark"] .math-tabs {
+        body.dark-mode .math-tabs {
             background: #333;
             border-bottom: #444;
         }
@@ -459,17 +459,17 @@
             box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.05);
         }
 
-        [data-theme="dark"] .math-tab {
+        body.dark-mode .math-tab {
             background: transparent;
             color: #aaa;
         }
 
-        [data-theme="dark"] .math-tab:hover {
+        body.dark-mode .math-tab:hover {
             background: #444;
             color: #fff;
         }
 
-        [data-theme="dark"] .math-tab.active {
+        body.dark-mode .math-tab.active {
             background: #333;
             border-color: #555;
             border-bottom-color: #333;
@@ -533,7 +533,7 @@
             max-width: 100%;
         }
 
-        [data-theme="dark"] .math-btn {
+        body.dark-mode .math-btn {
             background: #444;
             border-color: #555;
             color: white;
@@ -547,7 +547,7 @@
             z-index: 2;
         }
 
-        [data-theme="dark"] .math-btn:hover {
+        body.dark-mode .math-btn:hover {
             background: #555;
             border-color: var(--accent-color);
         }
