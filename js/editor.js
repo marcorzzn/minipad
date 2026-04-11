@@ -176,6 +176,10 @@ function switchNote(id) {
     if (tab) {
         setEditorContent(tab.content);
         updatePreviewWithContent(tab.content);
+        // Refresh CodeMirror after content change to recalculate scroll bounds
+        if (easyMDE) {
+            setTimeout(() => easyMDE.codemirror.refresh(), 50);
+        }
     }
     renderSidebar();
     updateStats();
@@ -431,6 +435,8 @@ function escapeHtml(text) {
 }
 
 // ===== Input Handler =====
+let _statsTimeout = null;
+
 function handleInput(content) {
     const tab = tabs.find(t => t.id === activeTabId);
     if (tab) {
@@ -455,7 +461,9 @@ function handleInput(content) {
         updatePreview(); 
     }, 300);
 
-    updateStats();
+    // Debounce stats update — avoid DOM writes on every keystroke
+    clearTimeout(_statsTimeout);
+    _statsTimeout = setTimeout(updateStats, 500);
 }
 
 // ===== Storage Functions =====
@@ -516,14 +524,15 @@ function toggleView(mode) {
         eP.classList.remove('hidden'); 
         pP.classList.add('hidden');
         eP.style.width = '100%';
-        // Refresh EasyMDE
-        if (easyMDE) {
-            setTimeout(() => easyMDE.codemirror.refresh(), 100);
-        }
     } else if (mode === 'preview') {
         eP.classList.add('hidden'); 
         pP.classList.remove('hidden');
         pP.style.width = '100%';
+    }
+    
+    // Refresh CodeMirror after layout change to recalculate dimensions
+    if (easyMDE && mode !== 'preview') {
+        setTimeout(() => easyMDE.codemirror.refresh(), 100);
     }
     
     // Highlight the active view button

@@ -127,22 +127,19 @@ async function init() {
         switchNote(lastActive);
     }
 
-    // Keyboard shortcuts on EasyMDE
+    // Initial refresh to ensure CodeMirror calculates correct dimensions
     if (easyMDE) {
-        easyMDE.codemirror.on('keydown', (cm, e) => {
-            // We'll handle shortcuts through EasyMDE's built-in functions
-            // Most are already handled (Ctrl+B, Ctrl+I, etc.)
-        });
+        setTimeout(() => easyMDE.codemirror.refresh(), 200);
     }
 
-    // Image Drag & Drop
-    const editorContainer = document.getElementById('editor-container');
-    if (editorContainer) {
-        editorContainer.addEventListener('dragover', (e) => {
+    // Image Drag & Drop — attach to CodeMirror wrapper (not hidden textarea)
+    if (easyMDE) {
+        const cmWrapper = easyMDE.codemirror.getWrapperElement();
+        cmWrapper.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.stopPropagation();
         });
-        editorContainer.addEventListener('drop', (e) => {
+        cmWrapper.addEventListener('drop', (e) => {
             e.preventDefault();
             e.stopPropagation();
             if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
