@@ -1,8 +1,5 @@
-function updatePreview() {
-    const editor = document.getElementById('editor');
-    if (!editor) return;
-
-    let rawMarkdown = editor.value;
+function parseMarkdown(markdown) {
+    let rawMarkdown = markdown;
 
     // 1. Normalizza la sintassi LaTeX delle AI
     rawMarkdown = rawMarkdown.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
@@ -23,7 +20,7 @@ function updatePreview() {
     let html = rawMarkdown;
     try {
         html = marked.parse(rawMarkdown, { gfm: true, breaks: true });
-    } catch(e) { 
+    } catch(e) {
         console.warn("Markdown parsing error", e);
     }
 
@@ -36,7 +33,6 @@ function updatePreview() {
     } catch(e) {}
 
     // 5. Ripristina e compila la matematica con KaTeX
-    // Replace placeholder while avoiding issues if markdown wrapped it in a <p> or <code>
     html = html.replace(/%%MATH_(BLOCK|INLINE)_(\d+)%%/g, (match, type, index) => {
         const item = mathBlocks[index];
         if (!item) return match;
@@ -45,19 +41,37 @@ function updatePreview() {
             return katex.renderToString(item.math.trim(), {
                 throwOnError: false,
                 displayMode: isDisplay,
-                strict: false // Prevent katex from throwing errors on non-strict syntax
+                strict: false
             });
         } catch (e) {
-            // Se KaTeX fallisce, mostra il codice crudo come fallback visibile
             return `<span style="color:red; font-family:monospace;">${item.math}</span>`;
         }
     });
 
+    return html;
+}
+
+function updatePreview() {
+    const editor = document.getElementById('editor');
+    if (!editor) {
+        // Fallback: try to get from EasyMDE
+        if (typeof getEditorContent === 'function') {
+            updatePreviewWithContent(getEditorContent());
+        }
+        return;
+    }
+
+    updatePreviewWithContent(editor.value);
+}
+
+function updatePreviewWithContent(content) {
+    const previewDiv = document.getElementById('preview-content');
+    if (!previewDiv || !content) return;
+
+    const html = parseMarkdown(content);
+
     // 6. Iniezione nel DOM (uso requestAnimationFrame per performance)
     requestAnimationFrame(() => {
-        const previewEl = document.getElementById('preview-content');
-        if (previewEl) {
-            previewEl.innerHTML = html;
-        }
+        previewDiv.innerHTML = html;
     });
 }

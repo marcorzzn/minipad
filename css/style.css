@@ -958,3 +958,141 @@
 
             /* When sidebar is active on mobile, hide the editor completely to avoid scrolling issues or just overlay it. Overlay is fine since z-index 1000 */
         }
+
+        /* ===== EasyMDE Integration ===== */
+        #editor-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .EasyMDEContainer {
+            border: none !important;
+            font-family: inherit !important;
+        }
+
+        .EasyMDEContainer .CodeMirror {
+            border: none !important;
+            border-radius: 0 !important;
+            font-family: inherit !important;
+            font-size: inherit !important;
+            background-color: var(--bg-color) !important;
+            color: var(--text-color) !important;
+            height: 100% !important;
+        }
+
+        .EasyMDEContainer .CodeMirror-gutters {
+            border-right: none !important;
+            background-color: var(--bg-color) !important;
+        }
+
+        .EasyMDEContainer .CodeMirror-scroll {
+            padding: 10px !important;
+        }
+
+        .EasyMDEContainer .CodeMirror-cursor {
+            border-left-color: var(--text-color) !important;
+        }
+
+        .EasyMDEContainer .CodeMirror-selected {
+            background-color: var(--hover-color) !important;
+        }
+
+        .EasyMDEContainer .CodeMirror-line {
+            padding: 0 !important;
+        }
+
+        .EasyMDEContainer .editor-toolbar {
+            display: none !important; /* We use our own toolbar */
+        }
+
+        .EasyMDEContainer .EasyMDE-selected {
+            background-color: var(--hover-color) !important;
+        }
+
+        /* Dark mode adjustments for EasyMDE */
+        body.dark-mode .EasyMDEContainer .CodeMirror {
+            background-color: var(--bg-color) !important;
+            color: var(--text-color) !important;
+        }
+
+        body.dark-mode .EasyMDEContainer .CodeMirror-gutters {
+            background-color: var(--bg-color) !important;
+        }
+
+        body.dark-mode .EasyMDEContainer .CodeMirror-scrollbar-filler {
+            background-color: var(--bg-color) !important;
+        }
+
+        /* ===== Sidebar Group Styles ===== */
+        .sidebar-group-header {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: var(--toolbar-bg);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-top: 4px;
+        }
+
+        .sidebar-group-header:first-child {
+            margin-top: 0;
+        }
+
+        .sidebar-group-header .group-toggle {
+            margin-right: 6px;
+            font-size: 10px;
+            opacity: 0.7;
+        }
+
+        .sidebar-group-header .group-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sidebar-group-header .group-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .sidebar-group-header:hover .group-actions {
+            opacity: 1;
+        }
+
+        .sidebar-group-header .group-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px 4px;
+            font-size: 12px;
+            color: var(--text-color);
+            border-radius: 3px;
+        }
+
+        .sidebar-group-header .group-btn:hover {
+            background-color: var(--hover-color);
+        }
+
+        /* Adjust sidebar items for groups */
+        .sidebar-item {
+            padding-left: 24px !important;
+        }
+
+        .sidebar-group-header + .sidebar-item {
+            padding-left: 36px !important;
+        }
+
+        /* Print styles - hide EasyMDE, show only preview */
+        @media print {
+            .EasyMDEContainer {
+                display: none !important;
+            }
+        }

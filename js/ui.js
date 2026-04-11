@@ -82,25 +82,7 @@
             document.getElementById('math-toolbar').classList.toggle('show');
         }
 
-        function insertLatex(code) {
-            const field = document.getElementById('editor');
-            const start = field.selectionStart;
-            const end = field.selectionEnd;
-            const val = field.value;
-
-            let cursorPos = start + code.length;
-            if (code.includes('\\frac{a}{b}') || code.includes('\\dfrac{a}{b}')) cursorPos = start + code.indexOf('{a}') + 1;
-            else if (code.includes('\\tfrac')) cursorPos = start + code.indexOf('{a}') + 1;
-            else if (code.includes('\\sqrt{x}')) cursorPos = start + code.indexOf('{x}') + 1;
-            else if (code.includes('\\binom{n}{k}')) cursorPos = start + code.indexOf('{n}') + 1;
-            else if (code.includes('\\begin{pmatrix}')) cursorPos = start + code.indexOf('{a}') + 1;
-            else if (code.includes('\\lim_{x \\to 0}')) cursorPos = start + code.indexOf('x');
-
-            field.value = val.substring(0, start) + code + val.substring(end);
-            field.focus();
-            field.setSelectionRange(cursorPos, cursorPos);
-            handleInput();
-        }
+        // insertLatex moved to editor.js to work with EasyMDE
 
 
         /* --- TOOLTIP FUNCTIONS --- */
@@ -345,19 +327,7 @@
         }
 
         /* --- FONT & COLOR with Span --- */
-        function applyStyle(styleStart, styleEnd) {
-            insertMarkdown(styleStart, styleEnd);
-        }
-
-        function changeFont() {
-            const font = document.getElementById('font-family').value;
-            applyStyle(`<span style="font-family:${font}">`, `</span>`);
-        }
-
-        function changeFontSize() {
-            const size = document.getElementById('font-size').value;
-            applyStyle(`<span style="font-size:${size}px">`, `</span>`);
-        }
+        // applyStyle, changeFont, changeFontSize moved to editor.js to work with EasyMDE
 
         /* --- TABLE BUILDER --- */
         function initTableGrid() {
@@ -445,26 +415,7 @@
         });
 
         /* --- HEADING HELPERS --- */
-        function applyHeading(level) {
-            const field = document.getElementById('editor');
-            if (!field) return;
-            if (typeof level !== 'number' || level < 0 || level > 6) {
-                console.warn("Invalid heading level");
-                return;
-            }
-            const start = field.selectionStart;
-            const val = field.value;
-            const lineStart = val.lastIndexOf('\n', start - 1) + 1;
-            const lineEnd = val.indexOf('\n', start);
-            const end = lineEnd === -1 ? val.length : lineEnd;
-            let line = val.substring(lineStart, end).replace(/^#+\s*/, '');
-            const prefix = level > 0 ? '#'.repeat(level) + ' ' : '';
-            const newLine = prefix + line;
-            field.value = val.substring(0, lineStart) + newLine + val.substring(end);
-            field.focus();
-            field.setSelectionRange(lineStart + newLine.length, lineStart + newLine.length);
-            handleInput();
-        }
+        // applyHeading moved to editor.js to work with EasyMDE
 
         function saveSelection() {
             const field = document.getElementById('editor');
@@ -544,233 +495,23 @@
         }
 
         /* ─── IMPROVED STATS ─────────────────────────────────────────────── */
-        function updateStats() {
-            const editorEl = document.getElementById('editor');
-            if (!editorEl) return;
-            const t = editorEl.value;
-            const chars = t.length;
-            const words = t.split(/\s+/).filter(w => w).length;
-            const lines = t.split('\n').length;
-            const pages = Math.max(1, Math.ceil(words / 500));
-            const sLeft = document.getElementById('status-left');
-            if (sLeft) sLeft.textContent = `Caratteri: ${chars.toLocaleString('it')} | Parole: ${words.toLocaleString('it')} | Righe: ${lines} | ~${pages} pag.`;
-        }
+        // updateStats moved to editor.js to work with EasyMDE
 
-        function applyList(prefix) {
-            const field = document.getElementById('editor');
-            const start = field.selectionStart;
-            const end = field.selectionEnd;
-            const val = field.value;
-            const selected = val.substring(start, end);
-
-            if (selected.length > 0) {
-                const lines = selected.split('\n');
-                const isOrdered = /^\d+\./.test(prefix);
-                const newLines = lines.map((l, i) => {
-                    const clean = l.replace(/^(\s*)(- \[[ xX]\] |[-*]\s|\d+\.\s)/, '$1');
-                    return isOrdered ? `${i + 1}. ${clean}` : prefix + clean;
-                });
-                const joined = newLines.join('\n');
-                field.value = val.substring(0, start) + joined + val.substring(end);
-                field.setSelectionRange(start, start + joined.length);
-            } else {
-                const lineStart = val.lastIndexOf('\n', start - 1) + 1;
-                const newVal = val.substring(0, lineStart) + prefix + val.substring(lineStart);
-                field.value = newVal;
-                field.setSelectionRange(lineStart + prefix.length, lineStart + prefix.length);
-            }
-            field.focus();
-            handleInput();
-        }
+        // applyList moved to editor.js to work with EasyMDE
 
 
         /* --- IMPORT/EXPORT --- */
-        function importFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const text = e.target.result;
-                const name = file.name.replace(/\.[^/.]+$/, ""); // strip extension
-                createTab(name, text);
-            };
-            reader.readAsText(file);
-            event.target.value = ''; // reset input
-            toggleFileMenu();
-        }
-
-        function promptExport(type) {
-            const t = tabs.find(x => x.id === activeTabId);
-            if (!t) return;
-            const name = prompt("Inserisci il nome del file:", t.name || "documento");
-            if (!name) return;
-
-            if (type === 'md') downloadFile(name + ".md", t.content, "text/markdown");
-            if (type === 'txt') downloadFile(name + ".txt", t.content, "text/plain");
-            if (type === 'tex') {
-                const texStr = t.content
-                    .replace(/^# (.+)$/gm, '\\section{$1}')
-                    .replace(/^## (.+)$/gm, '\\subsection{$1}')
-                    .replace(/^### (.+)$/gm, '\\subsubsection{$1}')
-                    .replace(/\*\*(.+?)\*\*/g, '\\textbf{$1}')
-                    .replace(/\*(.+?)\*/g, '\\textit{$1}')
-                    .replace(/`(.+?)`/g, '\\texttt{$1}')
-                    .replace(/\$\$(.+?)\$\$/gs, '\\[\n$1\n\\]')
-                    .replace(/\$(.+?)\$/g, '$$$1$$');
-                const fullTex = `\\documentclass{article}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amsmath, amssymb}\n\\begin{document}\n\n${texStr}\n\n\\end{document}`;
-                downloadFile(name + ".tex", fullTex, "text/plain");
-            }
-            if (type === 'html') {
-                const c = document.getElementById('preview-content').innerHTML;
-                const html = `<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <title>${name}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
-    <style>
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            line-height: 1.6; 
-            color: #333; 
-            max-width: 800px; 
-            margin: 40px auto; 
-            padding: 20px; 
-            background: #fff;
-        }
-        h1, h2, h3 { border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
-        pre { background: #f8f8f8; padding: 15px; border-radius: 8px; overflow-x: auto; border: 1px solid #ddd; }
-        blockquote { border-left: 4px solid #0067c0; margin: 0; padding-left: 15px; color: #555; }
-        img { max-width: 100%; border-radius: 4px; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-    </style>
-</head>
-<body>
-${c}
-</body>
-</html>`;
-                downloadFile(name + ".html", html, "text/html");
-            }
-            if (type === 'pdf') window.print();
-        }
-
-        function downloadFile(filename, content, type) {
-            const blob = new Blob([content], { type: type });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        /* --- BACKUP LOGIC --- */
-        function exportBackup() {
-            const dataStr = JSON.stringify(tabs, null, 2);
-            const dateStr = new Date().toISOString().split('T')[0];
-            downloadFile(`minipad_backup_${dateStr}.json`, dataStr, "application/json");
-            toggleFileMenu();
-        }
-
-        async function importBackup(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const text = await file.text();
-            try {
-                const importedTabs = JSON.parse(text);
-                if (Array.isArray(importedTabs) && importedTabs.length > 0) {
-                    if (confirm("Questo unirà le note salvate in questo browser con quelle del backup. Continuare?")) {
-                        // Merge logic: Add imported notes avoiding exact ID duplicates or generating new IDs
-                        importedTabs.forEach(t => {
-                            const existing = tabs.find(localTab => localTab.id === t.id);
-                            if (existing) {
-                                // If id conflict but different name/content, append as new
-                                if (existing.content !== t.content) {
-                                    const timestamp = Date.now();
-                                    t.id = t.id + "_imported_" + timestamp;
-                                    t.name = t.name + " (Backup " + new Date().toLocaleDateString() + ")";
-                                    tabs.push(t);
-                                }
-                            } else {
-                                tabs.push(t);
-                            }
-                        });
-                        await saveToStorage();
-                        renderSidebar();
-                        alert("Backup importato con successo!");
-                    }
-                } else {
-                    alert("File di backup non valido o vuoto.");
-                }
-            } catch (err) {
-                alert("Errore nella lettura del file JSON di backup.");
-            }
-            e.target.value = ''; // reset
-            toggleFileMenu();
-        }
-
-        function exportHTML() { promptExport('html'); toggleFileMenu(); }
-        function exportMarkdown() { promptExport('md'); toggleFileMenu(); }
-        function exportTXT() { promptExport('txt'); toggleFileMenu(); }
-        function exportTeX() { promptExport('tex'); toggleFileMenu(); }
-        function saveNow() { saveToStorage(); showSavedIndicator(); }
-
-        function clearEditor() {
-            if (confirm("Sei sicuro di voler svuotare l'editor?")) {
-                const field = document.getElementById('editor');
-                if (field) {
-                    field.value = '';
-                    handleInput();
-                }
-            }
-        }
+        // importFile, promptExport, downloadFile, exportBackup, importBackup, exportHTML, exportMarkdown, exportTXT, exportTeX, saveNow, clearEditor moved to editor.js
 
         /* --- EDITING --- */
-        function insertMarkdown(start, end) {
-            const field = document.getElementById('editor');
-            const sStart = field.selectionStart;
-            const sEnd = field.selectionEnd;
-            const val = field.value;
-            const selected = val.substring(sStart, sEnd);
-            field.value = val.substring(0, sStart) + start + selected + end + val.substring(sEnd);
-            field.focus();
-            field.selectionStart = sStart + start.length;
-            field.selectionEnd = sEnd + start.length;
-            handleInput();
-        }
-
-        function insertColor(prop, color) {
-            const field = document.getElementById('editor');
-            let start = field.selectionStart;
-            let end = field.selectionEnd;
-            if (savedSelection && start === end) {
-                start = savedSelection.start;
-                end = savedSelection.end;
-            }
-            const val = field.value;
-            let selected = val.substring(start, end);
-            if (!selected) selected = "Testo";
-
-            const insertText = `<span style="${prop}:${color}">` + selected + `</span>`;
-            field.value = val.substring(0, start) + insertText + val.substring(end);
-
-            savedSelection = null;
-
-            setTimeout(() => {
-                field.focus();
-                field.setSelectionRange(start, start + insertText.length);
-            }, 10);
-
-            handleInput();
-        }
+        // insertMarkdown and insertColor moved to editor.js to work with EasyMDE
 
 
         /* --- OLD FUNCTIONS REMOVED (Replaced above) --- */
 
         /* --- CORE NOTES LOGIC (SIDEBAR) --- */
+        // toggleSidebar and createNote moved to editor.js
+
         let sidebarVisible = false;
 
         // Auto-collapse on load
@@ -779,23 +520,5 @@ ${c}
                 document.getElementById('sidebar').classList.add('collapsed');
             }
         });
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebarVisible = !sidebarVisible;
-            if (sidebarVisible) {
-                sidebar.classList.remove('collapsed');
-            } else {
-                sidebar.classList.add('collapsed');
-            }
-        }
-
-        async function createNote(name, content) {
-            const id = Date.now().toString();
-            const dateStr = new Date().toLocaleString(currentLang === 'it' ? 'it-IT' : 'en-US', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-            tabs.push({ id, name, content, updatedAt: dateStr });
-            await saveToStorage();
-            switchNote(id);
-        }
 
         
