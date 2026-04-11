@@ -45,14 +45,26 @@ function setEditorContent(content) {
 }
 
 // ===== Scroll Sync =====
-function syncScrollFromEditor() {
-    const previewDiv = document.getElementById('preview-pane');
-    if (!previewDiv || !easyMDE) return;
+let _scrollSyncRAF = null;
 
-    const scrollInfo = easyMDE.codemirror.getScrollInfo();
-    const scrollPercentage = scrollInfo.top / Math.max(1, scrollInfo.height - scrollInfo.clientHeight);
-    previewDiv.scrollTop = scrollPercentage * (previewDiv.scrollHeight - previewDiv.clientHeight);
+function syncScrollFromEditor() {
+    // Throttle via rAF — max once per frame for smooth scrolling
+    if (_scrollSyncRAF) return;
+    _scrollSyncRAF = requestAnimationFrame(() => {
+        _scrollSyncRAF = null;
+        const previewDiv = document.getElementById('preview-pane');
+        if (!previewDiv || !easyMDE) return;
+
+        const scrollInfo = easyMDE.codemirror.getScrollInfo();
+        const maxEditorScroll = scrollInfo.height - scrollInfo.clientHeight;
+        if (maxEditorScroll <= 0) return;
+
+        const scrollPercentage = scrollInfo.top / maxEditorScroll;
+        const maxPreviewScroll = previewDiv.scrollHeight - previewDiv.clientHeight;
+        previewDiv.scrollTop = scrollPercentage * maxPreviewScroll;
+    });
 }
+
 
 // ===== Paste Handler for AI LaTeX =====
 function setupPasteHandler() {

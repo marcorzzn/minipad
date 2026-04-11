@@ -52,26 +52,25 @@ function parseMarkdown(markdown) {
 }
 
 function updatePreview() {
-    const editor = document.getElementById('editor');
-    if (!editor) {
-        // Fallback: try to get from EasyMDE
-        if (typeof getEditorContent === 'function') {
-            updatePreviewWithContent(getEditorContent());
-        }
-        return;
+    if (typeof getEditorContent === 'function') {
+        updatePreviewWithContent(getEditorContent());
     }
-
-    updatePreviewWithContent(editor.value);
 }
 
+// Cache reference to avoid DOM lookup on every keystroke
+let _previewContentEl = null;
+
 function updatePreviewWithContent(content) {
-    const previewDiv = document.getElementById('preview-content');
-    if (!previewDiv || !content) return;
+    if (!_previewContentEl) {
+        _previewContentEl = document.getElementById('preview-content');
+    }
+    if (!_previewContentEl || !content) return;
 
     const html = parseMarkdown(content);
 
-    // 6. Iniezione nel DOM (uso requestAnimationFrame per performance)
+    // Iniezione nel DOM (uso requestAnimationFrame per performance)
     requestAnimationFrame(() => {
-        previewDiv.innerHTML = html;
+        _previewContentEl.innerHTML = html;
     });
 }
+
