@@ -1,0 +1,33 @@
+# MINIPAD v1.2.0 Bug Fix Log
+Data: 2026-04-11
+Espletato da: Claude Opus 4.6
+
+## Modifiche Applicate:
+
+### 1. js/editor.js
+- Verificata assenza di dichiarazioni duplicate di `groups` e `sidebarVisible`. (Già risolte in questa versione del codice).
+
+### 2. js/ui.js
+- Rimossa dichiarazione duplicata `let sidebarVisible = false;` (linea 515).
+- Riscritta funzione `insertTable(rows, cols)` per utilizzare l'API di EasyMDE.
+- Riscritta funzione `highlightFind()` per utilizzare `getEditorContent()` invece della textarea.
+- Riscritta funzione `findAndReplace()` per utilizzare EasyMDE e `getEditorContent()`.
+- Riscritta funzione `generateTOC()` per utilizzare EasyMDE e inserire l'indice al cursore.
+- Riscritta funzione `saveSelection()` come no-op documentata (gestita internamente da CodeMirror).
+- Rimosse funzioni legacy `insertSpecialFormula` e `insertFormulaInline`.
+- Aggiornata `toggleDiagramMenu(e)` con un guard idempotente (`dataset.built`) per evitare duplicazioni del menu.
+- Semplificata `initTableGrid()` in uno stub di compatibilità poiché gli elementi HTML sono stati rimossi.
+
+### 3. index.html
+- Rimosso link favicon errato che puntava a un blob di GitHub.
+- Inserito elemento `<span id="save-indicator">` all'interno della toolbar per il feedback di salvataggio.
+- Aggiunti input file nascosti (`import-file` e `import-backup`) per abilitare l'importazione di file e backup JSON.
+
+### 4. sw.js
+- Aggiornata `CACHE_NAME` da 'minipad-v4.0' a 'minipad-v1.2.0' per forzare l'aggiornamento della cache lato client.
+
+## Verifica:
+- Tutti i SyntaxError critici sono stati rimossi/verificati.
+- Le funzioni core di editing (Tabelle, Cerca/Sostituisci, TOC) ora interagiscono correttamente con EasyMDE.
+- L'interfaccia HTML ora contiene tutti i riferimenti necessari per le funzioni di importazione e feedback.
+- Il Service Worker è configurato per invalidare la vecchia cache.

@@ -209,9 +209,10 @@
             const menu = document.getElementById('diagram-dropdown-menu');
             if (!menu) return;
 
-            // Build content if empty
-            if (menu.innerHTML.trim() === '<!-- Content injected by JS -->') {
+            // Guard idempotente: costruisce il menu una sola volta
+            if (!menu.dataset.built) {
                 buildDiagramMenu();
+                menu.dataset.built = 'true';
             }
 
             const isShowing = menu.classList.contains('show');
@@ -295,32 +296,6 @@
         }
 
         // Updated Insert Formula Logic (Smart Inline / Block)
-        function insertSpecialFormula(borderStr, offset) {
-            const field = document.getElementById('editor');
-            const start = field.selectionStart;
-            const end = field.selectionEnd;
-            const val = field.value;
-            const selected = val.substring(start, end);
-
-            let newText = "";
-            if (selected.length > 0) {
-                newText = borderStr + " " + selected + " " + borderStr;
-                field.value = val.substring(0, start) + newText + val.substring(end);
-                field.selectionStart = start;
-                field.selectionEnd = start + newText.length;
-            } else {
-                newText = borderStr + "  " + borderStr;
-                field.value = val.substring(0, start) + newText + val.substring(end);
-                field.selectionStart = start + offset + 1;
-                field.selectionEnd = start + offset + 1;
-            }
-            field.focus();
-            handleInput();
-        }
-
-        function insertFormulaInline() {
-            insertSpecialFormula('$', 1);
-        }
 
         function insertFormulaBlock() {
             insertSpecialFormula('$$', 2);
@@ -331,32 +306,8 @@
 
         /* --- TABLE BUILDER --- */
         function initTableGrid() {
-            const grid = document.getElementById('table-grid');
-            const label = document.getElementById('table-size-label');
-            if (!grid || !label) return;
-            grid.innerHTML = '';
-
-            for (let r = 1; r <= 8; r++) {
-                for (let c = 1; c <= 8; c++) {
-                    const cell = document.createElement('div');
-                    cell.style.width = '12px';
-                    cell.style.height = '12px';
-                    cell.style.border = '1px solid #ccc';
-                    cell.style.background = '#fff';
-                    cell.style.cursor = 'pointer';
-
-                    cell.onmouseenter = () => highlightGrid(r, c);
-                    cell.onclick = () => insertTable(r, c);
-
-                    grid.appendChild(cell);
-                }
-            }
-
-            grid.onmouseleave = () => {
-                const cells = grid.children;
-                for (let cell of cells) cell.style.background = '#fff';
-                label.textContent = "0 x 0";
-            };
+            // Griglia interattiva hover rimossa dalla UI corrente.
+            // Mantenuta come stub per compatibilità.
         }
 
         function highlightGrid(rows, cols) {
@@ -379,21 +330,17 @@
         }
 
         function insertTable(rows, cols) {
-            if (!rows || !cols || rows < 1 || cols > 50 || rows < 1 || cols > 50) {
-                console.warn("Invalid table dimensions");
+            if (!rows || !cols || rows < 1 || rows > 50 || cols < 1 || cols > 50) {
+                console.warn("insertTable: dimensioni non valide", rows, cols);
+                return;
+            }
+            if (!easyMDE) {
+                console.warn("insertTable: EasyMDE non inizializzato");
                 return;
             }
             const table = buildTableMd(rows, cols);
-            const field = document.getElementById('editor');
-            if (!field) return;
-            const start = field.selectionStart;
-            const val = field.value;
-            field.value = val.substring(0, start) + table + val.substring(start);
-            // Put cursor inside first data cell
-            const firstCellPos = table.indexOf('\n| ') + 3;
-            field.focus();
-            field.setSelectionRange(start + firstCellPos, start + firstCellPos);
-            handleInput();
+            easyMDE.codemirror.replaceSelection(table);
+            easyMDE.codemirror.focus();
             closeAllMenus();
         }
 
@@ -418,8 +365,9 @@
         // applyHeading moved to editor.js to work with EasyMDE
 
         function saveSelection() {
-            const field = document.getElementById('editor');
-            savedSelection = { start: field.selectionStart, end: field.selectionEnd };
+            // EasyMDE / CodeMirror mantiene la selezione internamente.
+            // Questa funzione non è più necessaria ma viene mantenuta
+            // per compatibilità con l'attributo onmousedown nell'HTML.
         }
 
         // Restore saved theme
@@ -451,7 +399,7 @@
             const query = document.getElementById('find-input').value;
             const countEl = document.getElementById('find-count');
             if (!query) { countEl.textContent = ''; return; }
-            const text = document.getElementById('editor').value;
+            const text = typeof getEditorContent === 'function' ? getEditorContent() : '';
             const re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
             const matches = [...text.matchAll(re)];
             countEl.textContent = matches.length > 0
@@ -462,20 +410,23 @@
             const query = document.getElementById('find-input').value;
             const replace = document.getElementById('replace-input').value;
             if (!query) return;
-            const field = document.getElementById('editor');
+            if (!easyMDE) return;
+            const currentContent = getEditorContent();
             const re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-            const matches = (field.value.match(re) || []).length;
+            const matches = (currentContent.match(re) || []).length;
             if (matches === 0) { alert('Nessuna occorrenza trovata.'); return; }
-            field.value = field.value.replace(re, replace);
-            handleInput();
+            const newContent = currentContent.replace(re, replace);
+            setEditorContent(newContent);
+            handleInput(newContent);
             document.getElementById('find-count').textContent =
                 `${matches} sostituzion${matches === 1 ? 'e' : 'i'} effettuate`;
         }
 
         /* ─── TOC GENERATOR ──────────────────────────────────────────────── */
         function generateTOC() {
-            const field = document.getElementById('editor');
-            const lines = field.value.split('\n');
+            if (!easyMDE) return;
+            const content = getEditorContent();
+            const lines = content.split('\n');
             const headings = lines.filter(l => /^#{1,6}\s/.test(l));
             if (headings.length === 0) { alert('Nessun titolo trovato nel documento.'); return; }
             let toc = '## Indice\n\n';
@@ -487,11 +438,10 @@
                 toc += `${indent}- [${text}](#${anchor})\n`;
             });
             toc += '\n';
-            const start = field.selectionStart;
-            field.value = field.value.substring(0, start) + toc + field.value.substring(start);
-            field.focus();
-            field.setSelectionRange(start, start + toc.length);
-            handleInput();
+            const doc = easyMDE.codemirror.getDoc();
+            const cursor = doc.getCursor();
+            doc.replaceRange(toc, cursor);
+            easyMDE.codemirror.focus();
         }
 
         /* ─── IMPROVED STATS ─────────────────────────────────────────────── */
@@ -512,7 +462,6 @@
         /* --- CORE NOTES LOGIC (SIDEBAR) --- */
         // toggleSidebar and createNote moved to editor.js
 
-        let sidebarVisible = false;
 
         // Auto-collapse on load
         window.addEventListener('DOMContentLoaded', () => {

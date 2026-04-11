@@ -91,7 +91,7 @@ function setupPasteHandler() {
 }
 
 // ===== Groups System =====
-let groups = [];
+// Nota: 'groups' è dichiarato in main.js come variabile globale
 
 function createGroup(name) {
     const newGroup = {
@@ -917,7 +917,7 @@ function insertLatex(code) {
 }
 
 // ===== Sidebar Toggle =====
-let sidebarVisible = false;
+// Nota: 'sidebarVisible' è dichiarato in ui.js come variabile globale
 
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');

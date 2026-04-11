@@ -13,7 +13,6 @@
   "url": "https://marcorzzn.github.io/minipad/"
 }
 </script>
-    <link rel="icon" href="https://github.com/marcorzzn/minipad/blob/main/icon.svg" type="image/x-icon">
 
     
 
@@ -264,6 +263,7 @@
                     </svg>
                 </button>
             </div>
+                <span id="save-indicator" style="font-size:11px; color:#888; margin-left:8px; opacity:0; transition:opacity 0.5s;">Salvato</span>
         </div>
 
         <!-- FILE DROPDOWN MENU -->
@@ -508,6 +508,9 @@
     <script src="js/editor.js"></script>
     <script src="js/preview.js"></script>
     <script src="js/main.js"></script>
+    <!-- Hidden file inputs for import functionality -->
+    <input type="file" id="import-file" accept=".md,.txt,.html,.tex" style="display:none" onchange="importFile(event)">
+    <input type="file" id="import-backup" accept=".json" style="display:none" onchange="importBackup(event)">
 
 </body>
 
