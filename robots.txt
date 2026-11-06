@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
 
-# Sostituisci USERNAME con il tuo username GitHub
 Sitemap: https://marcorzzn.github.io/minipad/sitemap.xml

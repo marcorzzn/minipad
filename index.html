@@ -18,25 +18,78 @@
 
     <!-- SEO & Meta Tags -->
     <meta name="description"
-        content="Un editor di testo gratuito e leggerissimo che gira interamente in locale nel tuo browser. Combina la semplicità di un blocco note con la potenza di Markdown e LaTeX e per creare documenti, appunti matematici e diagrammi">
-    <meta property="og:site_name" content="minipad">
-    <meta property="og:title" content="minipad">
+        content="MiniPad: editor di testo Markdown e LaTeX online gratuito, privacy-first e 100% locale nel browser. Supporto formule matematiche KaTeX, diagrammi Mermaid, anteprima live ed esportazione in PDF vettoriale, HTML, LaTeX e TXT.">
     <meta name="keywords"
-        content="markdown editor, latex editor, online text editor, math formulas, writing tool, minipad, ascii charts">
+        content="minipad, markdown editor, latex editor, formule matematiche katex, diagrammi mermaid, editor markdown online, export pdf, export latex, privacy-first, pwa">
     <meta name="author" content="Marco">
     <meta name="google-site-verification" content="V1dmn62hrnxnnXdHHqBkHLo-e3tioJs1SNoBUBllfEU" />
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <link rel="canonical" href="https://marcorzzn.github.io/minipad/">
     <link rel="manifest" href="./manifest.json">
-    <!-- Favicon: minimal notepad icon -->
+
+    <!-- Favicon & Icons -->
     <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="apple-touch-icon" href="icon-192.png">
 
-    <!-- Open Graph / Social Media -->
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="minipad - Un editor di testo con supporto Markdown & LaTeX">
+    <meta property="og:url" content="https://marcorzzn.github.io/minipad/">
+    <meta property="og:site_name" content="MiniPad">
+    <meta property="og:title" content="MiniPad — Editor Markdown, LaTeX & Diagrammi Mermaid">
     <meta property="og:description"
-        content="Scrivi appunti, formule matematiche e crea diagrammi direttamente nel browser. Semplice, veloce e gratuito.">
+        content="Editor di testo Markdown e LaTeX gratuito, privacy-first e 100% locale nel browser con rendering KaTeX, diagrammi Mermaid, anteprima live e stampa/PDF vettoriale avanzata.">
+    <meta property="og:image" content="https://marcorzzn.github.io/minipad/icon-512.png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta property="og:image:alt" content="MiniPad Logo">
+    <meta property="og:locale" content="it_IT">
+    <meta property="og:locale:alternate" content="en_US">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://marcorzzn.github.io/minipad/">
+    <meta name="twitter:title" content="MiniPad — Editor Markdown, LaTeX & Diagrammi Mermaid">
+    <meta name="twitter:description"
+        content="Editor di testo Markdown e LaTeX gratuito, privacy-first e 100% locale nel browser con rendering KaTeX, diagrammi Mermaid e stampa PDF vettoriale.">
+    <meta name="twitter:image" content="https://marcorzzn.github.io/minipad/icon-512.png">
+
+    <!-- Google Search Structured Data (Schema.org / JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "MiniPad",
+      "alternateName": ["minipad", "MiniPad Editor"],
+      "url": "https://marcorzzn.github.io/minipad/",
+      "description": "Editor di testo Markdown e LaTeX online gratuito, privacy-first e funzionante interamente in locale nel browser, con supporto formule KaTeX, diagrammi Mermaid, anteprima live ed esportazione in PDF, HTML, LaTeX e TXT.",
+      "applicationCategory": "ProductivityApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "inLanguage": ["it", "en"],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "Marco"
+      },
+      "image": "https://marcorzzn.github.io/minipad/icon-512.png",
+      "screenshot": "https://marcorzzn.github.io/minipad/icon-512.png",
+      "featureList": [
+        "Editor Markdown CommonMark con anteprima divisa in tempo reale",
+        "Formule matematiche LaTeX native con rendering KaTeX isolato",
+        "Modale interattivo per creare diagrammi Mermaid (Flowchart, Sequence, Class, State, Pie, Mindmap, Git)",
+        "Suite di impaginazione e stampa PDF avanzata con regole anti-spezzamento blocchi e salto pagina A4",
+        "Esportazione professionale in Markdown (.md), HTML autonomo (.html), LaTeX (.tex), PDF (.pdf) e Testo puro (.txt)",
+        "Smart Paste per estrazione e normalizzazione automatica da AI (ChatGPT, Claude, Gemini, Wikipedia)",
+        "Gestione note in schede e cartelle con salvataggio persistente locale 100% client-side (IndexedDB)",
+        "PWA installabile su Desktop, Android e iOS con supporto offline completo"
+      ]
+    }
+    </script>
 
     <!-- Librerie esterne CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
