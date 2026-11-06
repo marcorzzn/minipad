@@ -88,14 +88,12 @@ function applyLanguage() {
 // tabs, groups e activeTabId sono inizializzati in data.js
 let autoSaveTimeout = null;
 let previewTimeout = null;
-let savedSelection = null;
 
 // --- INIT ---
 async function init() {
     if (typeof MiniPadSmartPaste !== 'undefined') MiniPadSmartPaste.init();
     if (typeof MiniPadPreview !== 'undefined') MiniPadPreview.init();
     initMathToolbar();
-    initTableGrid();
 
     try {
         const savedLang = localStorage.getItem('minipad_lang');

@@ -103,7 +103,7 @@
             </div>
 
             <!-- Colors -->
-            <div class="tool-group" onmousedown="saveSelection()">
+            <div class="tool-group">
                 <button class="format-btn" onclick="document.getElementById('text-color-picker').click()"
                     title="Colore Testo">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -500,6 +500,8 @@
     
     <!-- Dependencies -->
     <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+    <!-- ORDINE CRITICO: katex.min.js DEVE precedere marked-katex-extension
+         perché la build UMD legge global.katex al momento del caricamento -->
     <script src="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension/lib/index.umd.js"></script>

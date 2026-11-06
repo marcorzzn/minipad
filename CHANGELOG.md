@@ -2,6 +2,25 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.1] - 2026-11-06
+
+### Miglioramenti di Manutenzione & Pulizia Debito Tecnico
+
+#### 1. Commento di Salvaguardia sull'Ordine di Caricamento Script (`index.html`)
+- Aggiunta documentazione esplicita nel markup HTML sul vincolo architetturale: `katex.min.js` deve tassativamente precedere `marked-katex-extension` in quanto l'inizializzazione della build UMD richiede la presenza immediata di `global.katex`.
+
+#### 2. Rimozione Stub Morti & Handler Obsoleti (`js/ui.js`, `js/main.js`, `index.html`)
+- Rimossi gli stub vuoti `initTableGrid()` e `saveSelection()` in `js/ui.js`.
+- Rimosso il listener inline `onmousedown="saveSelection()"` non più necessario da `index.html`.
+- Rimosso il richiamo a `initTableGrid()` e la variabile morta `savedSelection` in `js/main.js`.
+- Eliminati tutti i commenti fantasma obsoleti derivanti dalla divisione modulare originaria in `js/ui.js`.
+
+#### 3. Verifica Integrità Funzionale
+- Confermato il comportamento asincrono con `await` di `saveToStorage()` per una gestione affidabile del fallback su `localStorage` in caso di errore IndexedDB.
+- Confermato il corretto azzeramento dei contatori in `updateStats()` su documenti vuoti.
+
+---
+
 ## [v1.5.0] - 2026-11-06
 
 ### Nuove Funzionalità & Miglioramenti Maggiori

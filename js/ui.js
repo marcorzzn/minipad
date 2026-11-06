@@ -256,8 +256,6 @@
             });
         }
 
-        // insertDiagramAtCursor — rimossa: sovrascritta dalla versione EasyMDE in editor.js
-
         function insertCustomTable() {
             const rowsInput = document.getElementById('custom-table-rows');
             const colsInput = document.getElementById('custom-table-cols');
@@ -284,19 +282,7 @@
             });
         }
 
-        // insertFormulaBlock — rimossa: sovrascritta dalla versione EasyMDE in editor.js
-
-        /* --- FONT & COLOR with Span --- */
-        // applyStyle, changeFont, changeFontSize moved to editor.js to work with EasyMDE
-
         /* --- TABLE BUILDER --- */
-        function initTableGrid() {
-            // Griglia interattiva hover rimossa dalla UI corrente.
-            // Mantenuta come stub per compatibilità.
-        }
-
-        // highlightGrid — rimossa: referenzia elementi DOM inesistenti (table-grid, table-size-label)
-
         function buildTableMd(rows, cols) {
             const headerRow = '\n|' + Array.from({ length: cols }, (_, i) => ` Intestazione ${i + 1} |`).join('');
             const separatorRow = '\n|' + ' --- |'.repeat(cols);
@@ -320,9 +306,6 @@
             closeAllMenus();
         }
 
-        // insertTableFromInputs — rimossa: referenzia elementi DOM inesistenti (table-rows-input, table-cols-input)
-
-
         /* --- MENU FIX --- */
         window.addEventListener('click', (e) => {
             // Don't close if clicking inside a dropdown menu or on a designated menu toggle button
@@ -332,15 +315,6 @@
                 closeAllMenus();
             }
         });
-
-        /* --- HEADING HELPERS --- */
-        // applyHeading moved to editor.js to work with EasyMDE
-
-        function saveSelection() {
-            // EasyMDE / CodeMirror mantiene la selezione internamente.
-            // Questa funzione non è più necessaria ma viene mantenuta
-            // per compatibilità con l'attributo onmousedown nell'HTML.
-        }
 
         // Restore saved theme
         try {
@@ -415,25 +389,6 @@
             doc.replaceRange(toc, cursor);
             easyMDE.codemirror.focus();
         }
-
-        /* ─── IMPROVED STATS ─────────────────────────────────────────────── */
-        // updateStats moved to editor.js to work with EasyMDE
-
-        // applyList moved to editor.js to work with EasyMDE
-
-
-        /* --- IMPORT/EXPORT --- */
-        // importFile, promptExport, downloadFile, exportBackup, importBackup, exportHTML, exportMarkdown, exportTXT, exportTeX, saveNow, clearEditor moved to editor.js
-
-        /* --- EDITING --- */
-        // insertMarkdown and insertColor moved to editor.js to work with EasyMDE
-
-
-        /* --- OLD FUNCTIONS REMOVED (Replaced above) --- */
-
-        /* --- CORE NOTES LOGIC (SIDEBAR) --- */
-        // toggleSidebar and createNote moved to editor.js
-
 
         // Auto-collapse on load
         window.addEventListener('DOMContentLoaded', () => {
