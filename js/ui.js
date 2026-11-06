@@ -223,10 +223,6 @@
             if (!isShowing) positionDropdown('diagram-dropdown-menu', btn);
         }
 
-        function openDiagramModal(e) {
-            toggleDiagramMenu(e);
-        }
-
         function buildDiagramMenu() {
             const menu = document.getElementById('diagram-dropdown-menu');
             if (!menu) return;

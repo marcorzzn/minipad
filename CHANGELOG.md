@@ -2,6 +2,19 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.4.1] - 2026-11-06
+
+### Diagram Builder Modal (Fase C)
+
+#### 1. Modale Centrale Dedicato alla Creazione Diagrammi (`js/diagram-builder.js`, `css/diagram-modal.css`)
+- **Modale nativo in stile Mac Classic**: overlay centrale oscurato con supporto chiusura rapida tramite tasto `Escape`, click sull'overlay o pulsante chiudi `i-close`.
+- **Navigazione a schede per tipo di diagramma**: selezione immediata tra Flowchart, Sequence, Class, State, Pie, Mindmap e Git Graph con icone SVG dedicate.
+- **Libreria di template integrati**: configurazioni predefinite per ciascun tipo (es. TD base, LR orizzontale, cicli di errore, interfacce, percentuali).
+- **Editor codice con anteprima live reattiva**: rendering in tempo reale con debounce a 250ms tramite runtime Mermaid, gestione degli errori di sintassi visibili senza blocco e gestione automatica dei tab indentati a due spazi.
+- **Inserimento rapido alla posizione del cursore**: inserimento del blocco \`\`\`mermaid...\`\`\` direttamente nell'editor EasyMDE / CodeMirror e aggiornamento immediato dell'anteprima del documento.
+
+---
+
 ## [v1.5.4] - 2026-11-06
 
 ### UI Refresh Stile Mac Classic (Medium)
