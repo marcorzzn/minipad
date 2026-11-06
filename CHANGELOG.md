@@ -2,6 +2,28 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.3] - 2026-11-06
+
+### Conformità CommonMark, Rifinitura i18n & Hardening Pipeline
+
+#### 1. Code Spans Multi-Backtick CommonMark (`js/preview.js`, `js/export.js`)
+- **Supporto Completo ai Fence Multipli**: implementata la gestione rigorosa dei blocchi inline con due o più backtick (es. \`\` \`inline\` \`\`), consentendo l'inclusione di backtick letterali senza annidamenti spuri di tag `<code>`.
+- **Regola di Stripping Spazi CommonMark**: rimozione conforme dello spazio perimetrale attorno al codice inline delimitato da doppi backtick.
+- **Fedeltà LaTeX**: traduzione fedele dei backtick letterali in `\textasciigrave{}` all'interno dei blocchi `\texttt{...}` per la corretta compilazione in `pdflatex`.
+- **Pulizia Plain Text**: rimozione trasparente dei backtick letterali nei file `.txt` per una lettura naturale.
+
+#### 2. Salvaguardia Architetturale Loop di Risoluzione
+- Documentati esplicitamente con commenti protettivi i cicli `while` in `preview.js` ed `export.js` per preservare lo srotolamento completo di placeholder annidati (es. celle di tabella contenenti codice e formule).
+
+#### 3. Chiarimento sul Comportamento Offline del Formato HTML (`js/export.js`)
+- Aggiunta nota descrittiva nell'intestazione del file HTML esportato che chiarisce la dipendenza da CDN al primo caricamento per i font KaTeX e il runtime Mermaid, raccomandando "Stampa…" o "Esporta PDF" per archivi 100% autonomi e indipendenti dalla rete.
+
+#### 4. Rifinitura i18n & Event Binding UI (`js/main.js`, `index.html`)
+- Assegnato ID `btn-diagram` al pulsante diagrammi e collegata la traduzione del tooltip in `applyLanguage()`, rimuovendo il vecchio selettore orfano `#diagram-modal`.
+- Registrato listener esplicito `addEventListener('input', renderSidebar)` sul campo di ricerca `#sidebar-search` all'inizializzazione dell'app.
+
+---
+
 ## [v1.5.2] - 2026-11-06
 
 ### Risoluzione Bug Critici di Esportazione & Ottimizzazione Stampa

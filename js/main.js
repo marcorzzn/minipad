@@ -116,6 +116,7 @@ async function init() {
     initEasyMDE(firstTab ? firstTab.content : '');
 
     renderSidebar();
+    document.getElementById('sidebar-search')?.addEventListener('input', renderSidebar);
 
     // Restore active tab
     if (tabs.length > 0) {

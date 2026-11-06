@@ -135,7 +135,11 @@ window.MiniPadPreview = (function () {
    * e promuove i blocchi ```mermaid in <pre class="mermaid">.
    */
   function restoreCodeBlocks(html, codeBlocks) {
-    // Loop di risoluzione per prevenire leak di placeholder annidati
+    // Il loop è necessario perché il contenuto utente può annidare
+    // placeholder (es. una tabella Markdown con inline code che contiene
+    // un altro inline code o backticks). Ogni passaggio risolve un livello.
+    // Limite 5: oltre è quasi certamente un bug (auto-referenza).
+    // NON semplificare a un singolo passaggio senza rompere i casi con celle di tabella + code.
     let prev = '';
     let iterations = 0;
     while (html !== prev && iterations < 5) {

@@ -57,6 +57,8 @@ window.MiniPadExport = (function () {
       : (content || '');
     const title = escapeHtml(name || 'minipad');
     const doc = `<!DOCTYPE html>
+<!-- Nota: questo file richiede internet al primo caricamento per i font KaTeX e il runtime Mermaid.
+     Per un documento 100% autonomo offline senza dipendenze CDN, usa "Stampa…" -> "Salva come PDF". -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -256,6 +258,9 @@ ${body}
     });
 
     // 11. Re-inject CODE (con loop di risoluzione per placeholder annidati)
+    // Il loop è necessario perché il contenuto utente può annidare placeholder
+    // (es. una tabella Markdown con inline code che contiene backtick o formule).
+    // Limite 5: oltre è quasi certamente un bug di auto-referenza.
     let prevCode = '';
     let itCode = 0;
     while (text !== prevCode && itCode < 5) {
@@ -491,6 +496,7 @@ ${body}
     text = text.replace(/@@MP_MATH_(\d+)@@/g, (_, i) => `$${mathBlocks[+i]}$`);
 
     // 6. Re-inject code come testo puro (con loop di risoluzione per annidamenti)
+    // Risolve fino a 5 livelli di placeholder annidati (es. tabelle con frammenti di codice multipli)
     let prevTxt = '';
     let itTxt = 0;
     while (text !== prevTxt && itTxt < 5) {
