@@ -2,6 +2,39 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.2] - 2026-11-06
+
+### Risoluzione Bug Critici di Esportazione & Ottimizzazione Stampa
+
+#### 1. Pipeline di Protezione e Restore Senza Leak (`js/preview.js`)
+- **Segnaposto Bulletproof**: adottato il formato `@@MP_CODE_<id>@@` e `@@MP_ICODE_<id>@@`, privo di tag HTML intermedi e null-bytes, immune da alterazioni durante la serializzazione o il parsing Markdown.
+- **Risoluzione Annidata**: implementato loop di ripristino per garantire lo srotolamento completo di qualsiasi segnaposto annidato (es. frammenti di codice o backtick all'interno di celle di tabelle Markdown).
+- **Fenced Code Scoping**: vincolati i blocchi fenced su righe dedicate per evitare catture errate di backtick multipli su riga singola.
+
+#### 2. Pipeline LaTeX ad Alta Fedeltà (`js/export.js`)
+- **Sequenza di Trasformazione Rigorosa**: estrazione del codice prima della matematica per prevenire la corruzione di variabili ed espressioni shell come `$(( $PREZZO * $QTA ))`.
+- **Protezione Selettiva Valute**: isolamento preventivo dei prezzi (`$19,99`, `$4,50`) per impedire che i simboli di valuta vengano scambiati per delimitatori di formule matematiche inline.
+- **Supporto Tabelle Markdown**: compilazione automatica in ambienti `\begin{center}\begin{tabular}{...}\hline ... \end{tabular}\end{center}` con escape corretto dei contenuti delle celle.
+- **Codice Inline Sicuro**: i frammenti inline (es. `` `$` ``) vengono renderizzati come `\texttt{...}` con escape dei caratteri speciali LaTeX anziché generare blocchi `\begin{verbatim}` illegali all'interno dei paragrafi.
+
+#### 3. Esportazione Plain Text Completa (`js/export.js`)
+- **Zero Data Loss**: i blocchi di codice vengono preservati come testo leggibile anziché rimossi.
+- **Preservazione Underscore**: la rimozione del markup Markdown non intacca più gli underscore delle formule matematiche (`x_1`, `a_{n+1}`).
+- **Valute Non Escapate**: ripristinati i dollari normali (`$19,99`) eliminando i backslash non necessari per il testo puro.
+
+#### 4. HTML Standalone con Mermaid e Stampa Vettoriale (`js/export.js`)
+- **Rendering Standalone Deterministico**: aggiunto script di inizializzazione e render esplicito su `DOMContentLoaded` per garantire la corretta visualizzazione dei diagrammi Mermaid anche con protocollo locale `file://`.
+- **Regole `@media print` KaTeX**: forzata l'invisibilità di `.katex-mathml` in stampa per evitare che il browser stampi il testo grezzo di `<annotation>` al posto del rendering vettoriale `.katex-html`.
+
+#### 5. Separazione UI "Stampa" ed "Esporta PDF" (`index.html`, `js/editor.js`, `js/data.js`, `css/style.css`)
+- **Due Azioni Distinte**: il menu File include ora separatamente "🖨️ Stampa…" (`printDocument()` con finestra di stampa del browser) ed "📄 Esporta PDF" (`exportPDF()` con download diretto A4 via `html2pdf.js`).
+- **Supporto i18n Completo**: aggiunta chiave `print_doc` per italiano e inglese.
+
+#### 6. Persistenza Resiliente (`js/editor.js`)
+- `saveToStorage()` gestisce ora in modo indipendente il salvataggio di `minipad_tabs` e `minipad_groups`, isolando eventuali errori IndexedDB sul singolo store.
+
+---
+
 ## [v1.5.1] - 2026-11-06
 
 ### Miglioramenti di Manutenzione & Pulizia Debito Tecnico

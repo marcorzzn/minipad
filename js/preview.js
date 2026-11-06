@@ -70,27 +70,31 @@ window.MiniPadPreview = (function () {
     return _el;
   }
 
+  const PLACEHOLDER_OPEN = '@@MP_CODE_';
+  const PLACEHOLDER_INLINE = '@@MP_ICODE_';
+  const PLACEHOLDER_CLOSE = '@@';
+
   /**
    * Protegge i blocchi di codice (fenced e inline) trasformandoli in
-   * segnaposto HTML che marked lascia intatti senza far processare la matematica.
+   * segnaposto immuni da alterazioni UTF-8/HTML e senza tag HTML intermedi.
    */
   function protectCodeBlocks(md) {
     const codeBlocks = [];
 
-    // 1. Fenced code ```lang\n...\n```
-    md = md.replace(/```([\w-]*)\r?\n?([\s\S]*?)```/g, (_, lang, code) => {
-      const escaped = escapeHtml(code.replace(/\r?\n$/, ''));
+    // 1. Fenced code ```lang\n...\n``` (richiede line break per non catturare inline backticks su riga singola)
+    md = md.replace(/(^|\n)```([\w-]*)[ \t]*\r?\n([\s\S]*?)\r?\n[ \t]*```(?=\r?\n|$)/g, (_, lead, lang, code) => {
       const cleanLang = (lang || '').trim().toLowerCase();
+      const escaped = escapeHtml(code.replace(/\r?\n$/, ''));
       const cls = cleanLang ? ` class="language-${cleanLang}"` : '';
       codeBlocks.push({
         html: `<pre><code${cls}>${escaped}</code></pre>`,
         lang: cleanLang,
         rawCode: code.replace(/\r?\n$/, '')
       });
-      return `\n\n<div data-codeblock="${codeBlocks.length - 1}"></div>\n\n`;
+      return `${lead}\n\n${PLACEHOLDER_OPEN}${codeBlocks.length - 1}${PLACEHOLDER_CLOSE}\n\n`;
     });
 
-    // 2. Inline code `...` (usiamo <span> per non spezzare il paragrafo inline)
+    // 2. Inline code `...`
     md = md.replace(/`([^`\r\n]+)`/g, (_, code) => {
       const escaped = escapeHtml(code);
       codeBlocks.push({
@@ -98,7 +102,7 @@ window.MiniPadPreview = (function () {
         lang: '',
         rawCode: code
       });
-      return `<span data-inlinecode="${codeBlocks.length - 1}"></span>`;
+      return `${PLACEHOLDER_INLINE}${codeBlocks.length - 1}${PLACEHOLDER_CLOSE}`;
     });
 
     return { md, codeBlocks };
@@ -117,22 +121,29 @@ window.MiniPadPreview = (function () {
    * e promuove i blocchi ```mermaid in <pre class="mermaid">.
    */
   function restoreCodeBlocks(html, codeBlocks) {
-    // Ripristina blocchi multiriga
-    html = html.replace(/<div data-codeblock="(\d+)"><\/div>/g, (_, i) => {
-      const b = codeBlocks[+i];
-      if (!b) return '';
-      if (b.lang === 'mermaid') {
-        // Escapa le label ma lascia la sintassi Mermaid intatta
-        return `<pre class="mermaid">${escapeHtml(b.rawCode)}</pre>`;
-      }
-      return b.html;
-    });
+    // Loop di risoluzione per prevenire leak di placeholder annidati
+    let prev = '';
+    let iterations = 0;
+    while (html !== prev && iterations < 5) {
+      prev = html;
+      iterations++;
 
-    // Ripristina inline code
-    html = html.replace(/<span data-inlinecode="(\d+)"><\/span>/g, (_, i) => {
-      const b = codeBlocks[+i];
-      return b ? b.html : '';
-    });
+      // Ripristina inline code
+      html = html.replace(new RegExp(`${PLACEHOLDER_INLINE}(\\d+)${PLACEHOLDER_CLOSE}`, 'g'), (_, i) => {
+        const b = codeBlocks[+i];
+        return b ? b.html : '';
+      });
+
+      // Ripristina blocchi multiriga rimuovendo eventuale <p> aggiunto da marked
+      html = html.replace(new RegExp(`(?:<p>)?${PLACEHOLDER_OPEN}(\\d+)${PLACEHOLDER_CLOSE}(?:<\\/p>)?`, 'g'), (_, i) => {
+        const b = codeBlocks[+i];
+        if (!b) return '';
+        if (b.lang === 'mermaid') {
+          return `<pre class="mermaid">${escapeHtml(b.rawCode)}</pre>`;
+        }
+        return b.html;
+      });
+    }
 
     return html;
   }
@@ -173,6 +184,7 @@ window.MiniPadPreview = (function () {
     if (typeof DOMPurify !== 'undefined') {
       try {
         html = DOMPurify.sanitize(html, {
+          USE_PROFILES: { html: true, svg: true, svgFilters: true },
           ADD_TAGS: [
             'svg', 'path', 'circle', 'rect', 'line', 'polyline', 'polygon',
             'defs', 'marker', 'text', 'tspan', 'g', 'style', 'foreignObject',

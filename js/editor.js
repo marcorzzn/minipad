@@ -575,21 +575,25 @@ function handleInput(content) {
 
 // ===== Storage Functions =====
 async function saveToStorage() {
-    try {
-        if (typeof idbKeyval !== 'undefined' && idbKeyval.set) {
+    if (typeof idbKeyval !== 'undefined' && idbKeyval.set) {
+        try {
             await idbKeyval.set('minipad_tabs', tabs);
-            await idbKeyval.set('minipad_groups', groups);
-        } else {
-            localStorage.setItem('minipad_tabs', JSON.stringify(tabs));
-            localStorage.setItem('minipad_groups', JSON.stringify(groups));
+        } catch (e) {
+            console.warn("tabs: fallback localStorage", e);
+            try { localStorage.setItem('minipad_tabs', JSON.stringify(tabs)); } catch (e2) {}
         }
-    } catch (e) {
-        console.warn("Salvataggio IndexedDB non riuscito, fallback su localStorage", e);
+        try {
+            await idbKeyval.set('minipad_groups', groups);
+        } catch (e) {
+            console.warn("groups: fallback localStorage", e);
+            try { localStorage.setItem('minipad_groups', JSON.stringify(groups)); } catch (e2) {}
+        }
+    } else {
         try {
             localStorage.setItem('minipad_tabs', JSON.stringify(tabs));
             localStorage.setItem('minipad_groups', JSON.stringify(groups));
-        } catch (e2) {
-            console.error("Salvataggio fallito completamente", e2);
+        } catch (e) {
+            console.error("Salvataggio localStorage fallito", e);
         }
     }
 }
@@ -879,6 +883,15 @@ function exportTeX() {
         MiniPadExport.exportLaTeX(getEditorContent(), name);
     } else {
         promptExport('tex');
+    }
+    closeAllMenus();
+}
+
+function printDoc() {
+    if (typeof MiniPadExport !== 'undefined') {
+        MiniPadExport.printDocument(getEditorContent(), getCurrentTabName());
+    } else {
+        window.print();
     }
     closeAllMenus();
 }

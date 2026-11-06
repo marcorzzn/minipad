@@ -1,14 +1,11 @@
 /**
  * MiniPad Export
- * Standard di settore: .md, .html (standalone), .tex (con escape corretto), .pdf, .txt
+ * Standard di settore: .md, .html (standalone), .tex (con escape corretto), .pdf, .txt, e stampa nativa
  */
 window.MiniPadExport = (function () {
   const LATEX_ESCAPE = {
-    '\\': '\\textbackslash{}',
     '&': '\\&',
     '%': '\\%',
-    '$': '\\$',
-    '#': '\\#',
     '_': '\\_',
     '{': '\\{',
     '}': '\\}',
@@ -17,7 +14,7 @@ window.MiniPadExport = (function () {
   };
 
   function escapeLatexText(s) {
-    return String(s || '').replace(/[\\&%$#_{}~^]/g, (c) => LATEX_ESCAPE[c] || c);
+    return String(s || '').replace(/[&%_{}~^]/g, (c) => LATEX_ESCAPE[c] || c);
   }
 
   function sanitizeFilename(name) {
@@ -91,14 +88,50 @@ window.MiniPadExport = (function () {
   th, td { border: 1px solid #ccc; padding: .45em .8em; text-align: left; }
   th { background-color: rgba(0,0,0,0.04); }
   .mermaid { background: #fafafa; padding: 1em; border-radius: 6px; text-align: center; }
+  @media print {
+    .katex-mathml { display: none !important; }
+    .katex-html { display: inline !important; }
+    .katex-display { page-break-inside: avoid; }
+    pre, table { page-break-inside: avoid; }
+    h1, h2, h3 { page-break-after: avoid; }
+  }
 </style>
 </head>
 <body>
 ${body}
 <script>
-  if (typeof mermaid !== 'undefined') {
-    mermaid.initialize({ startOnLoad: true, securityLevel: 'strict', htmlLabels: false });
-  }
+  (function () {
+    async function renderMermaid() {
+      if (typeof mermaid === 'undefined') return;
+      try {
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: 'strict',
+          htmlLabels: false,
+          theme: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default'
+        });
+        const nodes = document.querySelectorAll('pre.mermaid');
+        if (nodes.length > 0) {
+          if (typeof mermaid.run === 'function') {
+            await mermaid.run({ nodes: Array.from(nodes) });
+          } else {
+            for (const node of nodes) {
+              const id = 'm' + Math.random().toString(36).slice(2);
+              const { svg } = await mermaid.render(id, node.textContent);
+              node.innerHTML = svg;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Mermaid render fallito:', e);
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderMermaid);
+    } else {
+      renderMermaid();
+    }
+  })();
 <\/script>
 </body>
 </html>`;
@@ -107,60 +140,64 @@ ${body}
   }
 
   /* ---------- LaTeX ---------- */
-  /**
-   * Conversione Markdown → LaTeX robusta:
-   *  1. Estrae math ($ $ e $$ $$) in placeholder per proteggere i comandi LaTeX
-   *  2. Estrae blocchi di codice e inline code in placeholder
-   *  3. Converte struttura Markdown (titoli, bold, italic, liste, link)
-   *  4. Esegue l'escape di tutti i caratteri riservati residui nel testo
-   *  5. Re-inietta math e code verbatim
-   */
   function markdownToLatex(md) {
-    const maths = [];
-    const codes = [];
+    const codeBlocks = [];
+    const mathBlocks = [];
+    const tables = [];
 
     let text = String(md || '');
 
-    // 1. Math blocks $$ ... $$
+    // 1. CODE PRIMA DI TUTTO — protegge $HOME, $(( )), etc.
+    text = text.replace(/(^|\n)```([\w-]*)[ \t]*\r?\n([\s\S]*?)\r?\n[ \t]*```(?=\r?\n|$)/g, (_, lead, lang, code) => {
+      codeBlocks.push({ lang, code: code.replace(/\r?\n$/, ''), inline: false });
+      return `${lead}\n\n@@MP_CODE_${codeBlocks.length - 1}@@\n\n`;
+    });
+
+    text = text.replace(/`([^`\r\n]+)`/g, (_, code) => {
+      codeBlocks.push({ lang: '', code, inline: true });
+      return `@@MP_ICODE_${codeBlocks.length - 1}@@`;
+    });
+
+    // 2. PROTEZIONE VALUTE: $<cifra> non deve MAI diventare math
+    text = text.replace(/(^|[^\\])\$(\d)/g, '$1@@MP_CURR_$2');
+
+    // 3. MATH (le formule non collidono con le valute protette)
     text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, m) => {
-      maths.push({ block: true, tex: m.trim() });
-      return `\u0000M${maths.length - 1}\u0000`;
+      mathBlocks.push({ block: true, tex: m.trim() });
+      return `\n\n@@MP_MATH_${mathBlocks.length - 1}@@\n\n`;
     });
 
-    // 1b. Math inline $ ... $ (con lookaround per non prendere $$)
     text = text.replace(/(?<!\$)\$(?!\$)([^$\n]+?)\$(?!\$)/g, (_, m) => {
-      maths.push({ block: false, tex: m.trim() });
-      return `\u0000M${maths.length - 1}\u0000`;
+      mathBlocks.push({ block: false, tex: m.trim() });
+      return `@@MP_MATH_${mathBlocks.length - 1}@@`;
     });
 
-    // 2. Fenced code blocks ``` ... ```
-    text = text.replace(/```\w*\r?\n([\s\S]*?)```/g, (_, code) => {
-      codes.push(code);
-      return `\u0000C${codes.length - 1}\u0000`;
-    });
+    // Ripristina valute con \$ per LaTeX usando function replacer
+    text = text.replace(/@@MP_CURR_(\d)/g, (_, d) => `\\$${d}`);
 
-    // 2b. Inline code ` ... `
-    text = text.replace(/`([^`\n]+)`/g, (_, code) => {
-      codes.push(code);
-      return `\u0000C${codes.length - 1}\u0000`;
-    });
+    // 4. Tabelle Markdown -> tabular
+    text = text.replace(
+      /(?:^|\n)((?:\|.+\|\r?\n)+)/g,
+      (block) => {
+        const rows = block.trim().split(/\r?\n/).filter(r => r.trim());
+        if (rows.length < 2) return block;
+        const parseRow = r => r.split('|').slice(1, -1).map(c => c.trim());
+        const header = parseRow(rows[0]);
+        const bodyRows = rows.slice(1).filter(r => !/^\s*\|?\s*:?-+:?\s*\|/.test(r));
+        const body = bodyRows.map(parseRow);
+        const spec = 'l'.repeat(header.length);
+        let tex = `\n\\begin{center}\n\\begin{tabular}{${spec}}\n\\hline\n`;
+        tex += header.map(c => escapeLatexText(c)).join(' & ') + ' \\\\\n\\hline\n';
+        for (const row of body) {
+          tex += row.map(c => escapeLatexText(c)).join(' & ') + ' \\\\\n';
+        }
+        tex += '\\hline\n\\end{tabular}\n\\end{center}\n';
+        tables.push(tex);
+        return `\n\n@@MP_TAB_${tables.length - 1}@@\n\n`;
+      }
+    );
 
-    // 3. Escape caratteri riservati LaTeX nel testo (esclusi quelli della sintassi Markdown)
-    const parts = text.split(/(\u0000[MC]\d+\u0000)/);
-    text = parts
-      .map((part) => {
-        if (/^\u0000[MC]\d+\u0000$/.test(part)) return part;
-        // Escape di %, _, &, ~, ^
-        return part
-          .replace(/%/g, '\\%')
-          .replace(/&/g, '\\&')
-          .replace(/_/g, '\\_')
-          .replace(/~/g, '\\textasciitilde{}')
-          .replace(/\^/g, '\\textasciicircum{}');
-      })
-      .join('');
-
-    // 4. Struttura titoli e formattazione Markdown
+    // 5. Struttura titoli e linee Markdown -> comandi LaTeX (PRIMA di escape #)
     text = text
       .replace(/^###### (.+)$/gm, '\\paragraph{$1}')
       .replace(/^##### (.+)$/gm, '\\subparagraph{$1}')
@@ -168,31 +205,67 @@ ${body}
       .replace(/^### (.+)$/gm, '\\subsection{$1}')
       .replace(/^## (.+)$/gm, '\\section{$1}')
       .replace(/^# (.+)$/gm, '\\section*{$1}')
-      .replace(/^---+$/gm, '\\bigskip\\hrule\\bigskip')
+      .replace(/^---+$/gm, '\\bigskip\\hrule\\bigskip');
+
+    // 6. Escape testo ordinario preservando i placeholder @@MP_...@@ e comandi LaTeX
+    const parts = text.split(/(@@MP_[A-Z]+_\d+@@)/);
+    text = parts.map(part => {
+      if (/^@@MP_[A-Z]+_\d+@@$/.test(part)) return part;
+      return part
+        .replace(/&/g, '\\&')
+        .replace(/%/g, '\\%')
+        .replace(/_/g, '\\_')
+        .replace(/~/g, '\\textasciitilde{}')
+        .replace(/\^/g, '\\textasciicircum{}')
+        .replace(/(?<!\\)#/g, '\\#');
+    }).join('');
+
+    // 7. Grassetto, corsivo, link
+    text = text
       .replace(/\*\*(.+?)\*\*/g, '\\textbf{$1}')
       .replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, '$1\\textit{$2}')
       .replace(/\[(.+?)\]\((.+?)\)/g, '\\href{$2}{$1}');
 
-    // Liste puntate e numerate
+    // 8. Liste puntate e numerate
     text = text.replace(/(?:^|\n)((?:[-*] .+\r?\n?)+)/g, (block) => {
-      const items = block.trim().split(/\r?\n/).map((l) => `\\item ${l.replace(/^[-*] /, '')}`).join('\n');
+      const items = block.trim().split(/\r?\n/).map(l => `\\item ${l.replace(/^[-*] /, '')}`).join('\n');
       return `\n\\begin{itemize}\n${items}\n\\end{itemize}\n`;
     });
     text = text.replace(/(?:^|\n)((?:\d+\. .+\r?\n?)+)/g, (block) => {
-      const items = block.trim().split(/\r?\n/).map((l) => `\\item ${l.replace(/^\d+\. /, '')}`).join('\n');
+      const items = block.trim().split(/\r?\n/).map(l => `\\item ${l.replace(/^\d+\. /, '')}`).join('\n');
       return `\n\\begin{enumerate}\n${items}\n\\end{enumerate}\n`;
     });
 
-    // 5. Re-iniezione di formule matematiche e codice con replacer function per evitare collisioni con '$'
-    text = text.replace(/\u0000M(\d+)\u0000/g, (_, i) => {
-      const m = maths[+i];
+    // 9. Re-inject TABELLE
+    text = text.replace(/@@MP_TAB_(\d+)@@/g, (_, i) => tables[+i] || '');
+
+    // 10. Re-inject MATH
+    text = text.replace(/@@MP_MATH_(\d+)@@/g, (_, i) => {
+      const m = mathBlocks[+i];
       if (!m) return '';
       return m.block ? `\n\\[\n${m.tex}\n\\]\n` : `\\(${m.tex}\\)`;
     });
 
-    text = text.replace(/\u0000C(\d+)\u0000/g, (_, i) => {
-      const code = codes[+i] || '';
-      return `\n\\begin{verbatim}\n${code}\n\\end{verbatim}\n`;
+    // 11. Re-inject CODE
+    text = text.replace(/@@MP_CODE_(\d+)@@/g, (_, i) => {
+      const b = codeBlocks[+i];
+      return b ? `\n\\begin{verbatim}\n${b.code}\n\\end{verbatim}\n` : '';
+    });
+
+    text = text.replace(/@@MP_ICODE_(\d+)@@/g, (_, i) => {
+      const b = codeBlocks[+i];
+      if (!b) return '';
+      const txt = b.code
+        .replace(/\\/g, '\\textbackslash{}')
+        .replace(/([{}])/g, '\\$1')
+        .replace(/\$/g, '\\$')
+        .replace(/_/g, '\\_')
+        .replace(/%/g, '\\%')
+        .replace(/&/g, '\\&')
+        .replace(/#/g, '\\#')
+        .replace(/\^/g, '\\textasciicircum{}')
+        .replace(/~/g, '\\textasciitilde{}');
+      return `\\texttt{${txt}}`;
     });
 
     return text;
@@ -226,11 +299,81 @@ ${body}
     download(blob, `${sanitizeFilename(name)}.tex`);
   }
 
+  /* ---------- Stampa Nativa Browser ---------- */
+  function printDocument(content, name) {
+    const body = typeof MiniPadPreview !== 'undefined'
+      ? MiniPadPreview.renderToHTML(content)
+      : (content || '');
+    const title = escapeHtml(name || 'minipad');
+    const w = window.open('', '_blank');
+    if (!w) {
+      alert('Blocca-popup attivo: consenti i popup per stampare.');
+      return;
+    }
+    w.document.write(`<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title}</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"><\/script>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 820px;
+    margin: 1.5em auto;
+    padding: 0 1em;
+    line-height: 1.6;
+    color: #222;
+  }
+  pre { background: #f4f4f4; padding: 1em; border-radius: 6px; overflow-x: auto; }
+  code { background: #f4f4f4; padding: .15em .35em; border-radius: 3px; font-family: Consolas, monospace; }
+  pre code { background: transparent; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  th, td { border: 1px solid #ccc; padding: .45em .8em; text-align: left; }
+  th { background: rgba(0,0,0,0.04); }
+  .mermaid { background: #fafafa; padding: 1em; border-radius: 6px; text-align: center; }
+  @media print {
+    .katex-mathml { display: none !important; }
+    .katex-html { display: inline !important; }
+    .katex-display { page-break-inside: avoid; }
+    pre, table { page-break-inside: avoid; }
+    h1, h2, h3 { page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+${body}
+<script>
+  (async function () {
+    if (typeof mermaid !== 'undefined') {
+      try {
+        mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', htmlLabels: false });
+        const nodes = document.querySelectorAll('.mermaid');
+        if (nodes.length > 0) {
+          await mermaid.run({ nodes: Array.from(nodes) });
+        }
+      } catch (e) {
+        console.warn('Mermaid print error:', e);
+      }
+    }
+    setTimeout(() => {
+      window.focus();
+      window.print();
+    }, 500);
+  })();
+<\/script>
+</body>
+</html>`);
+    w.document.close();
+  }
+
   /* ---------- PDF ---------- */
   async function exportPDF(content, name) {
     if (typeof html2pdf === 'undefined') {
-      console.warn('[Export] html2pdf non disponibile, fallback su window.print()');
-      window.print();
+      console.warn('[Export] html2pdf non disponibile, fallback su stampa nativa');
+      printDocument(content, name);
       return;
     }
     const holder = document.createElement('div');
@@ -240,6 +383,18 @@ ${body}
       ? MiniPadPreview.renderToHTML(content)
       : (content || '');
     document.body.appendChild(holder);
+
+    // Aspetta che Mermaid renderizzi gli SVG
+    if (typeof mermaid !== 'undefined') {
+      const mermaidNodes = holder.querySelectorAll('.mermaid');
+      if (mermaidNodes.length > 0) {
+        try {
+          await mermaid.run({ nodes: Array.from(mermaidNodes) });
+        } catch (e) {
+          console.warn('[Export] Mermaid error in PDF:', e);
+        }
+      }
+    }
 
     try {
       await html2pdf()
@@ -254,8 +409,8 @@ ${body}
         .from(holder)
         .save();
     } catch (e) {
-      console.error('[Export] PDF fallito, fallback su window.print()', e);
-      window.print();
+      console.error('[Export] PDF fallito, fallback su printDocument', e);
+      printDocument(content, name);
     } finally {
       if (holder.parentNode) {
         holder.parentNode.removeChild(holder);
@@ -265,11 +420,54 @@ ${body}
 
   /* ---------- Plain Text ---------- */
   function exportTxt(content, name) {
-    const text = String(content || '')
-      .replace(/```[\s\S]*?```/g, '')
-      .replace(/[#*_>`]/g, '')
-      .replace(/\$\$[\s\S]*?\$\$/g, '')
-      .replace(/\$([^$\n]+?)\$/g, '$1');
+    let text = String(content || '');
+    const codeBlocks = [];
+    const mathBlocks = [];
+
+    // 1. Proteggi code
+    text = text.replace(/(^|\n)```[\w-]*[ \t]*\r?\n([\s\S]*?)\r?\n[ \t]*```(?=\r?\n|$)/g, (_, lead, code) => {
+      codeBlocks.push(code.replace(/\r?\n$/, ''));
+      return `${lead}\n\n@@MP_CODE_${codeBlocks.length - 1}@@\n\n`;
+    });
+    text = text.replace(/`([^`\r\n]+)`/g, (_, code) => {
+      codeBlocks.push(code);
+      return `@@MP_ICODE_${codeBlocks.length - 1}@@`;
+    });
+
+    // 2. Proteggi valute prima di math
+    text = text.replace(/(^|[^\\])\$(\d)/g, '$1@@MP_CURR_$2');
+
+    // 3. Proteggi math
+    text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, m) => {
+      mathBlocks.push(m.trim());
+      return `\n\n@@MP_MATH_${mathBlocks.length - 1}@@\n\n`;
+    });
+    text = text.replace(/(?<!\$)\$(?!\$)([^$\n]+?)\$(?!\$)/g, (_, m) => {
+      mathBlocks.push(m.trim());
+      return `@@MP_MATH_${mathBlocks.length - 1}@@`;
+    });
+
+    // Ripristina valute ($ è letterale in TXT)
+    text = text.replace(/@@MP_CURR_(\d)/g, '$$$1');
+
+    // Rimuovi eventuali dollari escapati (\$) -> $
+    text = text.replace(/\\(\$)/g, '$1');
+
+    // 4. Rimuovi markup Markdown base
+    text = text
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, '$1$2')
+      .replace(/\[(.+?)\]\((.+?)\)/g, '$1 ($2)')
+      .replace(/^---+$/gm, '----------------------------------------');
+
+    // 5. Re-inject math (come formule tra $)
+    text = text.replace(/@@MP_MATH_(\d+)@@/g, (_, i) => `$${mathBlocks[+i]}$`);
+
+    // 6. Re-inject code come testo puro
+    text = text.replace(/@@MP_CODE_(\d+)@@/g, (_, i) => `\n${codeBlocks[+i]}\n`);
+    text = text.replace(/@@MP_ICODE_(\d+)@@/g, (_, i) => codeBlocks[+i]);
+
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     download(blob, `${sanitizeFilename(name)}.txt`);
   }
@@ -280,6 +478,7 @@ ${body}
     exportLaTeX,
     exportPDF,
     exportTxt,
+    printDocument,
     markdownToLatex,
     sanitizeFilename
   };

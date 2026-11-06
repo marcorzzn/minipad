@@ -848,11 +848,21 @@
             }
 
             /* Adjust KaTeX for printing so it breaks less */
+            .katex-mathml {
+                display: none !important;
+            }
+            .katex-html {
+                display: inline !important;
+            }
             .katex-display {
                 page-break-inside: avoid;
             }
             pre, blockquote, table, img {
                 page-break-inside: avoid;
+            }
+            h1, h2, h3 {
+                page-break-after: avoid;
+            }
             }
         }
 
