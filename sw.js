@@ -1,9 +1,12 @@
-const CACHE_NAME = 'minipad-v1.5.7.1';
+const CACHE_NAME = 'minipad-v1.5.7.2';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
+  './favicon.ico',
   './favicon.png',
+  './favicon-48x48.png',
+  './favicon-96x96.png',
   './icon.svg',
   './icon-192.png',
   './icon-512.png',

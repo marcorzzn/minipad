@@ -10,13 +10,14 @@
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "minipad",
+  "alternateName": ["MiniPad", "minipad editor"],
   "url": "https://marcorzzn.github.io/minipad/"
 }
 </script>
 
-    
-
     <!-- SEO & Meta Tags -->
+    <meta name="application-name" content="minipad">
+    <meta name="apple-mobile-web-app-title" content="minipad">
     <meta name="description"
         content="MiniPad: editor di testo Markdown e LaTeX online gratuito, privacy-first e 100% locale nel browser. Supporto formule matematiche KaTeX, diagrammi Mermaid, anteprima live ed esportazione in PDF vettoriale, HTML, LaTeX e TXT.">
     <meta name="keywords"
@@ -27,15 +28,18 @@
     <link rel="canonical" href="https://marcorzzn.github.io/minipad/">
     <link rel="manifest" href="./manifest.json">
 
-    <!-- Favicon & Icons -->
+    <!-- Favicon & Icons (Google Search requires a multiple of 48px square: 48x48, 96x96, 192x192) -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://marcorzzn.github.io/minipad/">
-    <meta property="og:site_name" content="MiniPad">
+    <meta property="og:site_name" content="minipad">
     <meta property="og:title" content="MiniPad — Editor Markdown, LaTeX & Diagrammi Mermaid">
     <meta property="og:description"
         content="Editor di testo Markdown e LaTeX gratuito, privacy-first e 100% locale nel browser con rendering KaTeX, diagrammi Mermaid, anteprima live e stampa/PDF vettoriale avanzata.">
@@ -101,6 +105,9 @@
 </head>
 
 <body>
+
+    <!-- Accessible site heading to anchor site name for search crawlers -->
+    <h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">minipad</h1>
 
     <!-- SVG Icon Sprite (Mac Classic) -->
     <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">

@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw
 
-def create_icon(size, filename):
+def create_icon(size, filename=None):
     # Base image with transparent background
     img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
@@ -13,10 +13,10 @@ def create_icon(size, filename):
     y0 = int(8 * scale)
     x1 = int((12 + 40) * scale)
     y1 = int((8 + 48) * scale)
-    r = int(4 * scale)
+    r = max(1, int(4 * scale))
 
     # Draw outline (stroke)
-    outline_width = int(4 * scale)
+    outline_width = max(1, int(4 * scale))
 
     # Using rounded_rectangle to match SVG rx=4
     draw.rounded_rectangle([x0, y0, x1, y1], radius=r, fill="#ffffff", outline="#000000", width=outline_width)
@@ -27,7 +27,7 @@ def create_icon(size, filename):
     ly0 = int(20 * scale)
     lx1 = int((20 + 24) * scale)
     ly1 = int((20 + 4) * scale)
-    lr = int(2 * scale)
+    lr = max(1, int(2 * scale))
     draw.rounded_rectangle([lx0, ly0, lx1, ly1], radius=lr, fill="#000000")
 
     # 2. x=20, y=30, w=18, h=4, rx=2
@@ -44,9 +44,24 @@ def create_icon(size, filename):
     ly1 = int((40 + 4) * scale)
     draw.rounded_rectangle([lx0, ly0, lx1, ly1], radius=lr, fill="#000000")
 
-    img.save(filename)
+    if filename:
+        img.save(filename)
+    return img
 
-# Generate 192x192, 512x512, and 16x16 (favicon)
-create_icon(192, 'icon-192.png')
-create_icon(512, 'icon-512.png')
-create_icon(32, 'favicon.png')
+if __name__ == '__main__':
+    # Standard PWA and web icons
+    create_icon(512, 'icon-512.png')
+    create_icon(192, 'icon-192.png')
+
+    # Google Search favicon requirements: must be a multiple of 48px square (48x48, 96x96, etc.)
+    create_icon(96, 'favicon-96x96.png')
+    create_icon(48, 'favicon-48x48.png')
+
+    # Classic 32x32 browser tab icon
+    img32 = create_icon(32, 'favicon.png')
+
+    # Multi-resolution favicon.ico for root crawler fallbacks (16x16, 32x32, 48x48)
+    img16 = create_icon(16)
+    img48 = create_icon(48)
+    img48.save('favicon.ico', format='ICO', sizes=[(16, 16), (32, 32), (48, 48)])
+    print("All icons successfully generated, including Google Search 48px square multiples.")
