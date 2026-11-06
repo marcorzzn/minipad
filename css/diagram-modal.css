@@ -299,3 +299,4 @@ body.mp-modal-open { overflow: hidden; }
   .mp-tpl-list { grid-template-columns: 1fr; max-height: 140px; }
   .mp-modal { max-height: 95vh; }
 }
+

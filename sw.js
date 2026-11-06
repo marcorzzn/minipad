@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minipad-v1.5.4.1';
+const CACHE_NAME = 'minipad-v1.5.5';
 const urlsToCache = [
   './',
   './index.html',
@@ -68,7 +68,28 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
 
-  // Font KaTeX (.woff2/.woff/.ttf): Cache-first con aggiornamento in background
+  // 1. Pagine HTML / Navigazione: Network-First con Cache fallback
+  // Garantisce che gli utenti online ricevano sempre l'ultima versione rilasciata istantaneamente
+  const isHtml = req.mode === 'navigate' ||
+                 req.destination === 'document' ||
+                 (req.headers.get('accept') && req.headers.get('accept').includes('text/html'));
+
+  if (isHtml) {
+    event.respondWith(
+      fetch(req)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(req).then((cached) => cached || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // 2. Font KaTeX (.woff2/.woff/.ttf): Cache-first con aggiornamento in background
   if (req.url.match(/\.(woff2?|ttf)(\?|$)/i)) {
     event.respondWith(
       caches.match(req).then((hit) => {
@@ -87,7 +108,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Risorse same-origin: Stale-while-revalidate
+  // 3. Risorse same-origin statiche: Stale-while-revalidate
   if (req.url.startsWith(self.location.origin)) {
     event.respondWith(
       caches.match(req).then((cachedResponse) => {
@@ -109,7 +130,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // CDN esterne: Cache-first con salvataggio al primo download
+  // 4. CDN esterne: Cache-first con salvataggio al primo download
   event.respondWith(
     caches.match(req).then((cachedRes) => {
       return (

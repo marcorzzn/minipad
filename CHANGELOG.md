@@ -2,6 +2,45 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.5] - 2026-11-06
+
+### Ripristino Controlli UI, Modale Impostazioni PDF/Stampa, PWA Network-First & Fix Pipeline Esportazione
+
+#### 1. Ripristino Toolbar e Controlli Utente (`index.html`, `js/editor.js`, `css/mac-classic.css`)
+- **Rimozione barra aggiuntiva non necessaria**: eliminata la menubar `<nav class="mp-menubar">` che duplicava i comandi e occupava spazio verticale.
+- **Pulsante File integrato nella toolbar**: posizionato il menu a tendina `[📄 File ▾]` subito a fianco del menu laterale ad hamburger `☰`.
+- **Selettori colore testo ed evidenziatore**: ripristinati i bottoni colore carattere `#text-color-picker` ed evidenziazione sfondo `#bg-color-picker` con gestione di fallback per selezioni multilinea.
+- **Pannello formule e funzioni matematiche**: ripristinata l'apertura del pannello matematico con tab (`toggleMathBar()`) sul pulsante `π`.
+- **Rimozione pulsante tab superfluo**: rimosso il pulsante "Inserisci tab" dalla barra.
+- **Sprite SVG icone corrette**: introdotte icone unificate per tema tavolozza (`#i-palette`), schermo intero a 4 angoli (`#i-fullscreen`), salto pagina (`#i-pagebreak`), colore (`#i-color`) ed evidenziatore (`#i-highlight`).
+
+#### 2. Modale Impostazioni di Stampa e Impaginazione PDF (`index.html`, `js/export.js`, `css/mac-classic.css`)
+- **Modale interattivo "Impostazioni di Stampa & PDF"** (`#print-modal-overlay`):
+  - Margini foglio personalizzabili: Stretti (10 mm), Normali (15 mm), Ampi (25 mm).
+  - Dimensione testo configurabile: Compatto (10.5 pt), Standard (12 pt), Grande (13.5 pt).
+  - Orientamento pagina: Verticale (Portrait) o Orizzontale (Landscape).
+  - Regola anti-spezzamento attiva per impostazione predefinita.
+- **Regole tipografiche avanzate anti-orfani e anti-taglio**:
+  - `break-after: avoid !important;` e `page-break-after: avoid !important;` su tutti i titoli (`h1-h6`) per eliminare titoli isolati a fine pagina.
+  - `break-inside: avoid !important;` su blocchi di codice `pre`, tabelle `table`, righe `tr`, citazioni `blockquote`, formule KaTeX `katex-display` e diagrammi `mermaid`.
+  - Ripetizione automatica dell'intestazione di tabella su ogni pagina (`thead { display: table-header-group !important; }`).
+- **Funzionalità Salto Pagina Manuale**: pulsante e voce di menu per inserire `<div class="page-break"></div>`, tradotto in `\clearpage` in LaTeX e salto pagina netto in stampa/PDF.
+
+#### 3. Correzioni Avanzate LaTeX ed Esportazione (`js/export.js`)
+- **Delimitatori a prova di collisione numerica**: aggiunta del trattino di chiusura (`MP-{rid}-{TYPE}-{index}-`) che impedisce ai numeri adiacenti (es. `$5`) di fondersi con l'indice del placeholder (es. `MATH-4` + `5` -> `MATH-45`).
+- **Estrazione prioritaria valute grezze**: pattern regex dedicato `(?<![\$])\$(\d[\d.,]*)(?!\w)` che isola prezzi e importi (es. `$19,99`, `$5,00`) prima del rilevamento formule KaTeX inline.
+- **Supporto collegamenti ipertestuali e stili nelle tabelle**: funzione `convertCell` per la corretta generazione di `\href{url}{testo}`, `\textbf{}`, `\textit{}` e `\sout{}` all'interno dei blocchi `\begin{tabular}`.
+- **Blockquote annidati ricorsivi**: parsing multilinea che preserva livelli multipli (`> >`) e righe vuote interne senza lasciare caratteri `>` spuri nel sorgente LaTeX.
+- **Traduzione stili HTML inline**: conversione di `<span>` con stili di colore in `\textcolor[HTML]{...}`, sfondi in `\colorbox[HTML]{...}`, sottolineature `<u>` in `\uline{}`, apici e pedici in `\textsuperscript{}` e `\textsubscript{}` tramite pacchetto `xcolor`.
+- **Preservazione numerazione elenchi ordinati in TXT**: rimossa l'eliminazione accidentale delle cifre iniziali (`1.`, `2.`) nel testo semplice esportato, con pulizia selettiva dei tag HTML residui.
+
+#### 4. Service Worker Network-First per Navigazione (`sw.js`)
+- Strategia **Network-First con fallback su Cache** per tutte le richieste di navigazione e pagine HTML (`req.mode === 'navigate'`).
+- Risolve definitivamente la persistenza di versioni storiche in cache locale su GitHub Pages all'apertura del browser.
+- Incremento versione cache a `minipad-v1.5.5`.
+
+---
+
 ## [v1.5.4.1] - 2026-11-06
 
 ### Diagram Builder Modal (Fase C)

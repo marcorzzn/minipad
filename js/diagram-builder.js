@@ -353,3 +353,4 @@ document.addEventListener('DOMContentLoaded', function () {
 window.openDiagramModal = function () {
   if (window.MiniPadDiagramBuilder) window.MiniPadDiagramBuilder.open();
 };
+

@@ -808,26 +808,36 @@
             color: var(--bg-color);
         }
 
-        /* Print */
+        /* Print & Anti-Taglio Paginazione */
         @media print {
+            @page {
+                size: A4;
+                margin: 15mm;
+            }
 
             #titlebar,
             #toolbar,
+            .mp-toolbar,
+            .mp-menubar,
             #math-toolbar,
             #tabs-container,
             #editor-pane,
+            .mp-pane:first-child,
             #statusbar,
             #sidebar,
             #find-bar,
             .zen-btn,
             .modal,
+            .mp-modal-overlay,
             .dropdown-menu,
-            #math-tooltip {
+            #math-tooltip,
+            .editor-toolbar {
                 display: none !important;
             }
 
-            #preview-pane {
+            #preview-pane, .mp-pane:last-child {
                 width: 100% !important;
+                max-width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 overflow: visible !important;
@@ -847,23 +857,69 @@
                 color: black !important;
             }
 
-            /* Adjust KaTeX for printing so it breaks less */
+            /* Anti-taglio: mai più titoli orfani in fondo alla pagina */
+            h1, h2, h3, h4, h5, h6 {
+                break-after: avoid !important;
+                page-break-after: avoid !important;
+            }
+
+            /* Anti-taglio: blocchi interi mai spezzati a metà tra due pagine */
+            pre, blockquote, table, tr, .mermaid, .katex-display, figure {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+
+            /* Ripetizione automatica intestazione tabelle su più fogli */
+            thead {
+                display: table-header-group !important;
+            }
+
+            /* Blockquote tipografico in stampa */
+            blockquote {
+                border-left: 3.5px solid #0067c0 !important;
+                background: #f8f9fa !important;
+                padding: 6px 14px !important;
+                margin: 10px 0 !important;
+            }
+
+            /* KaTeX in stampa */
             .katex-mathml {
                 display: none !important;
             }
             .katex-html {
                 display: inline !important;
             }
-            .katex-display {
-                page-break-inside: avoid;
+
+            /* Interruzione manuale di pagina */
+            .page-break {
+                page-break-before: always !important;
+                break-before: page !important;
+                display: block !important;
+                height: 0 !important;
+                margin: 0 !important;
+                border: none !important;
             }
-            pre, blockquote, table, img {
-                page-break-inside: avoid;
-            }
-            h1, h2, h3 {
-                page-break-after: avoid;
-            }
-            }
+        }
+
+        /* Salto Pagina visibile in anteprima live */
+        .page-break {
+            display: block;
+            height: 1px;
+            border: none;
+            border-top: 1px dashed var(--border-color, #bbb);
+            margin: 2em 0;
+            position: relative;
+        }
+        .page-break::after {
+            content: 'Salto Pagina (Stampa)';
+            position: absolute;
+            right: 0;
+            top: -9px;
+            font-size: 10px;
+            color: #888;
+            background: var(--bg-color, #fff);
+            padding: 0 6px;
+            font-family: var(--font-ui, sans-serif);
         }
 
         /* --- MOBILE RESPONSIVENESS --- */

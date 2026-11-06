@@ -988,24 +988,60 @@ function insertMarkdown(start, end) {
 
 function insertColor(prop, color) {
     if (!easyMDE) return;
-    const selection = easyMDE.codemirror.getSelection() || "Testo";
-    const insertText = `<span style="${prop}:${color}">` + selection + `</span>`;
+    const selection = easyMDE.codemirror.getSelection();
+    if (selection && selection.includes('\n')) {
+        alert("Impossibile applicare colore a selezioni multi-riga (romperebbe la formattazione). Seleziona una singola riga o parola.");
+        return;
+    }
+    const textToWrap = selection || "Testo";
+    const insertText = `<span style="${prop}:${color}">` + textToWrap + `</span>`;
     easyMDE.codemirror.replaceSelection(insertText);
     easyMDE.codemirror.focus();
 }
 
 function applyStyle(styleStart, styleEnd) {
+    if (!easyMDE) return;
+    const selection = easyMDE.codemirror.getSelection();
+    if (selection && selection.includes('\n')) {
+        alert("Impossibile applicare stile inline a più righe.");
+        return;
+    }
     insertMarkdown(styleStart, styleEnd);
 }
 
 function changeFont() {
     const font = document.getElementById('font-family').value;
-    applyStyle(`<span style="font-family:${font}">`, `</span>`);
+    if (!easyMDE) return;
+    const selection = easyMDE.codemirror.getSelection();
+    if (selection && !selection.includes('\n')) {
+        applyStyle(`<span style="font-family:${font}">`, `</span>`);
+    } else {
+        // Nessuna selezione: cambia il font di visualizzazione senza inquinare il markdown con tag vuoti
+        const cmEl = easyMDE.codemirror.getWrapperElement();
+        if (cmEl) cmEl.style.fontFamily = font;
+        const preview = document.getElementById('preview-pane');
+        if (preview) preview.style.fontFamily = font;
+    }
 }
 
 function changeFontSize() {
     const size = document.getElementById('font-size').value;
-    applyStyle(`<span style="font-size:${size}px">`, `</span>`);
+    if (!easyMDE) return;
+    const selection = easyMDE.codemirror.getSelection();
+    if (selection && !selection.includes('\n')) {
+        applyStyle(`<span style="font-size:${size}px">`, `</span>`);
+    } else {
+        // Nessuna selezione: cambia la dimensione base di visualizzazione
+        const cmEl = easyMDE.codemirror.getWrapperElement();
+        if (cmEl) cmEl.style.fontSize = size + 'px';
+        if (easyMDE.codemirror.refresh) easyMDE.codemirror.refresh();
+    }
+}
+
+function insertPageBreak() {
+    if (!easyMDE) return;
+    easyMDE.codemirror.replaceSelection('\n\n<div class="page-break"></div>\n\n');
+    easyMDE.codemirror.focus();
 }
 
 function applyHeading(level) {
