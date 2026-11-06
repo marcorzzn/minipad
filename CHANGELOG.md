@@ -2,6 +2,19 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.7.1] - 2026-11-06
+
+### Anteprima Live del Foglio A4 nel Modale di Stampa & PDF
+
+#### 1. Anteprima di Stampa Interattiva in Tempo Reale (`index.html`, `js/export.js`, `css/mac-classic.css`)
+- **Layout a 2 colonne in stile Desktop Publishing**: il modale di stampa integra ora un pannello a doppia colonna con visualizzazione affiancata del foglio e delle impostazioni.
+- **Foglio A4 Virtuale Reattivo (`#print-sheet-preview`)**:
+  - Il documento viene renderizzato in tempo reale su un foglio A4 con ombreggiatura e proporzioni fedeli alla stampa.
+  - **Aggiornamento istantaneo al cambio opzioni**: qualsiasi modifica a margini (*Stretti*, *Normali*, *Ampi*, *Minimi*), orientamento (*Verticale* / *Orizzontale*), famiglia caratteri (*Sans*, *Serif*, *Monospace*), dimensione font, interlinea o stile impaginazione si riflette immediatamente sul foglio di anteprima senza dover ricaricare o aprire la stampa del browser.
+  - **Riconoscimento grafico del salto capitolo**: l'opzione "Inizia ogni capitolo (H1) su nuova pagina" disegna un divisore visivo dedicato sui titoli di sezione.
+  - **Badge informativo A4**: indicatore in tempo reale delle dimensioni del foglio e della larghezza dei margini selezionati.
+  - **Rendering diagrammi e formule nell'anteprima**: KaTeX e Mermaid vengono elaborati fedelmente all'interno del foglio virtuale.
+
 ## [v1.5.7] - 2026-11-06
 
 ### Suite Avanzata Impaginazione & Stampa PDF & Modale Diagrammi Mermaid

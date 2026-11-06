@@ -1,7 +1,7 @@
 {
   "name": "minipad",
   "short_name": "minipad",
-  "version": "1.5.7",
+  "version": "1.5.7.1",
   "description": "Editor Markdown e LaTeX gratuito online. Free online Markdown and LaTeX editor with live preview.",
   "start_url": "./index.html",
   "display": "standalone",

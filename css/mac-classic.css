@@ -500,20 +500,214 @@ body.dark-mode .mp-save-toast {
 .legacy-toolbar { display: none !important; }
 
 /* =========================================================
-   Print & PDF Options Modal (Mac Classic)
+   Print & PDF Options Modal with Live Preview (Mac Classic)
    ========================================================= */
 .mp-modal-print {
-  max-width: 620px;
-  width: 100%;
+  max-width: 1040px;
+  width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
 }
+
+.mp-print-body {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Colonna Anteprima Sinistra */
+.mp-print-preview-col {
+  display: flex;
+  flex-direction: column;
+  background: #3e4245; /* Sfondo scuro visualizzatore PDF */
+  border-right: 1px solid var(--mp-border-hard);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mp-print-preview-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--mp-bg-bar);
+  border-bottom: 1px solid var(--mp-border-soft);
+  font-size: 11px;
+  color: var(--mp-text);
+  flex-shrink: 0;
+}
+
+.mp-print-preview-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  background: var(--mp-bg-panel);
+  border: 1px solid var(--mp-border-soft);
+  border-radius: 2px;
+  color: var(--mp-text-muted);
+}
+
+.mp-print-preview-stage {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 0;
+}
+
+/* Foglio A4 Virtuale */
+.mp-print-sheet {
+  background: #ffffff;
+  color: #1a1a1a;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 520px;
+  min-height: 720px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  user-select: text;
+}
+
+.mp-print-sheet.is-landscape {
+  max-width: 720px;
+  min-height: 500px;
+}
+
+/* Header & Footer all'interno del foglio virtuale */
+.mp-print-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+  font-size: 9px;
+  color: #666;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.mp-print-sheet-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #ddd;
+  padding-top: 5px;
+  margin-top: 24px;
+  font-size: 8.5px;
+  color: #888;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Stili degli elementi nel foglio virtuale */
+.mp-print-sheet h1,
+.mp-print-sheet h2,
+.mp-print-sheet h3,
+.mp-print-sheet h4 {
+  color: #111;
+  margin-top: 1.2em;
+  margin-bottom: 0.4em;
+}
+.mp-print-sheet h1 { font-size: 1.6em; border-bottom: 2px solid #222; padding-bottom: 3px; }
+.mp-print-sheet h2 { font-size: 1.3em; border-bottom: 1px solid #ccc; padding-bottom: 2px; }
+.mp-print-sheet h3 { font-size: 1.15em; }
+
+.mp-print-sheet-content.h1-break-active h1:not(:first-of-type) {
+  border-top: 2px dashed #0067c0;
+  margin-top: 28px;
+  padding-top: 14px;
+  position: relative;
+}
+.mp-print-sheet-content.h1-break-active h1:not(:first-of-type)::before {
+  content: '✂ Inizio Nuova Pagina (H1)';
+  position: absolute;
+  top: -10px;
+  right: 0;
+  font-size: 9px;
+  color: #0067c0;
+  background: #fff;
+  padding: 0 4px;
+  font-weight: 600;
+}
+
+.mp-print-sheet pre {
+  background: #f4f4f4;
+  padding: 0.6em 0.8em;
+  border-radius: 3px;
+  border: 1px solid #ddd;
+  font-family: Consolas, "SF Mono", monospace;
+  font-size: 0.88em;
+  overflow-x: auto;
+}
+.mp-print-sheet code {
+  background: #f4f4f4;
+  padding: 0.1em 0.3em;
+  border-radius: 2px;
+  font-family: Consolas, "SF Mono", monospace;
+}
+.mp-print-sheet pre code { background: transparent; padding: 0; }
+
+.mp-print-sheet table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.8em 0;
+  font-size: 0.9em;
+}
+.mp-print-sheet th,
+.mp-print-sheet td {
+  border: 1px solid #ccc;
+  padding: 0.4em 0.6em;
+  text-align: left;
+}
+.mp-print-sheet th { background: #f0f0f0; }
+
+.mp-print-sheet blockquote {
+  border-left: 3px solid #0067c0;
+  margin: 0.8em 0;
+  padding: 0.3em 0.8em;
+  background: #f8f9fa;
+  color: #444;
+}
+
+.mp-print-sheet .mermaid {
+  background: #fafafa;
+  padding: 0.6em;
+  border: 1px solid #eee;
+  text-align: center;
+  margin: 0.8em 0;
+}
+.mp-print-sheet .mermaid svg { max-width: 100% !important; height: auto !important; }
+
+/* Temi specifici del foglio */
+.mp-print-sheet.theme-academic th { background: #e8e8e8; }
+.mp-print-sheet.theme-academic blockquote { border-left-color: #333; background: #fafafa; }
+.mp-print-sheet.theme-formal h1 { text-align: center; }
+
+/* Colonna Opzioni Destra */
+.mp-print-options-col {
+  display: flex;
+  flex-direction: column;
+  background: var(--mp-bg);
+  min-height: 0;
+  overflow: hidden;
+}
+
 .mp-print-form {
   padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  max-height: 80vh;
+  gap: 12px;
+  flex: 1;
   overflow-y: auto;
 }
+
 .mp-print-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -568,6 +762,15 @@ body.dark-mode .mp-save-toast {
   background: var(--mp-bg-panel);
   border-left: 3px solid var(--mp-accent);
   padding: 8px 10px;
+}
+
+@media (max-width: 860px) {
+  .mp-print-body {
+    grid-template-columns: 1fr;
+  }
+  .mp-print-preview-col {
+    max-height: 280px;
+  }
 }
 
 @media (max-width: 580px) {

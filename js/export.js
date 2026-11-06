@@ -889,6 +889,109 @@ ${opts.footerDate ? `
   }
 
   /* ============================================================
+     Anteprima Live nel Modale di Stampa & PDF
+     ============================================================ */
+  function updatePrintPreview() {
+    const sheetEl = document.getElementById('print-sheet-preview');
+    if (!sheetEl) return;
+
+    let content = '';
+    if (typeof MiniPadEditor !== 'undefined' && MiniPadEditor.getValue) {
+      content = MiniPadEditor.getValue();
+    } else if (typeof getEditorContent === 'function') {
+      content = getEditorContent();
+    } else if (window.editorInstance) {
+      content = window.editorInstance.value();
+    }
+
+    const margins = document.getElementById('print-opt-margins')?.value || 'normal';
+    const fontFamily = document.getElementById('print-opt-fontfamily')?.value || 'sans';
+    const fontSize = document.getElementById('print-opt-fontsize')?.value || 'normal';
+    const lineHeight = document.getElementById('print-opt-lineheight')?.value || 'normal';
+    const orientation = document.getElementById('print-opt-orientation')?.value || 'portrait';
+    const theme = document.getElementById('print-opt-theme')?.value || 'clean';
+    const headerTitle = document.getElementById('print-opt-header-title')?.checked ?? true;
+    const footerDate = document.getElementById('print-opt-footer-date')?.checked ?? true;
+    const h1Break = document.getElementById('print-opt-h1-break')?.checked ?? false;
+
+    let title = 'minipad';
+    const titleEl = document.getElementById('doc-title') || document.querySelector('.note-tab.active .tab-title');
+    if (titleEl) {
+      title = (titleEl.value || titleEl.textContent || 'minipad').trim();
+    }
+
+    const marginPaddingMap = {
+      compact: '16px 20px',
+      normal: '24px 28px',
+      wide: '34px 40px',
+      zero: '10px 12px'
+    };
+
+    const fontFamMap = {
+      sans: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      serif: 'Georgia, Cambria, "Times New Roman", serif',
+      mono: 'Consolas, "SF Mono", Monaco, monospace'
+    };
+
+    const fontScaleMap = {
+      compact: '11px',
+      normal: '12.5px',
+      large: '14px'
+    };
+
+    const lineHMap = {
+      compact: '1.4',
+      normal: '1.6',
+      relaxed: '1.85'
+    };
+
+    sheetEl.className = 'mp-print-sheet' + (orientation === 'landscape' ? ' is-landscape' : '') + ' theme-' + theme;
+    sheetEl.style.padding = marginPaddingMap[margins] || '24px 28px';
+    sheetEl.style.fontFamily = fontFamMap[fontFamily] || fontFamMap.sans;
+    sheetEl.style.fontSize = fontScaleMap[fontSize] || '12.5px';
+    sheetEl.style.lineHeight = lineHMap[lineHeight] || '1.6';
+
+    const body = MiniPadPreview.renderToHTML(content);
+
+    let html = '';
+    if (headerTitle) {
+      html += `
+        <div class="mp-print-sheet-header">
+          <strong>${escapeHtml(title)}</strong>
+          <span>${new Date().toLocaleDateString('it-IT')}</span>
+        </div>
+      `;
+    }
+
+    html += `<div class="mp-print-sheet-content ${h1Break ? 'h1-break-active' : ''}">${body}</div>`;
+
+    if (footerDate) {
+      html += `
+        <div class="mp-print-sheet-footer">
+          <span>MiniPad — Anteprima di Stampa</span>
+          <span>${new Date().toLocaleDateString('it-IT')} ${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+      `;
+    }
+
+    sheetEl.innerHTML = html;
+
+    const badge = document.getElementById('print-preview-badge');
+    if (badge) {
+      const orientLabel = orientation === 'landscape' ? 'A4 Orizzontale' : 'A4 Verticale';
+      const marginLabel = margins === 'compact' ? '10 mm' : (margins === 'wide' ? '25 mm' : (margins === 'zero' ? '6 mm' : '15 mm'));
+      badge.textContent = `${orientLabel} • ${marginLabel}`;
+    }
+
+    const mermaidNodes = sheetEl.querySelectorAll('.mermaid');
+    if (typeof mermaid !== 'undefined' && mermaidNodes.length > 0) {
+      try {
+        mermaid.run({ nodes: Array.from(mermaidNodes) });
+      } catch (e) { /* ignore */ }
+    }
+  }
+
+  /* ============================================================
      Modale Impostazioni Stampa & PDF
      ============================================================ */
   function openPrintModal() {
@@ -896,6 +999,7 @@ ${opts.footerDate ? `
     if (modal) {
       modal.classList.add('is-open');
       document.body.classList.add('mp-modal-open');
+      updatePrintPreview();
     }
   }
 
@@ -981,6 +1085,7 @@ ${opts.footerDate ? `
   window.exportPDF = function() {
     openPrintModal();
   };
+  window.updatePrintPreview = updatePrintPreview;
   window.printDocument = printDocument;
 
   return {
@@ -993,6 +1098,7 @@ ${opts.footerDate ? `
     openPrintModal,
     closePrintModal,
     confirmPrintDocument,
+    updatePrintPreview,
     markdownToLatex,
     sanitizeFilename
   };
