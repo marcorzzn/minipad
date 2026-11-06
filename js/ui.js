@@ -15,27 +15,27 @@
 
         const mathGroups = [
             {
-                group: '🔤 Alfabeto Greco',
+                group: 'Alfabeto Greco',
                 cats: ['Greco min.', 'Greco mai.', 'Greco var.']
             },
             {
-                group: '📐 Analisi & Calcolo',
+                group: 'Analisi & Calcolo',
                 cats: ['Integrali', 'Derivate', 'Limiti', 'Serie', 'Eq. Diff.', 'Analisi Compl.']
             },
             {
-                group: '📊 Algebra & Geometria',
+                group: 'Algebra & Geometria',
                 cats: ['Trigon.', 'Funz. Spec.', 'Algebra Lin.', 'Strutture', 'Combinatoria']
             },
             {
-                group: '⚛️ Fisica & Scienze',
+                group: 'Fisica & Scienze',
                 cats: ['Fisica', 'Quantistica']
             },
             {
-                group: '💡 Logica & Insiemi',
+                group: 'Logica & Insiemi',
                 cats: ['Probabilità', 'Logica', 'Relazioni', 'Insiemi Num.']
             },
             {
-                group: '↗️ Simboli & Notazione',
+                group: 'Simboli & Notazione',
                 cats: ['Operatori', 'Frecce', 'Parentesi', 'Font', 'Decoratori', 'Spaziatura']
             }
         ];

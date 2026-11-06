@@ -2,6 +2,19 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.6.1] - 2026-11-06
+
+### Pulizia Icone, Spaziatore Toolbar a Schermo Intero & Design Schede/Gruppi
+
+#### 1. Riconfigurazione Pulsanti Toolbar Superiore (`index.html`, `css/mac-classic.css`)
+- **Nuova icona per Schede e Gruppi di Schede**: sostituita la classica icona ad hamburger (`#i-menu`) con un pittogramma dedicato a finestra con divisore e schede (`#i-tabs-sidebar`) che comunica in modo univoco l'accesso alle schede delle note e ai gruppi.
+- **Riconfigurazione Menu File**: rimossa l'icona del foglio/documento a sinistra del testo "File", rendendo il pulsante più pulito e minimale.
+- **Spostamento Pulsante Salva rapido (`#save-btn`)**: spostata l'icona del floppy disc salvataggio direttamente a destra del menu `File ▾`, rimuovendo la duplicazione a fine barra.
+- **Distanziatore flessibile (`.mp-toolbar-spacer`)**: introdotto un elemento flex-grow tra i comandi di editing/diagramma e i controlli di vista/meta, garantendo che la barra occupi l'intera larghezza disponibile senza lasciare ampi vuoti morti sul margine destro sui display widescreen.
+
+#### 2. Rimozione Emoji dalle Categorie Matematiche (`js/ui.js`)
+- **Titoli dei gruppi puliti e professionali**: rimossi tutti gli emoji decorativi dai titoli degli `optgroup` nel selettore a discesa delle formule KaTeX (`mathGroups`), mantenendo etichette testuali essenziali e coerenti con lo stile editoriale (es. `Alfabeto Greco`, `Analisi & Calcolo`, `Algebra & Geometria`, `Fisica & Scienze`, `Logica & Insiemi`, `Simboli & Notazione`).
+
 ## [v1.5.6] - 2026-11-06
 
 ### Ottimizzazione Spaziature Toolbar & Riprogettazione Pannello Formule Matematiche
