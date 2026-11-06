@@ -282,9 +282,11 @@
             <div class="dropdown-item" data-i18n="backup_json" onclick="exportBackup(); closeAllMenus();">💾 Backup JSON</div>
             <div class="dropdown-item" data-i18n="restore_backup" onclick="document.getElementById('import-backup').click(); closeAllMenus();">📥 Ripristina Backup</div>
             <div class="dropdown-divider"></div>
-            <div class="dropdown-item" data-i18n="export_pdf" onclick="window.print(); closeAllMenus();">🖨 Stampa / Esporta PDF</div>
+            <div class="dropdown-item" data-i18n="export_pdf" onclick="exportPDF(); closeAllMenus();">🖨 Stampa / Esporta PDF</div>
             <div class="dropdown-divider"></div>
             <div class="dropdown-item" data-i18n="btn_guida" onclick="openHelp(); closeAllMenus();">ℹ️ Guida</div>
+            <div class="dropdown-divider" id="install-divider" style="display:none;"></div>
+            <div class="dropdown-item" id="install-btn" style="display:none;" onclick="installPWA(); closeAllMenus();">📱 Installa Minipad</div>
         </div>
 
         <!-- HEADINGS DROPDOWN MENU -->
@@ -335,13 +337,13 @@
         <!-- FIND/REPLACE BAR -->
         <div id="find-bar"
             style="display:none; background:var(--toolbar-bg); border-bottom:1px solid var(--border-color); padding:6px 12px; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px;">
-            <label style="font-weight:600;">Cerca:</label>
+            <label id="find-label" style="font-weight:600;">Cerca:</label>
             <input type="text" id="find-input" placeholder="Testo da cercare..." oninput="highlightFind()"
                 style="padding:3px 7px; border:1px solid var(--border-color); border-radius:3px; background:var(--bg-color); color:var(--text-color); min-width:160px;">
-            <label>Sostituisci:</label>
+            <label id="replace-label">Sostituisci:</label>
             <input type="text" id="replace-input" placeholder="Sostituisci con..."
                 style="padding:3px 7px; border:1px solid var(--border-color); border-radius:3px; background:var(--bg-color); color:var(--text-color); min-width:140px;">
-            <button onclick="findAndReplace()"
+            <button id="replace-btn" onclick="findAndReplace()"
                 style="padding:3px 10px; background:var(--accent-color); color:white; border:none; border-radius:3px; cursor:pointer; font-size:11px;">Sostituisci
                 tutto</button>
             <span id="find-count" style="color:#888; font-size:11px;"></span>
@@ -380,6 +382,7 @@
                             </button>
                         </div>
                     </div>
+                    <input type="text" id="sidebar-search" class="sidebar-search" placeholder="Cerca nelle note..." oninput="renderSidebar()">
                 </div>
                 <div class="sidebar-content" id="tabs-list">
                     <!-- Tab items injected by JS -->
@@ -498,15 +501,21 @@
     <!-- Dependencies -->
     <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension/lib/index.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/turndown/dist/turndown.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2pdf.js/dist/html2pdf.bundle.min.js"></script>
 
     <!-- App Modules -->
-    <script src="js/data.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/editor.js"></script>
+    <script src="js/smart-paste.js"></script>
     <script src="js/preview.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/ui.js"></script>
     <script src="js/main.js"></script>
     <!-- Hidden file inputs for import functionality -->
     <input type="file" id="import-file" accept=".md,.txt,.html,.tex" style="display:none" onchange="importFile(event)">

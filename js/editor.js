@@ -70,37 +70,15 @@ function syncScrollFromEditor() {
 // ===== Paste Handler for AI LaTeX =====
 function setupPasteHandler() {
     if (!easyMDE) return;
-
-    easyMDE.codemirror.on('paste', (cm, event) => {
-        const clipboardData = event.clipboardData || window.clipboardData;
-        let pastedText = clipboardData.getData('text/plain');
-
-        // If no plain text, try HTML
-        if (!pastedText) {
-            const pastedHtml = clipboardData.getData('text/html');
-            if (pastedHtml) {
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = pastedHtml;
-                pastedText = tempDiv.textContent || tempDiv.innerText || '';
+    const cm = easyMDE.codemirror;
+    cm.getWrapperElement().addEventListener('paste', (event) => {
+        if (typeof MiniPadSmartPaste !== 'undefined') {
+            if (MiniPadSmartPaste.handlePaste(event, cm)) {
+                updateStats();
+                updatePreview();
             }
         }
-
-        if (!pastedText) return;
-
-        // Clean up non-breaking spaces
-        pastedText = pastedText.replace(/\u00A0/g, ' ');
-
-        // Normalize AI LaTeX syntax
-        // Replace \[ ... \] with $$ ... $$
-        pastedText = pastedText.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
-        // Replace \( ... \) with $ ... $
-        pastedText = pastedText.replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$');
-
-        event.preventDefault();
-        const doc = cm.getDoc();
-        const cursor = doc.getCursor();
-        doc.replaceRange(pastedText, cursor);
-    });
+    }, true);
 }
 
 // ===== Groups System =====
@@ -146,7 +124,7 @@ function toggleGroupCollapse(groupId) {
 }
 
 function createGroupPrompt() {
-    const name = prompt('Nome del nuovo gruppo:');
+    const name = prompt(getStr('new_group_prompt'));
     if (name && name.trim()) {
         createGroup(name);
     }
@@ -196,7 +174,7 @@ function deleteNote(e, id) {
         switchNote(tabs[0].id);
         return;
     }
-    if (!confirm("Eliminare definitivamente questa nota?")) return;
+    if (!confirm(getStr('delete_tab_confirm'))) return;
     tabs = tabs.filter(t => t.id !== id);
     saveToStorage();
     if (activeTabId === id) switchNote(tabs[tabs.length - 1].id);
@@ -237,7 +215,7 @@ function updateTabTitleFromContent(tab) {
         newTitle = lines[0].substring(3).trim();
     } else {
         // Use first line or fallback
-        newTitle = lines[0].trim().substring(0, 30) || 'Nuova Nota';
+        newTitle = lines[0].trim().substring(0, 30) || getStr('new_tab_name');
     }
     
     tab.name = newTitle.substring(0, 30);
@@ -247,7 +225,7 @@ function renameTab(tabId) {
     const tab = tabs.find(t => t.id === tabId);
     if (!tab) return;
     
-    const newName = prompt('Nuovo titolo:', tab.name);
+    const newName = prompt(getStr('rename_tab_prompt'), tab.name);
     if (newName && newName.trim()) {
         tab.name = newName.trim().substring(0, 30);
         tab.isTitleManual = true;
@@ -277,7 +255,7 @@ function renderSidebar() {
     // Create uncategorized group
     const uncategorizedGroup = { 
         id: null, 
-        name: 'Senza Gruppo', 
+        name: getStr('uncategorized_group'), 
         collapsed: false 
     };
     
@@ -350,12 +328,12 @@ function renderSidebar() {
         if (!isUncategorized) {
             actionBtns[0]?.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const newName = prompt('Nuovo nome gruppo:', group.name);
+                const newName = prompt(getStr('rename_group_prompt'), group.name);
                 if (newName) renameGroup(group.id, newName);
             });
             actionBtns[1]?.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (confirm('Eliminare il gruppo? Le schede saranno spostate in "Senza Gruppo".')) {
+                if (confirm(getStr('delete_group_confirm'))) {
                     deleteGroup(group.id);
                 }
             });
@@ -580,58 +558,78 @@ function handleInput(content) {
         showSavedIndicator(); 
     }, 1000);
 
-    clearTimeout(previewTimeout);
-    previewTimeout = setTimeout(() => { 
-        updatePreview(); 
-    }, 300);
+    // Live preview a 60 FPS con debounce rapido (60ms)
+    if (typeof MiniPadPreview !== 'undefined') {
+        MiniPadPreview.updatePreviewDebounced(content, 60);
+    } else {
+        clearTimeout(previewTimeout);
+        previewTimeout = setTimeout(() => { 
+            updatePreview(); 
+        }, 60);
+    }
 
-    // Debounce stats update — avoid DOM writes on every keystroke
+    // Debounce stats update
     clearTimeout(_statsTimeout);
-    _statsTimeout = setTimeout(updateStats, 500);
+    _statsTimeout = setTimeout(updateStats, 200);
 }
 
 // ===== Storage Functions =====
-function saveToStorage() {
+async function saveToStorage() {
     try {
-        idbKeyval.set('minipad_tabs', tabs);
-        idbKeyval.set('minipad_groups', groups);
+        if (typeof idbKeyval !== 'undefined' && idbKeyval.set) {
+            await idbKeyval.set('minipad_tabs', tabs);
+            await idbKeyval.set('minipad_groups', groups);
+        } else {
+            localStorage.setItem('minipad_tabs', JSON.stringify(tabs));
+            localStorage.setItem('minipad_groups', JSON.stringify(groups));
+        }
     } catch (e) {
-        console.error("Save failed", e);
+        console.warn("Salvataggio IndexedDB non riuscito, fallback su localStorage", e);
+        try {
+            localStorage.setItem('minipad_tabs', JSON.stringify(tabs));
+            localStorage.setItem('minipad_groups', JSON.stringify(groups));
+        } catch (e2) {
+            console.error("Salvataggio fallito completamente", e2);
+        }
     }
 }
 
-function loadFromStorage() {
-    return new Promise(async (resolve) => {
-        try {
-            const savedTabs = await idbKeyval.get('minipad_tabs');
-            const savedGroups = await idbKeyval.get('minipad_groups');
-
-            if (savedTabs && Array.isArray(savedTabs) && savedTabs.length > 0) {
-                tabs = savedTabs;
-            } else {
-                // Fallback to localStorage
-                const legacyData = localStorage.getItem('minipad_tabs');
-                if (legacyData) {
-                    tabs = JSON.parse(legacyData);
-                }
-            }
-
-            if (savedGroups && Array.isArray(savedGroups)) {
-                groups = savedGroups;
-            }
-
-            // Migration: ensure all tabs have required fields
-            tabs.forEach(tab => {
-                if (tab.isTitleManual === undefined) tab.isTitleManual = false;
-                if (tab.groupId === undefined) tab.groupId = null;
-            });
-
-            resolve();
-        } catch (e) {
-            console.error("Load failed", e);
-            resolve();
+async function loadFromStorage() {
+    try {
+        let savedTabs = null;
+        let savedGroups = null;
+        if (typeof idbKeyval !== 'undefined' && idbKeyval.get) {
+            savedTabs = await idbKeyval.get('minipad_tabs');
+            savedGroups = await idbKeyval.get('minipad_groups');
         }
-    });
+
+        if (savedTabs && Array.isArray(savedTabs) && savedTabs.length > 0) {
+            tabs = savedTabs;
+        } else {
+            // Fallback to localStorage
+            const legacyData = localStorage.getItem('minipad_tabs');
+            if (legacyData) {
+                tabs = JSON.parse(legacyData);
+            }
+        }
+
+        if (savedGroups && Array.isArray(savedGroups)) {
+            groups = savedGroups;
+        } else {
+            const legacyGroups = localStorage.getItem('minipad_groups');
+            if (legacyGroups) {
+                groups = JSON.parse(legacyGroups);
+            }
+        }
+
+        // Migration: ensure all tabs have required fields
+        tabs.forEach(tab => {
+            if (tab.isTitleManual === undefined) tab.isTitleManual = false;
+            if (tab.groupId === undefined) tab.groupId = null;
+        });
+    } catch (e) {
+        console.error("Load failed", e);
+    }
 }
 
 // ===== View Mode Toggling =====
@@ -821,7 +819,7 @@ function saveNow() {
 }
 
 function clearEditor() {
-    if (confirm("Sei sicuro di voler svuotare l'editor?")) {
+    if (confirm(getStr('clear_editor_confirm'))) {
         if (easyMDE) {
             easyMDE.value('');
             handleInput('');
@@ -830,6 +828,71 @@ function clearEditor() {
 }
 
 // ===== Import/Export Functions =====
+function getCurrentTabName() {
+    const t = tabs.find(x => x.id === activeTabId);
+    return (t && t.name) ? t.name : 'documento';
+}
+
+function promptExportName() {
+    const defaultName = getCurrentTabName();
+    const name = prompt("Inserisci il nome del file:", defaultName);
+    return name ? name.trim() : null;
+}
+
+function exportHTML() {
+    const name = promptExportName();
+    if (!name) return;
+    if (typeof MiniPadExport !== 'undefined') {
+        MiniPadExport.exportHTML(getEditorContent(), name);
+    } else {
+        promptExport('html');
+    }
+    closeAllMenus();
+}
+
+function exportMarkdown() {
+    const name = promptExportName();
+    if (!name) return;
+    if (typeof MiniPadExport !== 'undefined') {
+        MiniPadExport.exportMarkdown(getEditorContent(), name);
+    } else {
+        promptExport('md');
+    }
+    closeAllMenus();
+}
+
+function exportTXT() {
+    const name = promptExportName();
+    if (!name) return;
+    if (typeof MiniPadExport !== 'undefined') {
+        MiniPadExport.exportTxt(getEditorContent(), name);
+    } else {
+        promptExport('txt');
+    }
+    closeAllMenus();
+}
+
+function exportTeX() {
+    const name = promptExportName();
+    if (!name) return;
+    if (typeof MiniPadExport !== 'undefined') {
+        MiniPadExport.exportLaTeX(getEditorContent(), name);
+    } else {
+        promptExport('tex');
+    }
+    closeAllMenus();
+}
+
+function exportPDF() {
+    const name = promptExportName();
+    if (!name) return;
+    if (typeof MiniPadExport !== 'undefined') {
+        MiniPadExport.exportPDF(getEditorContent(), name);
+    } else {
+        window.print();
+    }
+    closeAllMenus();
+}
 function importFile(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -895,69 +958,6 @@ function downloadFile(filename, content, type) {
     a.click();
     URL.revokeObjectURL(url);
 }
-
-function promptExport(type) {
-    const t = tabs.find(x => x.id === activeTabId);
-    if (!t) return;
-    const name = prompt("Inserisci il nome del file:", t.name || "documento");
-    if (!name) return;
-
-    if (type === 'md') downloadFile(name + ".md", t.content, "text/markdown");
-    if (type === 'txt') downloadFile(name + ".txt", t.content, "text/plain");
-    if (type === 'tex') {
-        const texStr = t.content
-            .replace(/^# (.+)$/gm, '\\section{$1}')
-            .replace(/^## (.+)$/gm, '\\subsection{$1}')
-            .replace(/^### (.+)$/gm, '\\subsubsection{$1}')
-            .replace(/\*\*(.+?)\*\*/g, '\\textbf{$1}')
-            .replace(/\*(.+?)\*/g, '\\textit{$1}')
-            .replace(/`(.+?)`/g, '\\texttt{$1}')
-            .replace(/\$\$(.+?)\$\$/gs, '\\[\n$1\n\\]')
-            .replace(/\$(.+?)\$/g, '$$$1$$');
-        const fullTex = `\\documentclass{article}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amsmath, amssymb}\n\\begin{document}\n\n${texStr}\n\n\\end{document}`;
-        downloadFile(name + ".tex", fullTex, "text/plain");
-    }
-    if (type === 'html') {
-        const c = document.getElementById('preview-content').innerHTML;
-        const html = `<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <title>${name}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
-    <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 20px;
-            background: #fff;
-        }
-        h1, h2, h3 { border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
-        pre { background: #f8f8f8; padding: 15px; border-radius: 8px; overflow-x: auto; border: 1px solid #ddd; }
-        blockquote { border-left: 4px solid #0067c0; margin: 0; padding-left: 15px; color: #555; }
-        img { max-width: 100%; border-radius: 4px; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-    </style>
-</head>
-<body>
-${c}
-</body>
-</html>`;
-        downloadFile(name + ".html", html, "text/html");
-    }
-    if (type === 'pdf') window.print();
-}
-
-function exportHTML() { promptExport('html'); closeAllMenus(); }
-function exportMarkdown() { promptExport('md'); closeAllMenus(); }
-function exportTXT() { promptExport('txt'); closeAllMenus(); }
-function exportTeX() { promptExport('tex'); closeAllMenus(); }
 
 // ===== Markdown Insertion =====
 function insertMarkdown(start, end) {
@@ -1076,13 +1076,18 @@ function toggleSidebar() {
 
 // ===== Stats Update =====
 function updateStats() {
-    const content = getEditorContent();
-    if (!content) return;
-    
+    const content = getEditorContent() || '';
     const chars = content.length;
-    const words = content.split(/\s+/).filter(w => w).length;
-    const lines = content.split('\n').length;
+    const words = content.trim() ? content.trim().split(/\s+/).length : 0;
+    const lines = content ? content.split('\n').length : 0;
     const pages = Math.max(1, Math.ceil(words / 500));
     const sLeft = document.getElementById('status-left');
-    if (sLeft) sLeft.textContent = `Caratteri: ${chars.toLocaleString('it')} | Parole: ${words.toLocaleString('it')} | Righe: ${lines} | ~${pages} pag.`;
+    const loc = currentLang === 'it' ? 'it-IT' : 'en-US';
+    if (sLeft) {
+        if (currentLang === 'it') {
+            sLeft.textContent = `Caratteri: ${chars.toLocaleString(loc)} | Parole: ${words.toLocaleString(loc)} | Righe: ${lines} | ~${pages} pag.`;
+        } else {
+            sLeft.textContent = `Characters: ${chars.toLocaleString(loc)} | Words: ${words.toLocaleString(loc)} | Lines: ${lines} | ~${pages} pages`;
+        }
+    }
 }
