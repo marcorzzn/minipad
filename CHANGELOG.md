@@ -2,6 +2,44 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.0] - 2026-11-06
+
+### Nuove Funzionalità & Miglioramenti Maggiori
+
+#### 1. Smart Paste da LLM & Fonti Scientifiche (`js/smart-paste.js`)
+- **Normalizzazione delimitatori AI**: intercettazione automatica all'incolla di testi da ChatGPT, Claude, Gemini, con conversione di `\( ... \)` in `$ ... $`, `\[ ... \]` in `$$ ... $$` e pulizia dei dollari escapati `\$`.
+- **Estrazione LaTeX da HTML ricco**: quando si copia tramite selezione mouse da interfacce web (KaTeX, MathML, MathJax, Wikipedia, EoM), Turndown estrae il codice LaTeX originale da `<annotation encoding="application/x-tex">`, attributi `alt` o script `math/tex`, convertendo il resto del testo in Markdown pulito.
+
+#### 2. Motore Grafico Mermaid Integrato (`js/preview.js`, `js/data.js`)
+- **Compilazione visuale nativa**: i blocchi ```mermaid``` vengono compilati direttamente come diagrammi vettoriali SVG in anteprima (Flowchart, Sequence Diagram, Mindmap, Class Diagram, Pie Chart).
+- **Retrocompatibilità**: conservato il supporto completo per gli schemi ASCII in blocchi ```text```.
+- **Palette Diagrammi**: aggiunti template rapidi Mermaid pronti all'uso nella toolbar.
+
+#### 3. Preview Matematica Robusta con `marked-katex-extension`
+- **Isolamento della sintassi**: la matematica KaTeX viene protetta prima del parsing Markdown, eliminando ogni collisione con corsivo/grassetto (`_`, `*`) e variabili shell.
+- **Debounce fluido a 60 ms**: ottimizzato per una frequenza di rendering fino a 60 FPS senza lag di digitazione.
+- **Fix Anteprima Vuota**: corretta la gestione delle note svuotate, azzerando istantaneamente il pannello di anteprima invece di congelarlo sul testo precedente.
+
+#### 4. Esportazione Professionale Multi-formato (`js/export.js`)
+- **Markdown (.md)**: download diretto del sorgente.
+- **HTML Standalone (.html)**: pacchetto HTML autonomo con fogli di stile KaTeX e runtime Mermaid inclusi per visualizzazione immediata in qualsiasi browser offline.
+- **LaTeX (.tex)**: compilatore robusto Markdown → LaTeX con escape selettivo dei caratteri riservati (`%`, `_`, `&`, `~`, `^`) senza intaccare formule e blocchi di codice, pronto per la compilazione con `pdflatex`.
+- **PDF (.pdf)**: esportazione vettoriale A4 tramite `html2pdf.js` con fallback su stampa nativa.
+- **Plain Text (.txt)**: estrazione testo pulito senza markup.
+
+#### 5. PWA & Offline Resiliente (`sw.js`)
+- **Service Worker v1.5.0**: inclusi in pre-caching tutti gli asset critici precedentemente mancanti (EasyMDE JS/CSS, Mermaid, Turndown, html2pdf, IDB-Keyval, icone PNG/SVG e font vettoriali `.woff2`). L'app è ora completamente autonoma e funzionante anche offline.
+- **Pulsante Installa PWA**: inserito nel menu File l'elemento `#install-btn` collegato al prompt `beforeinstallprompt`.
+
+#### 6. Risoluzione Debito Tecnico & UI Fix
+- **Ricerca Schede**: inserito il campo `#sidebar-search` nell'intestazione della barra laterale per il filtraggio real-time delle note e dei gruppi.
+- **Barra Trova & Sostituisci**: assegnati gli ID corretti per garantire la corretta internazionalizzazione (IT/EN) di etichette e pulsanti.
+- **Statistiche su Note Vuote**: corretto `updateStats` per azzerare caratteri, parole e righe quando l'editor è vuoto.
+- **Persistenza Affidabile**: `saveToStorage` reso asincrono con fallback automatico su `localStorage` in caso di eccezioni IndexedDB.
+- **Pulizia File Orfani**: rimossi `temp_css.txt`, `replace.py`, `FIX_LOG_v1.2.0.txt` e la cartella duplicata `minipad-main/`.
+
+---
+
 ## [v1.1.0] - 2026-04-11
 
 ### Fix Applicati
