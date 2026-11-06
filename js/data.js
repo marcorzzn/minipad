@@ -1,4 +1,9 @@
 const diagramTemplates = [
+    { category: "Mermaid (Visuale)", title: "Diagramma di Flusso", code: "```mermaid\ngraph TD\n    A[Inizio] --> B{Condizione}\n    B -->|Sì| C[Azione 1]\n    B -->|No| D[Azione 2]\n    C --> E[Fine]\n    D --> E\n```" },
+    { category: "Mermaid (Visuale)", title: "Diagramma di Sequenza", code: "```mermaid\nsequenceDiagram\n    autonumber\n    Utente->>Client: Invia richiesta\n    Client->>Server: POST /api/data\n    Server-->>Client: 200 OK (JSON)\n    Client-->>Utente: Visualizza risultato\n```" },
+    { category: "Mermaid (Visuale)", title: "Mappa Mentale (Mindmap)", code: "```mermaid\nmindmap\n  root((Progetto))\n    Pianificazione\n      Obiettivi\n      Milestone\n    Sviluppo\n      Editor\n      Anteprima\n    Rilascio\n```" },
+    { category: "Mermaid (Visuale)", title: "Diagramma delle Classi", code: "```mermaid\nclassDiagram\n    class Documento {\n        +String titolo\n        +String contenuto\n        +salva()\n        +esporta()\n    }\n```" },
+    { category: "Mermaid (Visuale)", title: "Grafico a Torta (Pie)", code: "```mermaid\npie title Distribuzione Ore\n    \"Sviluppo\" : 55\n    \"Design\" : 25\n    \"Test\" : 20\n```" },
     { category: "Blocchi", title: "Riquadro Testo", code: "+-------+\n| testo |\n+-------+" },
     { category: "Blocchi", title: "Etichetta", code: "[concetto]" },
     { category: "Blocchi", title: "Bolla", code: "(_____)" },
@@ -51,7 +56,16 @@ const i18n = {
         'tab_close_confirm': "Chiudere l'ultima scheda?",
         'btn_guida': 'Informazioni / Guida',
         'btn_find': 'Cerca (Ctrl+F)',
-        'btn_toc': 'Genera Indice (TOC)'
+        'btn_toc': 'Genera Indice (TOC)',
+        'sidebar_search': 'Cerca nelle note...',
+        'install_pwa': 'Installa Minipad',
+        'delete_tab_confirm': 'Eliminare definitivamente questa nota?',
+        'new_group_prompt': 'Nome del nuovo gruppo:',
+        'rename_group_prompt': 'Nuovo nome gruppo:',
+        'delete_group_confirm': 'Eliminare il gruppo? Le schede saranno spostate in "Senza Gruppo".',
+        'rename_tab_prompt': 'Nuovo titolo:',
+        'uncategorized_group': 'Senza Gruppo',
+        'clear_editor_confirm': "Sei sicuro di voler svuotare l'editor?"
     },
     'en': {
         'file': 'File',
@@ -86,7 +100,16 @@ const i18n = {
         'tab_close_confirm': "Close the last tab?",
         'btn_guida': 'About / Help',
         'btn_find': 'Find (Ctrl+F)',
-        'btn_toc': 'Generate TOC'
+        'btn_toc': 'Generate TOC',
+        'sidebar_search': 'Search notes...',
+        'install_pwa': 'Install Minipad',
+        'delete_tab_confirm': 'Permanently delete this note?',
+        'new_group_prompt': 'New group name:',
+        'rename_group_prompt': 'New group name:',
+        'delete_group_confirm': 'Delete group? Tabs will be moved to "Uncategorized".',
+        'rename_tab_prompt': 'New title:',
+        'uncategorized_group': 'Uncategorized',
+        'clear_editor_confirm': 'Are you sure you want to clear the editor?'
     }
 };
 const mathCategories = {
@@ -443,5 +466,15 @@ const mathCategories = {
                 { cmd: "^{\\circ}", html: "^{\\circ}" }
             ]
         };
+
+// Stato globale dell'applicazione (definito prima di editor.js e main.js per evitare TDZ)
+var tabs = [];
+var groups = [];
+var activeTabId = null;
+if (typeof window !== 'undefined') {
+    window.tabs = tabs;
+    window.groups = groups;
+    window.activeTabId = activeTabId;
+}
 
         

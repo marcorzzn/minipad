@@ -65,6 +65,10 @@ function applyLanguage() {
     if (replaceInput) replaceInput.placeholder = getStr('replace_placeholder');
     const replaceBtn = document.getElementById('replace-btn');
     if (replaceBtn) replaceBtn.textContent = getStr('btn_replace');
+    const sSearch = document.getElementById('sidebar-search');
+    if (sSearch) sSearch.placeholder = getStr('sidebar_search');
+    const instBtn = document.getElementById('install-btn');
+    if (instBtn) instBtn.textContent = '📱 ' + getStr('install_pwa');
     const sLeft = document.getElementById('status-left');
     if (sLeft && (sLeft.textContent === i18n['it']['status_ready'] || sLeft.textContent === i18n['en']['status_ready'])) sLeft.textContent = getStr('status_ready');
 
@@ -81,15 +85,15 @@ function applyLanguage() {
     }
 }
 
-let tabs = [];
-let groups = [];
-let activeTabId = null;
+// tabs, groups e activeTabId sono inizializzati in data.js
 let autoSaveTimeout = null;
 let previewTimeout = null;
 let savedSelection = null;
 
 // --- INIT ---
 async function init() {
+    if (typeof MiniPadSmartPaste !== 'undefined') MiniPadSmartPaste.init();
+    if (typeof MiniPadPreview !== 'undefined') MiniPadPreview.init();
     initMathToolbar();
     initTableGrid();
 
