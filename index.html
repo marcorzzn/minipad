@@ -316,7 +316,7 @@
             <button class="mp-btn" id="btn-find" title="Cerca (Ctrl+F)" onclick="toggleFindBar()"><svg class="mp-i"><use href="#i-search"/></svg></button>
             <button class="mp-btn" id="btn-toc" title="Genera Indice (TOC)" onclick="generateTOC()"><svg class="mp-i"><use href="#i-help"/></svg></button>
             <button class="mp-btn" title="Salva (Ctrl+S)" onclick="saveNow()"><svg class="mp-i"><use href="#i-save"/></svg></button>
-            <span id="save-indicator" style="font-size:11px; color:#888; margin-left:4px; opacity:0; transition:opacity 0.5s;">Salvato</span>
+            <span id="save-indicator" class="mp-save-toast">Salvato</span>
 
             <span class="mp-sep"></span>
 
@@ -415,7 +415,22 @@
         </div>
 
         <!-- MATH TOOLBAR -->
-        <div id="math-toolbar">
+        <div id="math-toolbar" role="region" aria-label="Funzioni e formule matematiche">
+            <div class="mp-math-controls">
+                <div class="mp-math-left">
+                    <label for="math-category-select" class="mp-math-label">Categoria:</label>
+                    <select id="math-category-select" class="mp-math-select" onchange="onMathCategorySelect(this.value)"></select>
+                    <div class="mp-math-search-wrap">
+                        <svg class="mp-i mp-math-search-icon"><use href="#i-search"/></svg>
+                        <input type="text" id="math-search-input" class="mp-math-search" placeholder="Cerca simbolo (es. alpha, int, sum)..." oninput="onMathSearch(this.value)">
+                        <button id="math-search-clear" class="mp-math-clear-btn" style="display:none;" onclick="clearMathSearch()" title="Cancella ricerca">✕</button>
+                    </div>
+                </div>
+                <div class="mp-math-right">
+                    <span id="math-count-badge" class="mp-math-badge"></span>
+                    <button class="mp-math-close-btn" onclick="toggleMathBar()" title="Chiudi pannello formule">✕ Chiudi</button>
+                </div>
+            </div>
             <div class="math-tabs" id="math-tabs-container"></div>
             <div class="math-content">
                 <div class="math-grid" id="math-grid"></div>

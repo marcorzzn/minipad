@@ -132,18 +132,31 @@ body.dark-mode {
 .mp-toolbar {
   display: flex;
   align-items: center;
-  height: 36px;
-  padding: 0 var(--mp-space-sm);
-  gap: 2px;
+  min-height: 40px;
+  height: 40px;
+  padding: 0 12px;
+  gap: 1px;
   background: var(--mp-bg-bar);
   border-bottom: 1px solid var(--mp-border-soft);
   font: var(--mp-font-size) var(--mp-font);
   color: var(--mp-text);
   user-select: none;
   -webkit-user-select: none;
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: hidden;
   flex-shrink: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.mp-toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 1060px) {
+  .mp-toolbar {
+    overflow-x: auto;
+  }
 }
 
 .mp-toolbar > * { flex-shrink: 0; }
@@ -151,26 +164,26 @@ body.dark-mode {
 .mp-toolbar .mp-sep {
   display: inline-block;
   width: 1px;
-  height: 20px;
+  height: 18px;
   background: var(--mp-border-soft);
-  margin: 0 var(--mp-space-xs);
+  margin: 0 2px;
 }
 
 .mp-toolbar .mp-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: var(--mp-btn);
-  height: var(--mp-btn);
-  padding: 0 5px;
+  min-width: 25px;
+  height: 26px;
+  padding: 0 4px;
   border: 1px solid transparent;
   background: none;
   color: inherit;
   font: inherit;
   font-size: var(--mp-font-sm);
-  border-radius: 0;
+  border-radius: 3px;
   cursor: pointer;
-  gap: 3px;
+  gap: 2px;
 }
 
 .mp-toolbar .mp-btn:hover {
@@ -185,8 +198,8 @@ body.dark-mode {
 }
 
 .mp-toolbar .mp-btn .mp-i {
-  width: var(--mp-icon);
-  height: var(--mp-icon);
+  width: 15px;
+  height: 15px;
   fill: currentColor;
   stroke: currentColor;
   stroke-width: 0;
@@ -194,11 +207,15 @@ body.dark-mode {
   flex-shrink: 0;
 }
 
-.mp-toolbar .mp-btn.has-caret { padding-right: 16px; position: relative; }
+.mp-toolbar .mp-btn.has-caret {
+  padding-right: 12px;
+  position: relative;
+}
+
 .mp-toolbar .mp-btn.has-caret::after {
   content: "";
   position: absolute;
-  right: 5px;
+  right: 3px;
   top: 50%;
   width: 0; height: 0;
   transform: translateY(-50%);
@@ -207,35 +224,254 @@ body.dark-mode {
   border-top: 4px solid currentColor;
 }
 
-.mp-toolbar select {
-  height: var(--mp-btn);
-  padding: 0 4px;
+.mp-toolbar select.mp-font-select {
+  width: 82px;
+  height: 26px;
+  padding: 0 3px;
   border: 1px solid var(--mp-border-soft);
-  border-radius: 0;
+  border-radius: 3px;
   background: var(--mp-bg);
   color: var(--mp-text);
   font: var(--mp-font-sm) var(--mp-font);
   cursor: pointer;
 }
+
 .mp-toolbar select:hover { border-color: var(--mp-border-hard); }
 
 .mp-toolbar input.mp-size {
-  width: 40px;
-  height: var(--mp-btn);
-  padding: 0 4px;
+  width: 34px;
+  height: 26px;
+  padding: 0 2px;
   border: 1px solid var(--mp-border-soft);
-  border-radius: 0;
+  border-radius: 3px;
   background: var(--mp-bg);
   color: var(--mp-text);
   font: var(--mp-font-sm) var(--mp-font);
   text-align: center;
 }
 
+/* Floating Save Toast */
+.mp-save-toast {
+  position: fixed;
+  top: 48px;
+  right: 20px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: 9999;
+}
+
+/* ===== Math Toolbar Redesign (v1.5.6) ===== */
+#math-toolbar {
+  background: var(--mp-bg-bar);
+  border-bottom: 1px solid var(--mp-border-soft);
+  overflow-x: hidden !important;
+  width: 100%;
+}
+
+.mp-math-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  gap: 10px;
+  background: var(--mp-bg-bar);
+  border-bottom: 1px solid var(--mp-border-soft);
+  overflow-x: hidden !important;
+}
+
+.mp-math-left, .mp-math-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mp-math-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mp-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.mp-math-select {
+  height: 26px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-family: var(--mp-font);
+  background: var(--mp-bg);
+  color: var(--mp-text);
+  border: 1px solid var(--mp-border-soft);
+  border-radius: 3px;
+  cursor: pointer;
+  max-width: 180px;
+}
+
+.mp-math-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mp-math-search {
+  height: 26px;
+  width: 220px;
+  padding: 0 24px 0 24px;
+  font-size: 11.5px;
+  font-family: var(--mp-font);
+  background: var(--mp-bg);
+  color: var(--mp-text);
+  border: 1px solid var(--mp-border-soft);
+  border-radius: 3px;
+}
+
+.mp-math-search-icon {
+  position: absolute;
+  left: 6px;
+  width: 12px;
+  height: 12px;
+  color: var(--mp-text-muted);
+  pointer-events: none;
+}
+
+.mp-math-clear-btn {
+  position: absolute;
+  right: 4px;
+  background: none;
+  border: none;
+  color: var(--mp-text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 4px;
+}
+
+.mp-math-badge {
+  font-size: 11px;
+  color: var(--mp-text-muted);
+  white-space: nowrap;
+}
+
+.mp-math-close-btn {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 500;
+  background: none;
+  border: 1px solid var(--mp-border-soft);
+  border-radius: 3px;
+  color: var(--mp-text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mp-math-close-btn:hover {
+  background: var(--mp-bg-hover);
+  border-color: var(--mp-border-hard);
+}
+
+.math-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 12px;
+  background: var(--mp-bg-panel);
+  border-bottom: 1px solid var(--mp-border-soft);
+  overflow-x: hidden !important;
+  overflow-y: auto;
+  max-height: 64px;
+  scrollbar-width: thin;
+}
+
+.math-tab {
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 3px;
+  border: 1px solid var(--mp-border-soft);
+  background: var(--mp-bg);
+  color: var(--mp-text-muted);
+  white-space: nowrap;
+  user-select: none;
+  transition: all 0.1s ease;
+}
+
+.math-tab:hover {
+  background: var(--mp-bg-hover);
+  color: var(--mp-text);
+  border-color: var(--mp-border-hard);
+}
+
+.math-tab.active {
+  background: var(--mp-accent);
+  color: var(--mp-accent-text);
+  border-color: var(--mp-accent);
+  font-weight: 600;
+}
+
+.math-content {
+  padding: 8px 12px;
+  background: var(--mp-bg);
+  overflow-x: hidden !important;
+  overflow-y: auto;
+  max-height: 160px;
+  scrollbar-width: thin;
+}
+
+.math-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 6px;
+}
+
+.math-btn {
+  height: 38px;
+  min-width: 44px;
+  background: var(--mp-bg-panel);
+  border: 1px solid var(--mp-border-soft);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--mp-text);
+  transition: all 0.1s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.math-btn:hover {
+  background: var(--mp-bg-hover);
+  border-color: var(--mp-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+}
+
+.math-btn:active {
+  transform: translateY(0);
+}
+
+.mp-math-empty {
+  grid-column: 1 / -1;
+  padding: 20px;
+  text-align: center;
+  color: var(--mp-text-muted);
+  font-size: 12px;
+}
+
 /* Dark mode manuale */
 body.force-dark .mp-menubar,
 body.force-dark .mp-toolbar,
+body.force-dark #math-toolbar,
 body.dark-mode .mp-menubar,
-body.dark-mode .mp-toolbar {
+body.dark-mode .mp-toolbar,
+body.dark-mode #math-toolbar {
   --mp-bg-bar:      #2a2a2a;
   --mp-bg-panel:    #232323;
   --mp-bg-hover:    #363636;
@@ -246,6 +482,12 @@ body.dark-mode .mp-toolbar {
   --mp-border-soft: #454545;
   --mp-border-hard: #8a8a8a;
   --mp-accent:      #4a9eff;
+}
+
+body.force-dark .mp-save-toast,
+body.dark-mode .mp-save-toast {
+  background: #f0f0f0;
+  color: #111;
 }
 
 /* Nasconde la vecchia toolbar se ancora presente */

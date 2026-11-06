@@ -422,11 +422,15 @@
 
         .math-tabs {
             display: flex;
-            gap: 1px;
-            padding: 2px;
+            flex-wrap: wrap;
+            gap: 4px;
+            padding: 6px 12px;
             background: #e5e5e5;
             border-bottom: 1px solid #ccc;
-            overflow-x: auto;
+            overflow-x: hidden !important;
+            overflow-y: auto;
+            max-height: 72px;
+            scrollbar-width: thin;
         }
 
         body.dark-mode .math-tabs {
@@ -477,10 +481,12 @@
         }
 
         .math-content {
-            padding: 4px;
-            overflow-x: auto;
+            padding: 8px 12px;
+            overflow-x: hidden !important;
+            overflow-y: auto;
             background: var(--math-btn-bg);
             max-height: 160px;
+            scrollbar-width: thin;
         }
 
         .math-grid {

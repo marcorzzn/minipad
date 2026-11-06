@@ -2,6 +2,24 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.6] - 2026-11-06
+
+### Ottimizzazione Spaziature Toolbar & Riprogettazione Pannello Formule Matematiche
+
+#### 1. Margini e Spaziature Toolbar Senza Barre di Scorrimento (`css/mac-classic.css`, `index.html`)
+- **Altezza e margini accresciuti**: la toolbar superiore è stata elevata a 40px con padding verticale e laterale (12px) che dona respiro ai pulsanti ed elimina l'effetto "schiacciato" contro i bordi dello schermo.
+- **Eliminazione barra di scorrimento orizzontale**:
+  - Calibrata la larghezza complessiva di tutti i gruppi di pulsanti a ~1040px, permettendo alla toolbar di comparire interamente a schermo intero su qualsiasi risoluzione desktop (1920x1080 anche con scaling a 125%/150%, 1366x768 e 1280x800) senza alcun overflow.
+  - Applicato `scrollbar-width: none` e `::-webkit-scrollbar { display: none; }` per azzerare completamente il rendering della traccia grigia di scorrimento su Windows.
+  - `#save-indicator` trasformato in un badge toast fluttuante non intrusivo (`.mp-save-toast`), liberando 50px di spazio orizzontale permanente nella barra.
+
+#### 2. Riprogettazione Ottimale del Pannello Formule Matematiche (`js/ui.js`, `css/mac-classic.css`, `css/style.css`, `index.html`)
+- **Zero scorrimento orizzontale**: rimossa definitivamente la barra di scorrimento orizzontale su categorie e griglia simboli (`overflow-x: hidden !important;`).
+- **Selettore Categorie a Discesa con Optgroup**: introdotto `<select id="math-category-select">` con tutti i 26 raggruppamenti catalogati per dominio (Alfabeto Greco, Analisi & Calcolo, Algebra & Geometria, Fisica & Scienze, Logica & Insiemi, Simboli & Notazione).
+- **Ricerca Simboli e Comandi Istantanea**: campo di ricerca live (`#math-search-input`) per filtrare istantaneamente oltre 300 formule e simboli in tutte le 26 categorie (es. digitando `alpha`, `int`, `sum`, `infty`, `geq`), con contatore risultati e pulsante di pulizia rapida `✕`.
+- **Chip Categorie con Wrapping Responsivo**: i tab di categoria si dispongono in chip avvolgenti a più righe compatte con scroll verticale limitato a due righe, evitando qualsiasi sporgenza orizzontale.
+- **Griglia Simboli ad Alta Leggibilità**: celle KaTeX compatte da 38px di altezza, pulsante `✕ Chiudi` dedicato nell'header del pannello e scrolling unicamente verticale con barra sottile.
+
 ## [v1.5.5] - 2026-11-06
 
 ### Ripristino Controlli UI, Modale Impostazioni PDF/Stampa, PWA Network-First & Fix Pipeline Esportazione

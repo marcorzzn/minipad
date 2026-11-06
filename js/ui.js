@@ -9,54 +9,188 @@
             });
         });
 
-        /* --- MATH TOOLBAR LOGIC --- */
+        /* --- MATH TOOLBAR LOGIC (v1.5.6) --- */
+        let currentMathCat = 'Greco min.';
+        let mathSearchQuery = '';
+
+        const mathGroups = [
+            {
+                group: '🔤 Alfabeto Greco',
+                cats: ['Greco min.', 'Greco mai.', 'Greco var.']
+            },
+            {
+                group: '📐 Analisi & Calcolo',
+                cats: ['Integrali', 'Derivate', 'Limiti', 'Serie', 'Eq. Diff.', 'Analisi Compl.']
+            },
+            {
+                group: '📊 Algebra & Geometria',
+                cats: ['Trigon.', 'Funz. Spec.', 'Algebra Lin.', 'Strutture', 'Combinatoria']
+            },
+            {
+                group: '⚛️ Fisica & Scienze',
+                cats: ['Fisica', 'Quantistica']
+            },
+            {
+                group: '💡 Logica & Insiemi',
+                cats: ['Probabilità', 'Logica', 'Relazioni', 'Insiemi Num.']
+            },
+            {
+                group: '↗️ Simboli & Notazione',
+                cats: ['Operatori', 'Frecce', 'Parentesi', 'Font', 'Decoratori', 'Spaziatura']
+            }
+        ];
+
         function initMathToolbar() {
             const tabsContainer = document.getElementById('math-tabs-container');
-            Object.keys(mathCategories).forEach((catName, index) => {
-                const btn = document.createElement('div');
-                btn.className = `math-tab ${index === 0 ? 'active' : ''}`;
-                btn.textContent = catName;
-                btn.onclick = () => switchMathTab(catName, btn);
-                tabsContainer.appendChild(btn);
+            const selectEl = document.getElementById('math-category-select');
+
+            if (tabsContainer) {
+                tabsContainer.innerHTML = '';
+            }
+            if (selectEl) {
+                selectEl.innerHTML = '';
+                mathGroups.forEach(grp => {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = grp.group;
+                    grp.cats.forEach(c => {
+                        if (typeof mathCategories !== 'undefined' && mathCategories[c]) {
+                            const opt = document.createElement('option');
+                            opt.value = c;
+                            opt.textContent = c;
+                            optgroup.appendChild(opt);
+                        }
+                    });
+                    selectEl.appendChild(optgroup);
+                });
+            }
+
+            // Quick category chips
+            if (tabsContainer && typeof mathCategories !== 'undefined') {
+                Object.keys(mathCategories).forEach((catName, index) => {
+                    const btn = document.createElement('div');
+                    btn.className = `math-tab ${index === 0 ? 'active' : ''}`;
+                    btn.textContent = catName;
+                    btn.dataset.cat = catName;
+                    btn.onclick = () => switchMathTab(catName);
+                    tabsContainer.appendChild(btn);
+                });
+            }
+
+            const initialCat = (typeof mathCategories !== 'undefined' && Object.keys(mathCategories)[0]) || 'Greco min.';
+            switchMathTab(initialCat);
+        }
+
+        function switchMathTab(catName) {
+            currentMathCat = catName;
+            mathSearchQuery = '';
+            const searchInput = document.getElementById('math-search-input');
+            const clearBtn = document.getElementById('math-search-clear');
+            if (searchInput) searchInput.value = '';
+            if (clearBtn) clearBtn.style.display = 'none';
+
+            const selectEl = document.getElementById('math-category-select');
+            if (selectEl && selectEl.value !== catName) {
+                selectEl.value = catName;
+            }
+
+            document.querySelectorAll('.math-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.cat === catName);
             });
-            loadMathCategory(Object.keys(mathCategories)[0]);
+
+            if (typeof mathCategories !== 'undefined' && mathCategories[catName]) {
+                renderMathGrid(mathCategories[catName], `${mathCategories[catName].length} simboli`);
+            }
         }
 
-        function switchMathTab(catName, clickedTab) {
+        function onMathCategorySelect(catName) {
+            switchMathTab(catName);
+        }
+
+        function onMathSearch(query) {
+            mathSearchQuery = String(query || '').trim().toLowerCase();
+            const clearBtn = document.getElementById('math-search-clear');
+            if (clearBtn) clearBtn.style.display = mathSearchQuery ? 'inline-block' : 'none';
+
+            if (!mathSearchQuery) {
+                switchMathTab(currentMathCat);
+                return;
+            }
+
+            // Deselect tabs visually when searching across all categories
             document.querySelectorAll('.math-tab').forEach(t => t.classList.remove('active'));
-            clickedTab.classList.add('active');
-            loadMathCategory(catName);
+
+            const results = [];
+            const seen = new Set();
+
+            if (typeof mathCategories !== 'undefined') {
+                Object.keys(mathCategories).forEach(cat => {
+                    mathCategories[cat].forEach(item => {
+                        const key = item.cmd;
+                        if (seen.has(key)) return;
+                        const matchCmd = item.cmd.toLowerCase().includes(mathSearchQuery);
+                        const matchHtml = (item.html || '').toLowerCase().includes(mathSearchQuery);
+                        const matchCat = cat.toLowerCase().includes(mathSearchQuery);
+                        if (matchCmd || matchHtml || matchCat) {
+                            seen.add(key);
+                            results.push(item);
+                        }
+                    });
+                });
+            }
+
+            renderMathGrid(results, `${results.length} risultati per "${query}"`);
         }
 
-        function loadMathCategory(catName) {
-            const grid = document.getElementById('math-grid');
-            grid.innerHTML = '';
-            mathCategories[catName].forEach(item => {
-                const btn = document.createElement('button');
-                btn.className = 'math-btn';
-                btn.title = item.cmd; // tooltip shows LaTeX command
+        function clearMathSearch() {
+            const searchInput = document.getElementById('math-search-input');
+            if (searchInput) {
+                searchInput.value = '';
+                if (typeof searchInput.focus === 'function') searchInput.focus();
+            }
+            onMathSearch('');
+        }
 
-                // Try rendering the full cmd expression with KaTeX for a real math preview
-                // If the cmd is complex (long formula), fall back to a shortened label
+        function renderMathGrid(items, badgeText) {
+            const grid = document.getElementById('math-grid');
+            const badge = document.getElementById('math-count-badge');
+            if (badge && badgeText) {
+                badge.textContent = badgeText;
+            }
+
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            if (!items || items.length === 0) {
+                grid.innerHTML = '<div class="mp-math-empty">Nessun simbolo trovato. Prova con "alpha", "int", "sum", "geq", "to"...</div>';
+                return;
+            }
+
+            items.forEach(item => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'math-btn';
+                btn.title = item.cmd;
+
                 const renderTarget = item.cmd.length < 60 ? item.cmd : item.html;
                 let rendered = false;
 
                 if (!renderTarget.trim().startsWith('<')) {
                     try {
-                        btn.innerHTML = katex.renderToString(renderTarget, {
-                            throwOnError: true,
-                            displayMode: false,
-                            strict: false
-                        });
-                        rendered = true;
+                        if (typeof katex !== 'undefined') {
+                            btn.innerHTML = katex.renderToString(renderTarget, {
+                                throwOnError: true,
+                                displayMode: false,
+                                strict: false
+                            });
+                            rendered = true;
+                        }
                     } catch (e) {
                         try {
-                            // Try rendering just the html alias (simpler)
                             btn.innerHTML = katex.renderToString(item.html, {
                                 throwOnError: true, displayMode: false, strict: false
                             });
                             rendered = true;
-                        } catch (e2) { /* fall through to label */ }
+                        } catch (e2) { }
                     }
                 } else {
                     btn.innerHTML = renderTarget;
@@ -64,14 +198,12 @@
                 }
 
                 if (!rendered) {
-                    // Use a short text fallback showing the key symbol
                     const label = document.createElement('span');
                     label.className = 'math-label';
                     label.textContent = item.html.replace(/\\/g, '').substring(0, 12);
                     btn.appendChild(label);
                 }
 
-                // HOVER PREVIEW
                 btn.addEventListener('mouseenter', (e) => showTooltip(e, item));
                 btn.addEventListener('mousemove', moveTooltip);
                 btn.addEventListener('mouseleave', hideTooltip);
@@ -82,8 +214,23 @@
         }
 
         function toggleMathBar() {
-            document.getElementById('math-toolbar').classList.toggle('show');
+            const bar = document.getElementById('math-toolbar');
+            if (!bar) return;
+            bar.classList.toggle('show');
+            if (bar.classList.contains('show')) {
+                const search = document.getElementById('math-search-input');
+                if (search && window.innerWidth >= 768) {
+                    // non forzare focus su mobile per evitare tastiera virtuale indesiderata
+                }
+            }
         }
+
+        window.initMathToolbar = initMathToolbar;
+        window.toggleMathBar = toggleMathBar;
+        window.onMathCategorySelect = onMathCategorySelect;
+        window.onMathSearch = onMathSearch;
+        window.clearMathSearch = clearMathSearch;
+        window.switchMathTab = switchMathTab;
 
         // insertLatex moved to editor.js to work with EasyMDE
 
