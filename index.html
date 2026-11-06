@@ -597,44 +597,86 @@
                 <button class="mp-btn" title="Chiudi" onclick="closePrintModal()"><svg class="mp-i"><use href="#i-close"/></svg></button>
             </div>
             <div class="mp-print-form">
-                <div class="mp-print-row">
-                    <label for="print-opt-margins">Margini Foglio:</label>
-                    <select id="print-opt-margins" class="mp-print-select">
-                        <option value="compact">Stretti (10 mm)</option>
-                        <option value="normal" selected>Normali (15 mm)</option>
-                        <option value="wide">Ampi (25 mm)</option>
-                    </select>
+                <div class="mp-print-grid">
+                    <div class="mp-print-field">
+                        <label for="print-opt-margins">Margini Foglio:</label>
+                        <select id="print-opt-margins" class="mp-print-select">
+                            <option value="compact">Stretti (10 mm)</option>
+                            <option value="normal" selected>Normali (15 mm)</option>
+                            <option value="wide">Ampi (25 mm)</option>
+                            <option value="zero">Minimi (6 mm)</option>
+                        </select>
+                    </div>
+                    <div class="mp-print-field">
+                        <label for="print-opt-orientation">Orientamento:</label>
+                        <select id="print-opt-orientation" class="mp-print-select">
+                            <option value="portrait" selected>Verticale (Portrait A4)</option>
+                            <option value="landscape">Orizzontale (Landscape A4)</option>
+                        </select>
+                    </div>
+                    <div class="mp-print-field">
+                        <label for="print-opt-fontfamily">Famiglia Caratteri:</label>
+                        <select id="print-opt-fontfamily" class="mp-print-select">
+                            <option value="sans" selected>Moderno Sans-serif</option>
+                            <option value="serif">Classico con Grazie (Serif)</option>
+                            <option value="mono">Tecnico Monospazio</option>
+                        </select>
+                    </div>
+                    <div class="mp-print-field">
+                        <label for="print-opt-fontsize">Dimensione Testo:</label>
+                        <select id="print-opt-fontsize" class="mp-print-select">
+                            <option value="compact">Compatto (10.5 pt)</option>
+                            <option value="normal" selected>Standard (12 pt)</option>
+                            <option value="large">Grande (13.5 pt)</option>
+                        </select>
+                    </div>
+                    <div class="mp-print-field">
+                        <label for="print-opt-lineheight">Interlinea (Spaziatura):</label>
+                        <select id="print-opt-lineheight" class="mp-print-select">
+                            <option value="compact">Compatta (1.4)</option>
+                            <option value="normal" selected>Standard (1.6)</option>
+                            <option value="relaxed">Ampia (1.85)</option>
+                        </select>
+                    </div>
+                    <div class="mp-print-field">
+                        <label for="print-opt-theme">Stile Impaginazione:</label>
+                        <select id="print-opt-theme" class="mp-print-select">
+                            <option value="clean" selected>Pulito con accenti</option>
+                            <option value="academic">Accademico B&amp;W (Stampa)</option>
+                            <option value="formal">Editoriale Formale</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="mp-print-row">
-                    <label for="print-opt-fontsize">Dimensione Testo:</label>
-                    <select id="print-opt-fontsize" class="mp-print-select">
-                        <option value="compact">Compatto (11 pt)</option>
-                        <option value="normal" selected>Standard (12 pt)</option>
-                        <option value="large">Grande (13.5 pt)</option>
-                    </select>
-                </div>
-                <div class="mp-print-row">
-                    <label for="print-opt-orientation">Orientamento:</label>
-                    <select id="print-opt-orientation" class="mp-print-select">
-                        <option value="portrait" selected>Verticale (Portrait)</option>
-                        <option value="landscape">Orizzontale (Landscape)</option>
-                    </select>
-                </div>
-                <div class="mp-print-row">
+
+                <div class="mp-print-checks">
                     <label class="mp-print-check">
                         <input type="checkbox" id="print-opt-avoid-breaks" checked>
-                        <span>Evita di tagliare a metà diagrammi, tabelle e codice</span>
+                        <span>Anti-spezzamento blocchi (formule, diagrammi, tabelle, codice e liste interi)</span>
+                    </label>
+                    <label class="mp-print-check">
+                        <input type="checkbox" id="print-opt-header-title" checked>
+                        <span>Mostra intestazione superiore con titolo del documento</span>
+                    </label>
+                    <label class="mp-print-check">
+                        <input type="checkbox" id="print-opt-footer-date" checked>
+                        <span>Mostra piè di pagina con data e ora di generazione</span>
+                    </label>
+                    <label class="mp-print-check">
+                        <input type="checkbox" id="print-opt-h1-break">
+                        <span>Inizia ogni capitolo (Titolo H1) su una nuova pagina</span>
                     </label>
                 </div>
+
                 <div class="mp-print-tip">
-                    💡 Per ottenere un <strong>PDF vettoriale nitido</strong> al 100%, premi "Stampa / Salva PDF" e seleziona <strong>"Salva come PDF"</strong> nel dialogo di stampa del browser.
+                    💡 Per ottenere un <strong>PDF vettoriale nitido</strong> al 100%, premi "Stampa / Salva PDF" e seleziona <strong>"Salva come PDF"</strong> nel dialogo del browser.
                 </div>
             </div>
             <div class="mp-modal-footer">
-                <button class="mp-modal-btn" onclick="insertPageBreak(); closePrintModal();">Inserisci Salto Pagina</button>
+                <button class="mp-modal-btn" type="button" onclick="insertPageBreak(); closePrintModal();" title="Inserisci una linea di salto pagina nel documento">✂️ Inserisci Salto Pagina</button>
                 <div style="flex:1;"></div>
-                <button class="mp-modal-btn" onclick="closePrintModal()">Annulla</button>
-                <button class="mp-modal-btn mp-modal-btn-primary" onclick="confirmPrintDocument()">Stampa / Salva PDF</button>
+                <button class="mp-modal-btn" type="button" onclick="closePrintModal()">Annulla</button>
+                <button class="mp-modal-btn" type="button" onclick="confirmPrintDocument('direct-pdf')" title="Scarica direttamente il file PDF">📄 Scarica PDF Diretto</button>
+                <button class="mp-modal-btn is-primary" type="button" onclick="confirmPrintDocument('print')" title="Apri il dialogo per la stampa o il salvataggio in PDF vettoriale">🖨️ Stampa / Salva PDF</button>
             </div>
         </div>
     </div>

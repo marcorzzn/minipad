@@ -200,8 +200,10 @@ window.MiniPadExport = (function () {
     const { md: prot, codeBlocks, maths, currencies } = extractProtected(md, rid);
     const tables = [];
 
-    // Salto pagina manuale
-    let body = prot.replace(/<div\s+class=["']page-break["']\s*><\/div>/gi, '\n\\clearpage\n');
+    // Salto pagina manuale (incluso \pagebreak, <!-- pagebreak -->, ---pagebreak---)
+    let body = prot
+      .replace(/^[ \t]*(?:\\pagebreak|<!--\s*pagebreak\s*-->|---pagebreak---|===pagebreak===)[ \t]*$/gim, '\n\\clearpage\n')
+      .replace(/<div\s+class=["']page-break["']\s*><\/div>/gi, '\n\\clearpage\n');
 
     // Tabelle Markdown → tabular
     body = body.replace(/(?:^|\n)((?:\|.+\|\n?)+)/g, (block) => {
@@ -487,7 +489,9 @@ ${body}
     const currencies = [];
 
     // Salto pagina -> separatore
-    text = text.replace(/<div\s+class=["']page-break["']\s*><\/div>/gi, '\n\n--------------------\n\n');
+    text = text
+      .replace(/^[ \t]*(?:\\pagebreak|<!--\s*pagebreak\s*-->|---pagebreak---|===pagebreak===)[ \t]*$/gim, '\n\n--------------------\n\n')
+      .replace(/<div\s+class=["']page-break["']\s*><\/div>/gi, '\n\n--------------------\n\n');
 
     // Code PRIMA di tutto
     text = text.replace(/```([\w-]*)\n?([\s\S]*?)```/g, (_, lang, code) => {
@@ -568,11 +572,21 @@ ${body}
   /* ============================================================
      Export PDF via html2pdf
      ============================================================ */
-  async function exportPDF(content, name) {
+  async function exportPDF(content, name, options) {
     if (typeof html2pdf === 'undefined') {
-      alert('Export PDF non disponibile: libreria html2pdf non caricata. Puoi usare "Stampa / Opzioni PDF" per salvare via browser.');
+      alert('Export PDF non disponibile: libreria html2pdf non caricata. Puoi usare "Stampa / Salva PDF" per salvare via browser.');
       return;
     }
+    const opts = options || {};
+    const marginMap = {
+      compact: [10, 10, 10, 10],
+      normal: [15, 15, 15, 15],
+      wide: [25, 25, 25, 25],
+      zero: [6, 6, 6, 6]
+    };
+    const marginArr = marginMap[opts.margins] || [12, 12, 12, 12];
+    const orient = opts.orientation === 'landscape' ? 'landscape' : 'portrait';
+
     const holder = document.createElement('div');
     holder.style.cssText =
       'padding:20px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;' +
@@ -589,18 +603,18 @@ ${body}
 
     try {
       await html2pdf().set({
-        margin: [12, 12, 12, 12],
+        margin: marginArr,
         filename: `${sanitizeFilename(name)}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: orient },
         pagebreak: { mode: ['css', 'legacy'] }
       }).from(holder).save();
     } catch (e) {
       console.error('[Export] PDF fallito', e);
       alert("Errore durante l'esportazione PDF: " + e.message);
     } finally {
-      document.body.removeChild(holder);
+      if (holder.parentNode) document.body.removeChild(holder);
     }
   }
 
@@ -610,25 +624,61 @@ ${body}
   function printDocument(content, name, options) {
     const opts = Object.assign({
       margins: 'normal',
+      fontFamily: 'sans',
       fontSize: 'normal',
+      lineHeight: 'normal',
       orientation: 'portrait',
-      avoidBreaks: true
+      theme: 'clean',
+      avoidBreaks: true,
+      headerTitle: true,
+      footerDate: true,
+      h1Break: false
     }, options || {});
 
     const marginMap = {
       compact: '10mm',
       normal: '15mm',
-      wide: '25mm'
+      wide: '25mm',
+      zero: '6mm'
+    };
+    const fontFamMap = {
+      sans: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      serif: 'Georgia, Cambria, "Times New Roman", Times, serif',
+      mono: 'Consolas, "SF Mono", Monaco, Menlo, "Courier New", monospace'
     };
     const fontMap = {
       compact: '10.5pt',
       normal: '12pt',
       large: '13.5pt'
     };
+    const lineHeightMap = {
+      compact: '1.4',
+      normal: '1.6',
+      relaxed: '1.85'
+    };
 
     const marginVal = marginMap[opts.margins] || '15mm';
+    const fontFamVal = fontFamMap[opts.fontFamily] || fontFamMap.sans;
     const fontVal = fontMap[opts.fontSize] || '12pt';
+    const lineHVal = lineHeightMap[opts.lineHeight] || '1.6';
     const orientationVal = opts.orientation === 'landscape' ? 'landscape' : 'portrait';
+
+    let themeHeaderBorder = '#ccc';
+    let themeCodeBg = '#f4f4f4';
+    let themeQuoteBorder = '#0067c0';
+    let themeThBg = '#f0f0f0';
+
+    if (opts.theme === 'academic') {
+      themeHeaderBorder = '#000';
+      themeCodeBg = '#fcfcfc';
+      themeQuoteBorder = '#333';
+      themeThBg = '#e8e8e8';
+    } else if (opts.theme === 'formal') {
+      themeHeaderBorder = '#444';
+      themeCodeBg = '#f6f8fa';
+      themeQuoteBorder = '#555';
+      themeThBg = '#ececec';
+    }
 
     const body = MiniPadPreview.renderToHTML(content);
     const w = window.open('', '_blank');
@@ -651,43 +701,88 @@ ${body}
   }
   * { box-sizing: border-box; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: ${fontFamVal};
     font-size: ${fontVal};
-    line-height: 1.6;
+    line-height: ${lineHVal};
     color: #1a1a1a;
     background: #fff;
     margin: 0;
     padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .mp-print-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid ${themeHeaderBorder};
+    padding-bottom: 5px;
+    margin-bottom: 20px;
+    font-size: 8.5pt;
+    color: #666;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .mp-print-header strong {
+    color: #222;
+  }
+  .mp-print-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #ddd;
+    padding-top: 6px;
+    margin-top: 25px;
+    font-size: 8pt;
+    color: #888;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
     color: #111;
-    margin-top: 1.4em;
-    margin-bottom: 0.6em;
-    ${opts.avoidBreaks ? 'break-after: avoid !important; page-break-after: avoid !important;' : ''}
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-weight: 700;
+    ${opts.avoidBreaks ? 'break-after: avoid-page !important; break-after: avoid !important; page-break-after: avoid !important; break-inside: avoid !important;' : ''}
   }
-  h1 { font-size: 1.9em; border-bottom: 2px solid #333; padding-bottom: 4px; }
-  h2 { font-size: 1.5em; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
-  h3 { font-size: 1.25em; }
+  ${opts.h1Break ? 'h1 { break-before: page !important; page-break-before: always !important; } h1:first-of-type { break-before: auto !important; page-break-before: auto !important; }' : ''}
+  h1 { font-size: 1.85em; border-bottom: 2px solid #222; padding-bottom: 4px; }
+  h2 { font-size: 1.45em; border-bottom: 1px solid #ccc; padding-bottom: 3px; }
+  h3 { font-size: 1.2em; }
+  h4 { font-size: 1.05em; }
+  p {
+    margin: 0.6em 0 0.9em 0;
+    orphans: 3;
+    widows: 3;
+  }
+  ul, ol {
+    margin: 0.5em 0 0.9em 1.4em;
+    padding: 0;
+  }
+  li {
+    margin-bottom: 0.35em;
+    ${opts.avoidBreaks ? 'break-inside: avoid !important; page-break-inside: avoid !important;' : ''}
+  }
   pre {
-    background: #f4f4f4;
-    padding: 1em;
+    background: ${themeCodeBg};
+    padding: 0.85em 1em;
     border-radius: 4px;
     border: 1px solid #ddd;
     overflow-x: auto;
-    font-family: Consolas, "SF Mono", Monaco, monospace;
-    font-size: 0.9em;
+    font-family: Consolas, "SF Mono", Monaco, Menlo, monospace;
+    font-size: 0.88em;
+    line-height: 1.45;
+    margin: 1em 0;
     ${opts.avoidBreaks ? 'break-inside: avoid !important; page-break-inside: avoid !important;' : ''}
   }
   code {
-    background: #f4f4f4;
+    background: ${themeCodeBg};
     padding: .15em .35em;
     border-radius: 3px;
-    font-family: Consolas, "SF Mono", Monaco, monospace;
-    font-size: 0.9em;
+    font-family: Consolas, "SF Mono", Monaco, Menlo, monospace;
+    font-size: 0.88em;
   }
-  pre code { background: transparent; padding: 0; border: none; }
+  pre code { background: transparent; padding: 0; border: none; font-size: 1em; }
   blockquote {
-    border-left: 4px solid #0067c0;
+    border-left: 4px solid ${themeQuoteBorder};
     margin: 1em 0;
     padding: 0.4em 1em;
     background: #f8f9fa;
@@ -698,7 +793,7 @@ ${body}
     border-collapse: collapse;
     width: 100%;
     margin: 1.2em 0;
-    font-size: 0.95em;
+    font-size: 0.92em;
   }
   thead {
     display: table-header-group !important;
@@ -708,30 +803,40 @@ ${body}
   }
   th, td {
     border: 1px solid #ccc;
-    padding: .5em .8em;
+    padding: .45em .75em;
     text-align: left;
   }
-  th { background: #f0f0f0; font-weight: 600; }
+  th { background: ${themeThBg}; font-weight: 600; }
   .mermaid {
     background: #fafafa;
     padding: 1em;
     border: 1px solid #eee;
     border-radius: 4px;
     text-align: center;
-    margin: 1.5em 0;
+    margin: 1.2em 0;
     ${opts.avoidBreaks ? 'break-inside: avoid !important; page-break-inside: avoid !important;' : ''}
+  }
+  .mermaid svg {
+    max-width: 100% !important;
+    height: auto !important;
   }
   .katex-display {
     margin: 1em 0;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
     ${opts.avoidBreaks ? 'break-inside: avoid !important; page-break-inside: avoid !important;' : ''}
   }
   .page-break {
     break-after: page !important;
     page-break-after: always !important;
-    height: 0;
-    margin: 0;
-    padding: 0;
-    border: none;
+    break-before: page !important;
+    page-break-before: always !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    display: block !important;
+    visibility: hidden !important;
   }
   @media print {
     .katex-mathml { display: none !important; }
@@ -741,7 +846,19 @@ ${body}
 </style>
 </head>
 <body>
+${opts.headerTitle ? `
+  <div class="mp-print-header">
+    <strong>${escapeHtml(name || 'Documento')}</strong>
+    <span>${new Date().toLocaleDateString('it-IT')}</span>
+  </div>
+` : ''}
 ${body}
+${opts.footerDate ? `
+  <div class="mp-print-footer">
+    <span>MiniPad — Documento formattato</span>
+    <span>Generato il ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</span>
+  </div>
+` : ''}
 <script>
   (function() {
     async function init() {
@@ -790,11 +907,17 @@ ${body}
     }
   }
 
-  function confirmPrintDocument() {
+  function confirmPrintDocument(action) {
     const margins = document.getElementById('print-opt-margins')?.value || 'normal';
+    const fontFamily = document.getElementById('print-opt-fontfamily')?.value || 'sans';
     const fontSize = document.getElementById('print-opt-fontsize')?.value || 'normal';
+    const lineHeight = document.getElementById('print-opt-lineheight')?.value || 'normal';
     const orientation = document.getElementById('print-opt-orientation')?.value || 'portrait';
+    const theme = document.getElementById('print-opt-theme')?.value || 'clean';
     const avoidBreaks = document.getElementById('print-opt-avoid-breaks')?.checked ?? true;
+    const headerTitle = document.getElementById('print-opt-header-title')?.checked ?? true;
+    const footerDate = document.getElementById('print-opt-footer-date')?.checked ?? true;
+    const h1Break = document.getElementById('print-opt-h1-break')?.checked ?? false;
 
     closePrintModal();
 
@@ -813,12 +936,22 @@ ${body}
       title = (titleEl.value || titleEl.textContent || 'minipad').trim();
     }
 
-    printDocument(content, title, {
-      margins,
-      fontSize,
-      orientation,
-      avoidBreaks
-    });
+    if (action === 'direct-pdf') {
+      exportPDF(content, title, { margins, orientation });
+    } else {
+      printDocument(content, title, {
+        margins,
+        fontFamily,
+        fontSize,
+        lineHeight,
+        orientation,
+        theme,
+        avoidBreaks,
+        headerTitle,
+        footerDate,
+        h1Break
+      });
+    }
   }
 
   // Bridge su window per retrocompatibilità ed eventi DOM inline
@@ -846,9 +979,7 @@ ${body}
     if (name) exportLaTeX(content, name);
   };
   window.exportPDF = function() {
-    const content = typeof getEditorContent === 'function' ? getEditorContent() : (window.editorInstance ? window.editorInstance.value() : '');
-    const name = typeof promptExportName === 'function' ? promptExportName() : 'minipad';
-    if (name) exportPDF(content, name);
+    openPrintModal();
   };
   window.printDocument = printDocument;
 

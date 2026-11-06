@@ -21,6 +21,14 @@ function initEasyMDE(initialContent = '') {
         placeholder: getStr('placeholder')
     });
 
+    window.easyMDE = easyMDE;
+    window.insertDiagramAtCursor = function(text) {
+        if (easyMDE && easyMDE.codemirror) {
+            easyMDE.codemirror.replaceSelection(text);
+            easyMDE.codemirror.focus();
+        }
+    };
+
     // Listen for content changes
     easyMDE.codemirror.on('change', () => {
         const content = easyMDE.value();

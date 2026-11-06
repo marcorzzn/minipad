@@ -273,7 +273,8 @@ body.mp-modal-open { overflow: hidden; }
 
 .mp-modal-btn:hover { background: var(--mp-bg-hover); }
 
-.mp-modal-btn.is-primary {
+.mp-modal-btn.is-primary,
+.mp-modal-btn.mp-modal-btn-primary {
   background: var(--mp-accent);
   border-color: var(--mp-accent);
   color: var(--mp-accent-text);

@@ -154,7 +154,11 @@ window.MiniPadPreview = (function () {
     if (typeof marked === 'undefined') return escapeHtml(markdown || '');
 
     const rid = generateRenderId();
-    const source = String(markdown || '');
+    // Normalizza scorciatoie salto pagina (\pagebreak, <!-- pagebreak -->, ---pagebreak---) in <div class="page-break"></div>
+    const source = String(markdown || '').replace(
+      /^[ \t]*(?:\\pagebreak|<!--\s*pagebreak\s*-->|---pagebreak---|===pagebreak===)[ \t]*$/gim,
+      '\n\n<div class="page-break"></div>\n\n'
+    );
     const { md: protectedMd, codeBlocks, currencies } = protectCodeAndCurrency(source, rid);
 
     let html;

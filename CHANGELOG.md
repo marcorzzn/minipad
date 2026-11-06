@@ -2,6 +2,33 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.7] - 2026-11-06
+
+### Suite Avanzata Impaginazione & Stampa PDF & Modale Diagrammi Mermaid
+
+#### 1. Sistema di Impaginazione Avanzata e Personalizzazione Stampa / PDF (`js/export.js`, `index.html`, `css/mac-classic.css`, `js/preview.js`)
+- **Modale Impostazioni Stampa & PDF Potenziato**:
+  - **Margini calibrati**: scelta tra Stretti (10 mm), Normali (15 mm), Ampi (25 mm) e Minimi (6 mm).
+  - **Famiglia Caratteri di Stampa**: opzione per comporre il documento con Moderno Sans-serif (Segoe UI/Roboto), Classico con Grazie / Serif (Georgia/Cambria) o Tecnico Monospazio (Consolas/SF Mono).
+  - **Dimensione Carattere e Interlinea**: selezione precisa della scala (Compatto 10.5 pt, Standard 12 pt, Grande 13.5 pt) e spaziatura interlinea (Compatta 1.4, Standard 1.6, Ampia 1.85).
+  - **Stili di Impaginazione**: tre stili dedicati (*Pulito con accenti*, *Accademico B&W* privo di sfondi colorati per stampa laser, *Editoriale Formale*).
+  - **Regole Anti-spezzamento Intelligenti**: prevenzione attiva del troncamento a metà pagina di elementi delle liste (`li`), tabelle (`tr`), blocchi codice (`pre`), citazioni (`blockquote`), diagrammi Mermaid (`.mermaid`) e formule KaTeX (`.katex-display`), oltre a protezione titoli orfani a fondo pagina (`break-after: avoid !important; break-inside: avoid !important;`).
+  - **Intestazione e Piè di Pagina Dinamici**: opzione per stampare titolo documento in alto e timestamp di generazione in basso.
+  - **Salto Capitolo su H1**: possibilità di forzare ogni titolo principale H1 all'inizio di una nuova pagina A4.
+- **Supporto Universale Salto Pagina**:
+  - Riconoscimento immediato delle sintassi `\pagebreak`, `<!-- pagebreak -->`, `---pagebreak---` e `<div class="page-break"></div>`.
+  - **Visualizzatore A4 nell'anteprima live**: divisore tratteggiato elegante con indicatore visivo `✂ Salto Pagina (A4)` in anteprima per sapere esattamente dove finirà ogni pagina prima di stampare.
+  - Conversione automatica in `\clearpage` nell'esportazione LaTeX e separatore pulito nei file TXT.
+- **Doppia modalità di esportazione PDF**:
+  - *Stampa / Salva PDF Vettoriale*: output a massima risoluzione tipografica tramite motore di stampa nativo.
+  - *Scarica PDF Diretto*: generazione istantanea del file `.pdf` scaricabile con i margini e l'orientamento configurati.
+
+#### 2. Integrazione Modale Centrale Diagrammi Mermaid (`js/diagram-builder.js`, `css/diagram-modal.css`, `js/editor.js`, `index.html`)
+- **Finestra modale interattiva**: apertura centrale con categorie grafiche (Flowchart, Sequence, Class, State, Pie, Mindmap, Git Graph).
+- **Template preconfigurati**: selezione visuale con icone e schemi di partenza pronti per ogni tipologia di diagramma.
+- **Editor codice con Anteprima Live**: debouncing a 250ms con rendering KaTeX/Mermaid dinamico e rilevamento automatico del tema scuro.
+- **Inserimento Diretto al Cursore**: pulsante "Inserisci nell'editor" che inserisce il blocco ` ```mermaid ... ``` ` direttamente alla posizione del cursore in EasyMDE/CodeMirror senza perdere il focus.
+
 ## [v1.5.6.1] - 2026-11-06
 
 ### Pulizia Icone, Spaziatore Toolbar a Schermo Intero & Design Schede/Gruppi
