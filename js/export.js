@@ -111,6 +111,53 @@ window.MiniPadExport = (function () {
   }
 
   /* ============================================================
+     Helper LaTeX (Emoji & Liste annidate)
+     ============================================================ */
+  function stripEmoji(s) {
+    return String(s).replace(
+      /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F1E6}-\u{1F1FF}]/gu,
+      ''
+    ).replace(/\s+/g, ' ').trim();
+  }
+
+  function convertNestedList(lines, ordered) {
+    const items = [];
+    for (const line of lines) {
+      const m = line.match(/^([ \t]*)([-*]|\d+\.)\s+(.+)$/);
+      if (!m) continue;
+      const level = Math.floor(m[1].replace(/\t/g, '  ').length / 2);
+      items.push({ level, text: m[3] });
+    }
+    if (!items.length) return '';
+
+    const env = ordered ? 'enumerate' : 'itemize';
+    let result = '';
+    let currentLevel = -1;
+    const stack = [];
+
+    for (const item of items) {
+      if (item.level > currentLevel) {
+        for (let l = currentLevel + 1; l <= item.level; l++) {
+          result += `\\begin{${env}}\n`;
+          stack.push(l);
+        }
+      } else if (item.level < currentLevel) {
+        for (let l = currentLevel; l > item.level; l--) {
+          result += `\\end{${env}}\n`;
+          stack.pop();
+        }
+      }
+      result += `\\item ${item.text}\n`;
+      currentLevel = item.level;
+    }
+    while (stack.length > 0) {
+      result += `\\end{${env}}\n`;
+      stack.pop();
+    }
+    return '\n' + result + '\n';
+  }
+
+  /* ============================================================
      Markdown → LaTeX
      ============================================================ */
   function markdownToLatex(md) {
@@ -143,17 +190,17 @@ window.MiniPadExport = (function () {
       return `\n\nMP-${rid}-TAB-${tables.length - 1}\n\n`;
     });
 
-    // Trasformazioni strutturali
+    // Trasformazioni strutturali con emoji stripping (M5)
     body = body
-      .replace(/^###### (.+)$/gm, '\\paragraph{$1}')
-      .replace(/^##### (.+)$/gm, '\\subparagraph{$1}')
-      .replace(/^#### (.+)$/gm, '\\subsubsection{$1}')
-      .replace(/^### (.+)$/gm, '\\subsection{$1}')
-      .replace(/^## (.+)$/gm, '\\section{$1}')
-      .replace(/^# (.+)$/gm, '\\section*{$1}')
+      .replace(/^###### (.+)$/gm, (_, t) => `\\paragraph{${stripEmoji(t)}}`)
+      .replace(/^##### (.+)$/gm, (_, t) => `\\subparagraph{${stripEmoji(t)}}`)
+      .replace(/^#### (.+)$/gm, (_, t) => `\\subsubsection{${stripEmoji(t)}}`)
+      .replace(/^### (.+)$/gm, (_, t) => `\\subsection{${stripEmoji(t)}}`)
+      .replace(/^## (.+)$/gm, (_, t) => `\\section{${stripEmoji(t)}}`)
+      .replace(/^# (.+)$/gm, (_, t) => `\\section*{${stripEmoji(t)}}`)
       .replace(/^---+$/gm, '\\bigskip\\hrule\\bigskip');
 
-    // Blockquote (semplice, un livello)
+    // M1: Blockquote (semplice, un livello)
     body = body.replace(
       /(?:^|\n)((?:> .+\n?)+)/g,
       (block) => {
@@ -162,21 +209,40 @@ window.MiniPadExport = (function () {
       }
     );
 
-    // Liste
-    body = body.replace(/(?:^|\n)((?:[-*] .+\n?)+)/g, (block) => {
-      const items = block.trim().split('\n')
-        .map((l) => `\\item ${l.replace(/^[-*] /, '')}`)
-        .join('\n');
-      return `\n\\begin{itemize}\n${items}\n\\end{itemize}\n`;
-    });
-    body = body.replace(/(?:^|\n)((?:1\. .+\n?)+)/g, (block) => {
-      const items = block.trim().split('\n')
-        .map((l) => `\\item ${l.replace(/^\d+\. /, '')}`)
-        .join('\n');
-      return `\n\\begin{enumerate}\n${items}\n\\end{enumerate}\n`;
-    });
+    // M2+M3: Task list e Liste con supporto annidamento
+    body = body.replace(
+      /(?:^|\n)((?:[ \t]*[-*] \[[ xX]\] .+\n?)+)/g,
+      (block) => {
+        const items = block.trim().split('\n')
+          .map((l) => {
+            const m = l.match(/^[ \t]*[-*] \[([ xX])\] (.+)$/);
+            if (!m) return null;
+            const checked = m[1].toLowerCase() === 'x';
+            const marker = checked ? '$\\boxtimes$' : '$\\square$';
+            return `\\item[${marker}] ${m[2]}`;
+          })
+          .filter(Boolean)
+          .join('\n');
+        return `\n\\begin{itemize}\n${items}\n\\end{itemize}\n`;
+      }
+    );
 
-    // Grassetto / corsivo
+    // Liste non ordinate con supporto annidamento (indent-based)
+    body = body.replace(
+      /(?:^|\n)((?:[ \t]*[-*] .+\n?)+)/g,
+      (block) => convertNestedList(block.trim().split('\n'), false)
+    );
+
+    // Liste ordinate con supporto annidamento
+    body = body.replace(
+      /(?:^|\n)((?:[ \t]*\d+\. .+\n?)+)/g,
+      (block) => convertNestedList(block.trim().split('\n'), true)
+    );
+
+    // M4: Strikethrough (richiede \usepackage{ulem})
+    body = body.replace(/~~(.+?)~~/g, '\\sout{$1}');
+
+    // Grassetto / corsivo / link
     body = body
       .replace(/\*\*(.+?)\*\*/g, '\\textbf{$1}')
       .replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, '$1\\textit{$2}')
@@ -350,10 +416,11 @@ ${body}
 \\usepackage{graphicx}
 \\usepackage{hyperref}
 \\usepackage{geometry}
+\\usepackage{ulem}
 \\geometry{margin=2.5cm}
 \\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
 
-\\title{${escapeLatexText(name || 'minipad')}}
+\\title{${escapeLatexText(stripEmoji(name || 'minipad'))}}
 \\author{}
 \\date{\\today}
 
@@ -446,6 +513,9 @@ ${body}
       new RegExp(`MP-${rid}-ICODE-(\\d+)`, 'g'),
       (_, i) => codeBlocks[+i].code
     );
+
+    // M8: un-escape completo di \$ residui (oltre a \$N già gestiti)
+    text = text.replace(/\\\$/g, '$');
 
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     download(blob, `${sanitizeFilename(name)}.txt`);

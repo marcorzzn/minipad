@@ -2,6 +2,28 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.3.2] - 2026-11-06
+
+### Fix Minori Esportazione LaTeX & Plain Text (`js/export.js`)
+
+#### 1. Supporto Blockquote LaTeX (M1)
+- Conversione dei blocchi di citazione Markdown (`> Citazione`) nell'ambiente nativo `\begin{quote}...\end{quote}`.
+
+#### 2. Task List & Liste Annidate a Più Livelli (M2 + M3)
+- **Task List**: conversione degli elementi `- [ ]` e `- [x]` in `\item[$\square$]` e `\item[$\boxtimes$]` (pacchetto `amssymb`).
+- **Liste Annidate**: algoritmo ricorsivo indent-based (`convertNestedList`) che genera gerarchie arbitrarie di `\begin{itemize}` e `\begin{enumerate}` con corretta apertura e chiusura dei blocchi.
+
+#### 3. Testo Barrato / Strikethrough (M4)
+- Conversione della sintassi `~~testo~~` nel comando LaTeX `\sout{testo}`, con inclusione del pacchetto `\usepackage{ulem}` nel preambolo LaTeX.
+
+#### 4. Rimozione Emoji nei Titoli per pdflatex (M5)
+- Funzione `stripEmoji` applicata selettivamente agli argomenti di `\section`, `\subsection`, `\paragraph` e `\title{}` per prevenire errori di compilazione in ambienti LaTeX tradizionali a 8-bit (`pdflatex`).
+
+#### 5. Un-escape Dollari Residui in TXT (M8)
+- Ripristino finale di tutti i dollari escapati non numerici (es. `\$abc` -> `$abc`) nei file `.txt` esportati.
+
+---
+
 ## [v1.5.3.1] - 2026-11-06
 
 ### Segnaposto Nonce-Based & Hardening Pipeline CommonMark
