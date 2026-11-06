@@ -1,0 +1,252 @@
+/* =========================================================
+   MiniPad v1.5.4 — Mac Classic Medium
+   Caricato DOPO style.css: override mirati al chrome UI.
+   NON tocca EasyMDE, KaTeX, Mermaid, sidebar, modali.
+   ========================================================= */
+
+:root {
+  --mp-bg:          #ffffff;
+  --mp-bg-bar:      #f5f5f5;
+  --mp-bg-panel:    #ebebeb;
+  --mp-bg-hover:    #e0e0e0;
+  --mp-bg-active:   #d2d2d2;
+  --mp-bg-drop:     #fafafa;
+  --mp-text:        #1a1a1a;
+  --mp-text-muted:  #555555;
+  --mp-border-soft: #c4c4c4;
+  --mp-border-hard: #1a1a1a;
+  --mp-accent:      #0a5cc2;
+  --mp-accent-text: #ffffff;
+
+  --mp-space-xs: 4px;
+  --mp-space-sm: 8px;
+  --mp-space-md: 12px;
+  --mp-icon:     16px;
+  --mp-btn:      26px;
+  --mp-font:     -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --mp-font-mono: "SF Mono", Menlo, Consolas, monospace;
+  --mp-font-size: 13px;
+  --mp-font-sm:   12px;
+}
+
+/* Dark mode: barra inverte, icone schiariscono */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mp-bg:          #1c1c1c;
+    --mp-bg-bar:      #2a2a2a;
+    --mp-bg-panel:    #232323;
+    --mp-bg-hover:    #363636;
+    --mp-bg-active:   #404040;
+    --mp-bg-drop:     #2a2a2a;
+    --mp-text:        #e8e8e8;
+    --mp-text-muted:  #a0a0a0;
+    --mp-border-soft: #454545;
+    --mp-border-hard: #8a8a8a;
+    --mp-accent:      #4a9eff;
+    --mp-accent-text: #ffffff;
+  }
+}
+body.force-light { color-scheme: light; }
+body.force-dark  { color-scheme: dark; }
+
+/* Inclusione per compatibilità con dark-mode manuale di Minipad */
+body.dark-mode {
+  --mp-bg:          #1c1c1c;
+  --mp-bg-bar:      #2a2a2a;
+  --mp-bg-panel:    #232323;
+  --mp-bg-hover:    #363636;
+  --mp-bg-active:   #404040;
+  --mp-bg-drop:     #2a2a2a;
+  --mp-text:        #e8e8e8;
+  --mp-text-muted:  #a0a0a0;
+  --mp-border-soft: #454545;
+  --mp-border-hard: #8a8a8a;
+  --mp-accent:      #4a9eff;
+  --mp-accent-text: #ffffff;
+}
+
+/* ===== Menu bar ===== */
+.mp-menubar {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 var(--mp-space-sm);
+  background: var(--mp-bg-bar);
+  border-bottom: 1px solid var(--mp-border-soft);
+  font: var(--mp-font-size) var(--mp-font);
+  color: var(--mp-text);
+  user-select: none;
+  -webkit-user-select: none;
+  flex-shrink: 0;
+}
+
+.mp-menubar > .mp-menu {
+  position: relative;
+  padding: 3px var(--mp-space-sm);
+  cursor: default;
+  color: inherit;
+}
+
+.mp-menubar > .mp-menu:hover { background: var(--mp-bg-hover); }
+
+.mp-menu > .mp-drop {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 190px;
+  padding: 3px 0;
+  background: var(--mp-bg-drop);
+  border: 1px solid var(--mp-border-hard);
+  z-index: 1000;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.mp-menu:hover > .mp-drop,
+.mp-menu:focus-within > .mp-drop { display: block; }
+
+.mp-drop button {
+  display: block;
+  width: 100%;
+  padding: 4px var(--mp-space-md);
+  background: none;
+  border: 0;
+  text-align: left;
+  font: var(--mp-font-size) var(--mp-font);
+  color: var(--mp-text);
+  cursor: pointer;
+}
+
+.mp-drop button:hover {
+  background: var(--mp-accent);
+  color: var(--mp-accent-text);
+}
+
+.mp-drop hr {
+  margin: 4px 0;
+  border: 0;
+  border-top: 1px solid var(--mp-border-soft);
+}
+
+/* ===== Toolbar ===== */
+.mp-toolbar {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 var(--mp-space-sm);
+  gap: 2px;
+  background: var(--mp-bg-bar);
+  border-bottom: 1px solid var(--mp-border-soft);
+  font: var(--mp-font-size) var(--mp-font);
+  color: var(--mp-text);
+  user-select: none;
+  -webkit-user-select: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
+}
+
+.mp-toolbar > * { flex-shrink: 0; }
+
+.mp-toolbar .mp-sep {
+  display: inline-block;
+  width: 1px;
+  height: 20px;
+  background: var(--mp-border-soft);
+  margin: 0 var(--mp-space-xs);
+}
+
+.mp-toolbar .mp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--mp-btn);
+  height: var(--mp-btn);
+  padding: 0 5px;
+  border: 1px solid transparent;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: var(--mp-font-sm);
+  border-radius: 0;
+  cursor: pointer;
+  gap: 3px;
+}
+
+.mp-toolbar .mp-btn:hover {
+  background: var(--mp-bg-hover);
+  border-color: var(--mp-border-soft);
+}
+
+.mp-toolbar .mp-btn:active,
+.mp-toolbar .mp-btn.is-active {
+  background: var(--mp-bg-active);
+  border-color: var(--mp-border-hard);
+}
+
+.mp-toolbar .mp-btn .mp-i {
+  width: var(--mp-icon);
+  height: var(--mp-icon);
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 0;
+  display: block;
+  flex-shrink: 0;
+}
+
+.mp-toolbar .mp-btn.has-caret { padding-right: 16px; position: relative; }
+.mp-toolbar .mp-btn.has-caret::after {
+  content: "";
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  width: 0; height: 0;
+  transform: translateY(-50%);
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 4px solid currentColor;
+}
+
+.mp-toolbar select {
+  height: var(--mp-btn);
+  padding: 0 4px;
+  border: 1px solid var(--mp-border-soft);
+  border-radius: 0;
+  background: var(--mp-bg);
+  color: var(--mp-text);
+  font: var(--mp-font-sm) var(--mp-font);
+  cursor: pointer;
+}
+.mp-toolbar select:hover { border-color: var(--mp-border-hard); }
+
+.mp-toolbar input.mp-size {
+  width: 40px;
+  height: var(--mp-btn);
+  padding: 0 4px;
+  border: 1px solid var(--mp-border-soft);
+  border-radius: 0;
+  background: var(--mp-bg);
+  color: var(--mp-text);
+  font: var(--mp-font-sm) var(--mp-font);
+  text-align: center;
+}
+
+/* Dark mode manuale */
+body.force-dark .mp-menubar,
+body.force-dark .mp-toolbar,
+body.dark-mode .mp-menubar,
+body.dark-mode .mp-toolbar {
+  --mp-bg-bar:      #2a2a2a;
+  --mp-bg-panel:    #232323;
+  --mp-bg-hover:    #363636;
+  --mp-bg-active:   #404040;
+  --mp-bg-drop:     #2a2a2a;
+  --mp-text:        #e8e8e8;
+  --mp-text-muted:  #a0a0a0;
+  --mp-border-soft: #454545;
+  --mp-border-hard: #8a8a8a;
+  --mp-accent:      #4a9eff;
+}
+
+/* Nasconde la vecchia toolbar se ancora presente */
+.legacy-toolbar { display: none !important; }

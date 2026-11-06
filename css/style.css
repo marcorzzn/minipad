@@ -1177,3 +1177,5 @@
                 display: none !important;
             }
         }
+
+        .editor-toolbar { display: none !important; }

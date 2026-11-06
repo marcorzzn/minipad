@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minipad-v1.5.3.2';
+const CACHE_NAME = 'minipad-v1.5.4';
 const urlsToCache = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ const urlsToCache = [
   './icon-192.png',
   './icon-512.png',
   './css/style.css',
+  './css/mac-classic.css',
   './js/data.js',
   './js/smart-paste.js',
   './js/preview.js',

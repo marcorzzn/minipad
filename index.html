@@ -42,228 +42,338 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
     <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mac-classic.css">
 
 </head>
 
 <body>
+
+    <!-- SVG Icon Sprite (Mac Classic) -->
+    <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <!-- ===== Menu / nav ===== -->
+    <symbol id="i-menu" viewBox="0 0 16 16">
+      <path d="M2 4h12M2 8h12M2 12h12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-caret" viewBox="0 0 16 16">
+      <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- ===== Text formatting (lettere) ===== -->
+    <symbol id="i-bold" viewBox="0 0 16 16">
+      <text x="8" y="12" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-weight="800" font-size="13" fill="currentColor">B</text>
+    </symbol>
+    <symbol id="i-italic" viewBox="0 0 16 16">
+      <text x="8" y="12" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="13" fill="currentColor">I</text>
+    </symbol>
+    <symbol id="i-underline" viewBox="0 0 16 16">
+      <text x="8" y="11" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="12" fill="currentColor">U</text>
+      <path d="M4 13.5h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-strike" viewBox="0 0 16 16">
+      <text x="8" y="12" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="12" fill="currentColor">S</text>
+      <path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    </symbol>
+    <symbol id="i-sup" viewBox="0 0 16 16">
+      <text x="3" y="12" font-family="Helvetica Neue, Arial, sans-serif" font-size="9" fill="currentColor">x</text>
+      <text x="9" y="7" font-family="Helvetica Neue, Arial, sans-serif" font-size="7" fill="currentColor">2</text>
+    </symbol>
+    <symbol id="i-sub" viewBox="0 0 16 16">
+      <text x="3" y="10" font-family="Helvetica Neue, Arial, sans-serif" font-size="9" fill="currentColor">x</text>
+      <text x="9" y="14" font-family="Helvetica Neue, Arial, sans-serif" font-size="7" fill="currentColor">2</text>
+    </symbol>
+
+    <!-- ===== Alignment ===== -->
+    <symbol id="i-align-left" viewBox="0 0 16 16">
+      <path d="M2 4h12M2 8h8M2 12h10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-align-center" viewBox="0 0 16 16">
+      <path d="M2 4h12M4 8h8M3 12h10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-align-right" viewBox="0 0 16 16">
+      <path d="M2 4h12M6 8h8M4 12h10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-align-justify" viewBox="0 0 16 16">
+      <path d="M2 4h12M2 8h12M2 12h12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- ===== Structure ===== -->
+    <symbol id="i-heading" viewBox="0 0 16 16">
+      <text x="2" y="12" font-family="Helvetica Neue, Arial, sans-serif" font-weight="700" font-size="12" fill="currentColor">H</text>
+      <text x="9" y="12" font-family="Georgia, serif" font-size="12" fill="currentColor">¶</text>
+    </symbol>
+    <symbol id="i-list-ul" viewBox="0 0 16 16">
+      <circle cx="3" cy="4" r="1" fill="currentColor"/>
+      <circle cx="3" cy="8" r="1" fill="currentColor"/>
+      <circle cx="3" cy="12" r="1" fill="currentColor"/>
+      <path d="M6 4h8M6 8h8M6 12h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-list-ol" viewBox="0 0 16 16">
+      <text x="1" y="5.5" font-family="Helvetica Neue, Arial, sans-serif" font-size="6" fill="currentColor">1</text>
+      <text x="1" y="9.5" font-family="Helvetica Neue, Arial, sans-serif" font-size="6" fill="currentColor">2</text>
+      <text x="1" y="13.5" font-family="Helvetica Neue, Arial, sans-serif" font-size="6" fill="currentColor">3</text>
+      <path d="M6 4h8M6 8h8M6 12h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-list-task" viewBox="0 0 16 16">
+      <rect x="1" y="3" width="4" height="4" fill="none" stroke="currentColor" stroke-width="1"/>
+      <rect x="1" y="9" width="4" height="4" fill="currentColor"/>
+      <path d="M7 5h7M7 11h7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- ===== Insert ===== -->
+    <symbol id="i-code" viewBox="0 0 16 16">
+      <path d="M5 4L1 8l4 4M11 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-math" viewBox="0 0 16 16">
+      <text x="8" y="12" text-anchor="middle" font-family="Georgia, serif" font-size="13" font-style="italic" fill="currentColor">π</text>
+    </symbol>
+    <symbol id="i-table" viewBox="0 0 16 16">
+      <rect x="2" y="3" width="12" height="10" fill="none" stroke="currentColor" stroke-width="1.2"/>
+      <path d="M2 6h12M2 10h12M6 3v10M10 3v10" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    </symbol>
+    <symbol id="i-comment" viewBox="0 0 16 16">
+      <path d="M2 3h12v8H7l-3 3v-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-hr" viewBox="0 0 16 16">
+      <path d="M2 8h12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-link" viewBox="0 0 16 16">
+      <path d="M6 10a3 3 0 0 0 4 0l2-2a3 3 0 0 0-4-4L7 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M10 6a3 3 0 0 0-4 0L4 8a3 3 0 0 0 4 4l1-1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-image" viewBox="0 0 16 16">
+      <rect x="2" y="3" width="12" height="10" fill="none" stroke="currentColor" stroke-width="1.2"/>
+      <circle cx="5.5" cy="6.5" r="1" fill="currentColor"/>
+      <path d="M2 12l4-4 3 3 2-2 3 3" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-html" viewBox="0 0 16 16">
+      <path d="M5 4L2 8l3 4M11 4l3 4-3 4M9 3l-2 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- ===== View ===== -->
+    <symbol id="i-tab" viewBox="0 0 16 16">
+      <rect x="2" y="6" width="12" height="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M2 6l3-3h6l1 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-panel-edit" viewBox="0 0 16 16">
+      <rect x="3" y="3" width="10" height="10" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-panel-split" viewBox="0 0 16 16">
+      <rect x="2" y="3" width="5" height="10" fill="currentColor"/>
+      <rect x="9" y="3" width="5" height="10" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    </symbol>
+    <symbol id="i-panel-preview" viewBox="0 0 16 16">
+      <rect x="3" y="3" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    </symbol>
+
+    <!-- ===== Meta ===== -->
+    <symbol id="i-help" viewBox="0 0 16 16">
+      <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.2"/>
+      <text x="8" y="11" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="8" font-weight="700" fill="currentColor">?</text>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 16 16">
+      <circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M10.5 10.5L14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-save" viewBox="0 0 16 16">
+      <path d="M2 2h9l3 3v9H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <rect x="5" y="2" width="5" height="4" fill="currentColor"/>
+      <rect x="4" y="9" width="8" height="5" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-sun" viewBox="0 0 16 16">
+      <circle cx="8" cy="8" r="3" fill="currentColor"/>
+      <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M13 3l-1.5 1.5M4.5 11.5L3 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-moon" viewBox="0 0 16 16">
+      <path d="M12 10a5 5 0 1 1-4-9 4 4 0 0 0 4 9z" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-settings" viewBox="0 0 16 16">
+      <circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M13 3l-1.5 1.5M4.5 11.5L3 13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-close" viewBox="0 0 16 16">
+      <path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-diagram" viewBox="0 0 16 16">
+      <circle cx="4" cy="4" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <circle cx="12" cy="4" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <circle cx="8" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <path d="M5.5 5.5L7 10.5M10.5 5.5L9 10.5M6 4h4" fill="none" stroke="currentColor" stroke-width="1.3"/>
+    </symbol>
+  </defs>
+</svg>
 
     <!-- Tooltip Element -->
     <div id="math-tooltip"></div>
 
     <div id="app-root">
         <!-- Formatting Toolbar (Merged File + Formatting) -->
-        <div id="toolbar">
-
-            <!-- File & Sidebar Group -->
-            <div class="tool-group" style="padding-left: 4px;">
-                <button class="menu-btn" onclick="toggleSidebar()" title="Esplora Note"
-                    style="margin-right: 4px; padding: 4px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                <button class="menu-btn" id="file-btn" onclick="toggleFileMenu(event)">
-                    <span style="margin-right:4px;">File</span>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M6 9l6 6 6-6" />
-                    </svg>
-                </button>
+<!-- ===== MENU BAR (Mac Classic) ===== -->
+        <nav class="mp-menubar" role="menubar">
+            <div class="mp-menu" id="file-btn" role="menuitem" tabindex="0">
+                <span data-i18n="file">File</span>
+                <div class="mp-drop" id="file-menu" role="menu">
+                    <button data-i18n="new" onclick="newNote(); closeAllMenus();">Nuova Scheda</button>
+                    <button data-i18n="save_title" onclick="saveNow(); closeAllMenus();">Salva Ora (Ctrl+S)</button>
+                    <button data-i18n="clear_editor" onclick="clearEditor(); closeAllMenus();" style="color: #e81123;">Svuota Editor</button>
+                    <hr>
+                    <button id="install-btn" style="display:none;" data-i18n="install_app" onclick="installPWA(); closeAllMenus();">Installa App…</button>
+                    <button data-i18n="print_doc" onclick="printDoc(); closeAllMenus();">Stampa…</button>
+                    <button data-i18n="export_pdf" onclick="exportPDF(); closeAllMenus();">Esporta PDF</button>
+                    <button data-i18n="export_md" onclick="exportMarkdown(); closeAllMenus();">Esporta .md</button>
+                    <button data-i18n="export_html" onclick="exportHTML(); closeAllMenus();">Esporta .html</button>
+                    <button data-i18n="export_tex" onclick="exportTeX(); closeAllMenus();">Esporta .tex (LaTeX)</button>
+                    <button data-i18n="export_txt" onclick="exportTXT(); closeAllMenus();">Esporta .txt</button>
+                    <hr>
+                    <button data-i18n="open" onclick="document.getElementById('import-file').click(); closeAllMenus();">Apri/Importa File</button>
+                    <button data-i18n="backup_json" onclick="exportBackup(); closeAllMenus();">Backup JSON</button>
+                    <button data-i18n="restore_backup" onclick="document.getElementById('import-backup').click(); closeAllMenus();">Ripristina Backup</button>
+                </div>
             </div>
-            <!-- Fonts -->
-            <div class="tool-group">
-                <select class="tool-select" id="font-family" onchange="changeFont()">
-                    <option value="'Segoe UI', sans-serif" selected>Segoe UI</option>
-                    <option value="'Arial', sans-serif">Arial</option>
-                    <option value="'Verdana', sans-serif">Verdana</option>
-                    <option value="'Georgia', serif">Georgia</option>
-                    <option value="'Consolas', monospace">Consolas</option>
-                    <option value="'Courier New', monospace">Courier New</option>
-                    <option value="'Roboto', sans-serif">Roboto</option>
-                    <option value="'Monaco', monospace">Monaco</option>
-                </select>
-                <input type="number" id="font-size" class="number-input" value="14" min="8" max="72"
-                    onchange="changeFontSize()">
+            <div class="mp-menu" role="menuitem" tabindex="0">
+                <span data-i18n="menu_edit">Modifica</span>
+                <div class="mp-drop" role="menu">
+                    <button onclick="if (easyMDE) easyMDE.codemirror.undo(); else document.execCommand('undo');">Annulla (Ctrl+Z)</button>
+                    <button onclick="if (easyMDE) easyMDE.codemirror.redo(); else document.execCommand('redo');">Ripeti (Ctrl+Y)</button>
+                    <hr>
+                    <button id="btn-find-menu" onclick="toggleFindBar()">Cerca e sostituisci… (Ctrl+F)</button>
+                    <button id="btn-toc-menu" onclick="generateTOC()">Genera Indice (TOC)</button>
+                </div>
             </div>
-
-            <!-- Basic Format -->
-            <div class="tool-group">
-                <button class="format-btn" onclick="insertMarkdown('**', '**')"
-                    title="Grassetto (Ctrl+B)"><strong>B</strong></button>
-                <button class="format-btn" onclick="insertMarkdown('*', '*')"
-                    title="Corsivo (Ctrl+I)"><em>I</em></button>
-                <button class="format-btn" onclick="insertMarkdown('<u>', '</u>')"
-                    title="Sottolineato"><u>U</u></button>
-                <button class="format-btn" onclick="insertMarkdown('~~', '~~')" title="Barrato"><s>S</s></button>
-                <button class="format-btn" onclick="insertMarkdown('<sup>', '</sup>')" title="Apice"
-                    style="font-size:11px;">x²</button>
-                <button class="format-btn" onclick="insertMarkdown('<sub>', '</sub>')" title="Pedice"
-                    style="font-size:11px;">x₂</button>
+            <div class="mp-menu" role="menuitem" tabindex="0">
+                <span data-i18n="menu_view">Visualizza</span>
+                <div class="mp-drop" role="menu">
+                    <button onclick="toggleView('editor')">Solo Editor</button>
+                    <button onclick="toggleView('split')">Vista Divisa (Split)</button>
+                    <button onclick="toggleView('preview')">Solo Anteprima</button>
+                    <hr>
+                    <button onclick="toggleSidebar()">Barra Laterale Note</button>
+                    <button onclick="toggleZenMode()">Schermo Intero (Zen)</button>
+                    <button onclick="toggleDarkMode()">Modalità Scura</button>
+                    <button onclick="cycleTheme()">Cicla Temi</button>
+                </div>
             </div>
-
-            <!-- Colors -->
-            <div class="tool-group">
-                <button class="format-btn" onclick="document.getElementById('text-color-picker').click()"
-                    title="Colore Testo">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 20h16" />
-                        <path d="M12 4l-6 13h12L12 4z" />
-                        <path d="M12 15h0" stroke-width="4" stroke="var(--accent-color)" />
-                    </svg>
-                </button>
-                <input type="color" id="text-color-picker" style="display:none"
-                    onchange="insertColor('color', this.value)" value="#000000">
-
-                <button class="format-btn" onclick="document.getElementById('bg-color-picker').click()"
-                    title="Evidenziatore">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M15.24 6.36l-3.53-3.53a2 2 0 0 0-2.83 0l-7.79 7.79a2 2 0 0 0 0 2.83L6.36 18.76" />
-                        <path d="M12.41 9.19l3.54 3.54" />
-                        <path d="M14 18h6v2h-6z" />
-                        <path d="M9.19 12.41l-2.43 2.43" />
-                    </svg>
-                </button>
-                <input type="color" id="bg-color-picker" style="display:none"
-                    onchange="insertColor('background-color', this.value)" value="#ffff00">
+            <div class="mp-menu" role="menuitem" tabindex="0">
+                <span data-i18n="menu_format">Formato</span>
+                <div class="mp-drop" role="menu">
+                    <button onclick="applyHeading(1)">Titolo 1 (H1)</button>
+                    <button onclick="applyHeading(2)">Titolo 2 (H2)</button>
+                    <button onclick="applyHeading(3)">Titolo 3 (H3)</button>
+                    <hr>
+                    <button onclick="insertMarkdown('**', '**')">Grassetto (Ctrl+B)</button>
+                    <button onclick="insertMarkdown('*', '*')">Corsivo (Ctrl+I)</button>
+                    <button onclick="insertMarkdown('<u>', '</u>')">Sottolineato (Ctrl+U)</button>
+                    <button onclick="insertMarkdown('~~', '~~')">Barrato</button>
+                    <button onclick="insertMarkdown('<sup>', '</sup>')">Apice (x²)</button>
+                    <button onclick="insertMarkdown('<sub>', '</sub>')">Pedice (x₂)</button>
+                </div>
             </div>
-
-            <!-- Headings Menu -->
-            <div class="tool-group">
-                <button id="headings-menu-btn" class="format-btn" onclick="toggleHeadingsMenu(event)" title="Testo e Titoli">
-                    <strong style="font-size:12px">H / ¶ ▾</strong>
-                </button>
+            <div class="mp-menu" role="menuitem" tabindex="0">
+                <span data-i18n="menu_insert">Inserisci</span>
+                <div class="mp-drop" role="menu">
+                    <button id="btn-diagram" onclick="openDiagramModal(event)">Diagramma Mermaid…</button>
+                    <button onclick="insertLink()">Link (Ctrl+K)</button>
+                    <button onclick="insertMarkdown('![Alt](', ')')">Immagine</button>
+                    <button onclick="insertTable(3,3)">Tabella (3×3)</button>
+                    <button onclick="insertHR()">Separatore Orizzontale (---)</button>
+                    <button onclick="insertMarkdown('$$\n', '\n$$')">Formula (Display block)</button>
+                    <button onclick="insertMarkdown('$', '$')">Formula (Inline)</button>
+                    <button onclick="insertMarkdown('\n```\n', '\n```\n')">Blocco di Codice (```)</button>
+                    <button onclick="insertMarkdown('`', '`')">Codice Inline</button>
+                </div>
             </div>
-
-            <!-- Lists Menu -->
-            <div class="tool-group">
-                <button id="list-menu-btn" class="format-btn" onclick="toggleListMenu(event)" title="Elenchi">
-                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;">
-                        <circle cx="5" cy="6" r="2" />
-                        <circle cx="5" cy="12" r="2" />
-                        <circle cx="5" cy="18" r="2" />
-                        <line x1="11" y1="6" x2="22" y2="6" stroke="currentColor" stroke-width="2.5" />
-                        <line x1="11" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2.5" />
-                        <line x1="11" y1="18" x2="22" y2="18" stroke="currentColor" stroke-width="2.5" />
-                    </svg>
-                    <span style="font-size:10px; margin-left:2px;">▾</span>
-                </button>
+            <div class="mp-menu" role="menuitem" tabindex="0">
+                <span data-i18n="menu_help">Aiuto</span>
+                <div class="mp-drop" role="menu">
+                    <button id="btn-guida" onclick="openHelp()">Guida Rapida</button>
+                    <button onclick="openHelp()">Informazioni su MiniPad</button>
+                </div>
             </div>
+        </nav>
 
-            <!-- MATH SECTION -->
-            <div class="tool-group">
-                <!-- Pulsante equazione a blocco -->
-                <button class="format-btn" onclick="insertFormulaBlock()" title="Blocco Equazione ($$)">
-                    <strong style="font-family: 'Times New Roman', serif; font-size: 14px; line-height:1;">$$</strong>
-                </button>
-                <button class="format-btn" onclick="toggleMathBar()" title="Tavolozza Simboli Matematici">
-                    <span style="font-family: 'Times New Roman', serif; font-size: 17px; line-height:1;">&pi;▾</span>
-                </button>
-            </div>
+        <!-- ===== TOOLBAR (Mac Classic) ===== -->
+        <div class="mp-toolbar" role="toolbar" aria-label="Formattazione">
+            <!-- Gruppo 1: toggle sidebar -->
+            <button class="mp-btn" title="Barra laterale" onclick="toggleSidebar()">
+                <svg class="mp-i"><use href="#i-menu"/></svg>
+            </button>
 
-            <!-- ASCII DIAGRAMS -->
-            <div class="tool-group">
-                <button class="format-btn" id="btn-diagram" onclick="toggleDiagramMenu(event)" title="Schemi e Blocchi ASCII">
-                    <span style="font-size: 14px; line-height:1;">▦▾</span>
-                </button>
-            </div>
+            <span class="mp-sep"></span>
 
-            <!-- Extra Markdown -->
-            <div class="tool-group">
-                <button class="format-btn" onclick="insertMarkdown('> ', '')" title="Citazione Blockquote">
-                    <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;">
-                        <path
-                            d="M3 21v-5a4 4 0 0 1 4-4h1V8a4 4 0 0 1 4-4h1v6h-1a2 2 0 0 0-2 2v5H3zm10 0v-5a4 4 0 0 1 4-4h1V8a4 4 0 0 0-1-3V3h1a4 4 0 0 1 4 4v4h-1a2 2 0 0 0-2 2v5h-6z" />
-                    </svg>
-                    <span style="font-size:9px;margin-left:1px;">❝</span>
-                </button>
-                <button class="format-btn" onclick="insertHR()" title="Separatore Orizzontale (---)"
-                    style="font-size:10px;">─ HR</button>
-                <button class="format-btn" onclick="insertLink()" title="Inserisci Link (Ctrl+K)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        style="width:14px;height:14px;">
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                    </svg>
-                    <span style="font-size:9px;margin-left:1px;">URL</span>
-                </button>
-                <button class="format-btn" onclick="insertMarkdown('\n```\n', '\n```\n')" title="Blocco di Codice (```)"
-                    style="font-size:10px; letter-spacing:-1px;">&lt;/&gt;</button>
+            <!-- Gruppo 2: font + size -->
+            <select id="font-family" class="mp-font-select" title="Font" onchange="changeFont()">
+                <option value="'Segoe UI', system-ui, sans-serif" selected>Segoe UI</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="'SF Mono', Menlo, Consolas, monospace">Mono</option>
+                <option value="'Arial', sans-serif">Arial</option>
+                <option value="'Verdana', sans-serif">Verdana</option>
+                <option value="'Roboto', sans-serif">Roboto</option>
+            </select>
+            <input type="number" class="mp-size" id="font-size" value="14" min="8" max="72" title="Dimensione" onchange="changeFontSize()">
 
-                <!-- Separator -->
-                <div style="width:1px; height:20px; background:var(--border-color); margin:0 4px;"></div>
+            <span class="mp-sep"></span>
 
-                <!-- Tables -->
-                <button id="table-menu-btn" class="format-btn" onclick="toggleTableMenu(event)"
-                    title="Inserisci Tabella">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="18" height="18" rx="2" />
-                        <line x1="3" y1="9" x2="21" y2="9" />
-                        <line x1="3" y1="15" x2="21" y2="15" />
-                        <line x1="9" y1="3" x2="9" y2="21" />
-                        <line x1="15" y1="3" x2="15" y2="21" />
-                    </svg>
-                    <span style="font-size:10px; margin-left:2px;">Tab</span>
-                </button>
-            </div>
+            <!-- Gruppo 3: text formatting -->
+            <button class="mp-btn" title="Grassetto (Ctrl+B)" onclick="insertMarkdown('**', '**')"><svg class="mp-i"><use href="#i-bold"/></svg></button>
+            <button class="mp-btn" title="Corsivo (Ctrl+I)" onclick="insertMarkdown('*', '*')"><svg class="mp-i"><use href="#i-italic"/></svg></button>
+            <button class="mp-btn" title="Sottolineato (Ctrl+U)" onclick="insertMarkdown('<u>', '</u>')"><svg class="mp-i"><use href="#i-underline"/></svg></button>
+            <button class="mp-btn" title="Barrato" onclick="insertMarkdown('~~', '~~')"><svg class="mp-i"><use href="#i-strike"/></svg></button>
+            <button class="mp-btn" title="Apice" onclick="insertMarkdown('<sup>', '</sup>')"><svg class="mp-i"><use href="#i-sup"/></svg></button>
+            <button class="mp-btn" title="Pedice" onclick="insertMarkdown('<sub>', '</sub>')"><svg class="mp-i"><use href="#i-sub"/></svg></button>
 
-            <!-- Help Button (Aligned rightmost but part of flow? Or separate? User said "close to other buttons") -->
-            <!-- We'll keep it as a tool group but maybe push it to the end OR just keep it in line. User requested all aligned left to right. -->
-            <!-- Help & View Controls -->
-            <div class="tool-group" style="border-right: none;">
-                <!-- View toggles -->
-                <button class="format-btn" onclick="toggleView('editor')" title="Solo Editor" id="view-editor-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="10" height="18" rx="1" />
-                    </svg>
-                </button>
-                <button class="format-btn" onclick="toggleView('split')" title="Vista Divisa" id="view-split-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="18" height="18" rx="1" />
-                        <line x1="12" y1="3" x2="12" y2="21" />
-                    </svg>
-                </button>
-                <button class="format-btn" onclick="toggleView('preview')" title="Solo Anteprima" id="view-preview-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="11" y="3" width="10" height="18" rx="1" />
-                    </svg>
-                </button>
-                <!-- Help, Find, TOC -->
-                <button class="format-btn" onclick="openHelp()" title="Guida" id="btn-guida"><strong>?</strong></button>
-                <button class="format-btn" onclick="toggleFindBar()" title="Cerca (Ctrl+F)" style="font-size:10px;"
-                    id="btn-find">🔍</button>
-                <button class="format-btn" onclick="generateTOC()" title="Genera Indice (TOC)" style="font-size:10px;"
-                    id="btn-toc">📑</button>
+            <span class="mp-sep"></span>
 
-                <!-- Separator -->
-                <div style="width:1px; height:20px; background:var(--border-color); margin:0 4px;"></div>
+            <!-- Gruppo 4: alignment -->
+            <button class="mp-btn" title="Allinea a sinistra" onclick="insertMarkdown('<div align=\'left\'>\n', '\n</div>')"><svg class="mp-i"><use href="#i-align-left"/></svg></button>
+            <button class="mp-btn" title="Centra" onclick="insertMarkdown('<div align=\'center\'>\n', '\n</div>')"><svg class="mp-i"><use href="#i-align-center"/></svg></button>
+            <button class="mp-btn" title="Allinea a destra" onclick="insertMarkdown('<div align=\'right\'>\n', '\n</div>')"><svg class="mp-i"><use href="#i-align-right"/></svg></button>
+            <button class="mp-btn" title="Giustifica" onclick="insertMarkdown('<div align=\'justify\'>\n', '\n</div>')"><svg class="mp-i"><use href="#i-align-justify"/></svg></button>
 
-                <!-- System Toggles (Lang, Theme, Focus) -->
-                <button class="format-btn" onclick="toggleLanguage()" title="Lingua / Language" id="lang-toggle-btn"
-                    style="padding: 0 4px;">
-                    <strong style="font-size:12px; color:var(--text-color);" id="lang-label">IT</strong>
-                </button>
-                <!-- Dark mode toggle -->
-                <button class="format-btn" onclick="toggleDarkMode()" title="Modalità Scura" id="dark-toggle-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                </button>
-                <!-- Theme cycle -->
-                <button class="format-btn" onclick="cycleTheme()" title="Cambia Colori (Tema)" id="theme-toggle-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path
-                            d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                    </svg>
-                </button>
-                <button class="format-btn" onclick="toggleZenMode()" title="Schermo Intero (Zen)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path
-                            d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-                    </svg>
-                </button>
-                <span id="save-indicator" style="font-size:11px; color:#888; margin-left:8px; opacity:0; transition:opacity 0.5s;">Salvato</span>
-            </div>
+            <span class="mp-sep"></span>
+
+            <!-- Gruppo 5: heading + lists -->
+            <button class="mp-btn has-caret" title="Titolo" onclick="toggleHeadingsMenu(event)"><svg class="mp-i"><use href="#i-heading"/></svg></button>
+            <button class="mp-btn has-caret" title="Elenco" onclick="toggleListMenu(event)"><svg class="mp-i"><use href="#i-list-ul"/></svg></button>
+
+            <span class="mp-sep"></span>
+
+            <!-- Gruppo 6: math + code + table -->
+            <button class="mp-btn" title="Codice inline" onclick="insertMarkdown('`', '`')"><svg class="mp-i"><use href="#i-code"/></svg></button>
+            <button class="mp-btn has-caret" title="Formula matematica" onclick="toggleMathToolbar()"><svg class="mp-i"><use href="#i-math"/></svg></button>
+            <button class="mp-btn has-caret" id="table-menu-btn" title="Tabella" onclick="toggleTableMenu(event)"><svg class="mp-i"><use href="#i-table"/></svg></button>
+
+            <span class="mp-sep"></span>
+
+            <!-- Gruppo 7: insert -->
+            <button class="mp-btn" title="Citazione (Blockquote)" onclick="insertMarkdown('> ', '')"><svg class="mp-i"><use href="#i-comment"/></svg></button>
+            <button class="mp-btn" title="Riga orizzontale" onclick="insertHR()"><svg class="mp-i"><use href="#i-hr"/></svg></button>
+            <button class="mp-btn" title="Link (Ctrl+K)" onclick="insertLink()"><svg class="mp-i"><use href="#i-link"/></svg></button>
+            <button class="mp-btn" title="HTML inline" onclick="insertMarkdown('<span>', '</span>')"><svg class="mp-i"><use href="#i-html"/></svg></button>
+
+            <span class="mp-sep"></span>
+
+            <!-- Gruppo 8: diagrammi + tab + view panel -->
+            <button class="mp-btn" id="btn-diagram-main" title="Diagrammi Mermaid" onclick="openDiagramModal(event)"><svg class="mp-i"><use href="#i-diagram"/></svg></button>
+            <button class="mp-btn" title="Inserisci tab" onclick="insertMarkdown('\t', '')"><svg class="mp-i"><use href="#i-tab"/></svg></button>
+            <button class="mp-btn is-active" id="view-split-btn" title="Vista Divisa" onclick="toggleView('split')"><svg class="mp-i"><use href="#i-panel-split"/></svg></button>
+            <button class="mp-btn" id="view-editor-btn" title="Solo Editor" onclick="toggleView('editor')"><svg class="mp-i"><use href="#i-panel-edit"/></svg></button>
+            <button class="mp-btn" id="view-preview-btn" title="Solo Anteprima" onclick="toggleView('preview')"><svg class="mp-i"><use href="#i-panel-preview"/></svg></button>
+
+            <span class="mp-sep"></span>
+
+            <!-- Gruppo 9: meta (cerca, salva, indicatore) -->
+            <button class="mp-btn" id="btn-find" title="Cerca (Ctrl+F)" onclick="toggleFindBar()"><svg class="mp-i"><use href="#i-search"/></svg></button>
+            <button class="mp-btn" id="btn-toc" title="Genera Indice (TOC)" onclick="generateTOC()"><svg class="mp-i"><use href="#i-help"/></svg></button>
+            <button class="mp-btn" title="Salva (Ctrl+S)" onclick="saveNow()"><svg class="mp-i"><use href="#i-save"/></svg></button>
+            <span id="save-indicator" style="font-size:11px; color:#888; margin-left:4px; opacity:0; transition:opacity 0.5s;">Salvato</span>
+
+            <span class="mp-sep"></span>
+
+            <!-- Gruppo 10: lingua + tema + dark + zen -->
+            <button class="mp-btn" id="lang-toggle-btn" title="Lingua / Language" onclick="toggleLanguage()"><strong style="font-size:11px;" id="lang-label">IT</strong></button>
+            <button class="mp-btn" id="theme-toggle-btn" title="Cambia Colori (Tema)" onclick="cycleTheme()"><svg class="mp-i"><use href="#i-moon"/></svg></button>
+            <button class="mp-btn" id="dark-toggle-btn" title="Modalità Scura" onclick="toggleDarkMode()"><svg class="mp-i"><use href="#i-sun"/></svg></button>
+            <button class="mp-btn" title="Schermo Intero (Zen)" onclick="toggleZenMode()"><svg class="mp-i"><use href="#i-settings"/></svg></button>
         </div>
 
         <!-- FILE DROPDOWN MENU -->

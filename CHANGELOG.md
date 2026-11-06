@@ -2,6 +2,26 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.4] - 2026-11-06
+
+### UI Refresh Stile Mac Classic (Medium)
+
+#### 1. Menu Bar Desktop Orizzontale (`.mp-menubar`)
+- Nuova barra dei menu Mac-style in alto con menu a tendina nativi (File, Modifica, Visualizza, Formato, Inserisci, Aiuto).
+- Dropdown compatti con bordi netti, ombreggiature sobrie ed evidenziazione accent hover.
+
+#### 2. Toolbar Compatta con Icone SVG Monoline (`.mp-toolbar`)
+- Sprite SVG integrato con icone geometriche 16x16 monoline (`currentColor`, stroke 1.5px).
+- Separatori verticali sottili `|` per raggruppare visivamente: font/dimensione, formattazione testo, allineamento, elenchi, matematica/codice/tabelle, inserimenti, diagrammi, vista (split/editor/anteprima), meta e preferenze.
+- Supporto al responsive scrolling orizzontale su schermi stretti e dispositivi mobili.
+
+#### 3. Palette Colori Mac & Dark Mode Inversa (`css/mac-classic.css`)
+- Palette desktop classica: barra superiore chiara `#f5f5f5` con bordi definiti a 1px.
+- Inversione automatica o manuale con Dark Mode: barra scura `#2a2a2a` e icone chiare ad alto contrasto.
+- Isolamento pulito degli override CSS in `css/mac-classic.css` senza alterazioni al layout del markdown editor, split-screen o anteprima.
+
+---
+
 ## [v1.5.3.2] - 2026-11-06
 
 ### Fix Minori Esportazione LaTeX & Plain Text (`js/export.js`)
