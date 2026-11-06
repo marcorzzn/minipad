@@ -97,7 +97,7 @@ window.MiniPadExport = (function () {
 ${body}
 <script>
   if (typeof mermaid !== 'undefined') {
-    mermaid.initialize({ startOnLoad: true, securityLevel: 'loose' });
+    mermaid.initialize({ startOnLoad: true, securityLevel: 'strict', htmlLabels: false });
   }
 <\/script>
 </body>

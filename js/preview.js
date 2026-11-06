@@ -199,7 +199,7 @@ window.MiniPadPreview = (function () {
   /**
    * Aggiorna l'elemento di anteprima del DOM.
    */
-  function updatePreviewWithContent(content) {
+  async function updatePreviewWithContent(content) {
     init();
     const el = getEl();
     if (!el) return;
@@ -211,24 +211,19 @@ window.MiniPadPreview = (function () {
     }
 
     const html = renderToHTML(content);
+    el.innerHTML = html;
 
-    requestAnimationFrame(() => {
-      el.innerHTML = html;
-
-      // Renderizza i blocchi Mermaid presenti con gestione errori
-      if (typeof mermaid !== 'undefined') {
-        const mermaidNodes = el.querySelectorAll('.mermaid');
-        if (mermaidNodes.length > 0) {
-          try {
-            mermaid.run({ nodes: Array.from(mermaidNodes) }).catch(err => {
-              console.warn('[Preview] Mermaid run error:', err);
-            });
-          } catch (e) {
-            console.warn('[Preview] Mermaid synchronous error:', e);
-          }
+    // Renderizza i blocchi Mermaid presenti con gestione errori
+    if (typeof mermaid !== 'undefined') {
+      const mermaidNodes = el.querySelectorAll('.mermaid');
+      if (mermaidNodes.length > 0) {
+        try {
+          await mermaid.run({ nodes: Array.from(mermaidNodes) });
+        } catch (err) {
+          console.warn('[Preview] Mermaid run error:', err);
         }
       }
-    });
+    }
   }
 
   /**

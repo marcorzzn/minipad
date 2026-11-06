@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minipad-v1.5.1';
+const CACHE_NAME = 'minipad-v1.5.0';
 const urlsToCache = [
   './',
   './index.html',
