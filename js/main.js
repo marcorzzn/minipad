@@ -36,8 +36,8 @@ function applyLanguage() {
     const bFile = document.getElementById('file-btn').querySelector('span');
     if (bFile) bFile.textContent = getStr('file');
 
-    const diagTitle = document.querySelector('#diagram-modal h2');
-    if (diagTitle) diagTitle.childNodes[0].nodeValue = getStr('diagram_title');
+    const btnDiagram = document.getElementById('btn-diagram');
+    if (btnDiagram) btnDiagram.title = getStr('diagram_title');
 
     const sInd = document.getElementById('save-indicator');
     if (sInd && (sInd.textContent === i18n['it']['saved_indicator'] || sInd.textContent === i18n['en']['saved_indicator'])) sInd.textContent = getStr('saved_indicator');

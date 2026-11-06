@@ -94,7 +94,21 @@ window.MiniPadPreview = (function () {
       return `${lead}\n\n${PLACEHOLDER_OPEN}${codeBlocks.length - 1}${PLACEHOLDER_CLOSE}\n\n`;
     });
 
-    // 2. Inline code `...`
+    // 2. Inline code CommonMark: prima i fence multipli (2+ backtick), che possono contenere backtick letterali
+    md = md.replace(/(`{2,})([\s\S]*?)\1/g, (_, fence, code) => {
+      if (code.length >= 2 && code.startsWith(' ') && code.endsWith(' ') && code.trim()) {
+        code = code.slice(1, -1);
+      }
+      const escaped = escapeHtml(code);
+      codeBlocks.push({
+        html: `<code>${escaped}</code>`,
+        lang: '',
+        rawCode: code
+      });
+      return `${PLACEHOLDER_INLINE}${codeBlocks.length - 1}${PLACEHOLDER_CLOSE}`;
+    });
+
+    // Poi i fence singoli (che non contengono backtick per definizione)
     md = md.replace(/`([^`\r\n]+)`/g, (_, code) => {
       const escaped = escapeHtml(code);
       codeBlocks.push({

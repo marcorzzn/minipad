@@ -153,6 +153,15 @@ ${body}
       return `${lead}\n\n@@MP_CODE_${codeBlocks.length - 1}@@\n\n`;
     });
 
+    // Inline code CommonMark: prima i fence multipli (2+ backtick), poi i singoli
+    text = text.replace(/(`{2,})([\s\S]*?)\1/g, (match, fence, code) => {
+      if (code.length >= 2 && code.startsWith(' ') && code.endsWith(' ') && code.trim()) {
+        code = code.slice(1, -1);
+      }
+      codeBlocks.push({ lang: '', code, inline: true });
+      return `@@MP_ICODE_${codeBlocks.length - 1}@@`;
+    });
+
     text = text.replace(/`([^`\r\n]+)`/g, (_, code) => {
       codeBlocks.push({ lang: '', code, inline: true });
       return `@@MP_ICODE_${codeBlocks.length - 1}@@`;
@@ -246,27 +255,34 @@ ${body}
       return m.block ? `\n\\[\n${m.tex}\n\\]\n` : `\\(${m.tex}\\)`;
     });
 
-    // 11. Re-inject CODE
-    text = text.replace(/@@MP_CODE_(\d+)@@/g, (_, i) => {
-      const b = codeBlocks[+i];
-      return b ? `\n\\begin{verbatim}\n${b.code}\n\\end{verbatim}\n` : '';
-    });
+    // 11. Re-inject CODE (con loop di risoluzione per placeholder annidati)
+    let prevCode = '';
+    let itCode = 0;
+    while (text !== prevCode && itCode < 5) {
+      prevCode = text;
+      itCode++;
+      text = text.replace(/@@MP_CODE_(\d+)@@/g, (_, i) => {
+        const b = codeBlocks[+i];
+        return b ? `\n\\begin{verbatim}\n${b.code}\n\\end{verbatim}\n` : '';
+      });
 
-    text = text.replace(/@@MP_ICODE_(\d+)@@/g, (_, i) => {
-      const b = codeBlocks[+i];
-      if (!b) return '';
-      const txt = b.code
-        .replace(/\\/g, '\\textbackslash{}')
-        .replace(/([{}])/g, '\\$1')
-        .replace(/\$/g, '\\$')
-        .replace(/_/g, '\\_')
-        .replace(/%/g, '\\%')
-        .replace(/&/g, '\\&')
-        .replace(/#/g, '\\#')
-        .replace(/\^/g, '\\textasciicircum{}')
-        .replace(/~/g, '\\textasciitilde{}');
-      return `\\texttt{${txt}}`;
-    });
+      text = text.replace(/@@MP_ICODE_(\d+)@@/g, (_, i) => {
+        const b = codeBlocks[+i];
+        if (!b) return '';
+        const txt = b.code
+          .replace(/\\/g, '\\textbackslash{}')
+          .replace(/([{}])/g, '\\$1')
+          .replace(/\$/g, '\\$')
+          .replace(/_/g, '\\_')
+          .replace(/%/g, '\\%')
+          .replace(/&/g, '\\&')
+          .replace(/#/g, '\\#')
+          .replace(/\^/g, '\\textasciicircum{}')
+          .replace(/~/g, '\\textasciitilde{}')
+          .replace(/`/g, '\\textasciigrave{}');
+        return `\\texttt{${txt}}`;
+      });
+    }
 
     return text;
   }
@@ -429,6 +445,16 @@ ${body}
       codeBlocks.push(code.replace(/\r?\n$/, ''));
       return `${lead}\n\n@@MP_CODE_${codeBlocks.length - 1}@@\n\n`;
     });
+    // Fence multipli
+    text = text.replace(/(`{2,})([\s\S]*?)\1/g, (match, fence, code) => {
+      if (code.length >= 2 && code.startsWith(' ') && code.endsWith(' ') && code.trim()) {
+        code = code.slice(1, -1);
+      }
+      codeBlocks.push(code.replace(/`/g, ''));
+      return `@@MP_ICODE_${codeBlocks.length - 1}@@`;
+    });
+
+    // Singoli
     text = text.replace(/`([^`\r\n]+)`/g, (_, code) => {
       codeBlocks.push(code);
       return `@@MP_ICODE_${codeBlocks.length - 1}@@`;
@@ -464,9 +490,15 @@ ${body}
     // 5. Re-inject math (come formule tra $)
     text = text.replace(/@@MP_MATH_(\d+)@@/g, (_, i) => `$${mathBlocks[+i]}$`);
 
-    // 6. Re-inject code come testo puro
-    text = text.replace(/@@MP_CODE_(\d+)@@/g, (_, i) => `\n${codeBlocks[+i]}\n`);
-    text = text.replace(/@@MP_ICODE_(\d+)@@/g, (_, i) => codeBlocks[+i]);
+    // 6. Re-inject code come testo puro (con loop di risoluzione per annidamenti)
+    let prevTxt = '';
+    let itTxt = 0;
+    while (text !== prevTxt && itTxt < 5) {
+      prevTxt = text;
+      itTxt++;
+      text = text.replace(/@@MP_CODE_(\d+)@@/g, (_, i) => `\n${codeBlocks[+i]}\n`);
+      text = text.replace(/@@MP_ICODE_(\d+)@@/g, (_, i) => codeBlocks[+i]);
+    }
 
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     download(blob, `${sanitizeFilename(name)}.txt`);
