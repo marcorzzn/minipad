@@ -2,6 +2,20 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.3.1] - 2026-11-06
+
+### Segnaposto Nonce-Based & Hardening Pipeline CommonMark
+
+#### 1. Prevenzione Collisioni Segnaposto tramite Nonce Random (`js/preview.js`, `js/export.js`)
+- **Nonce Univoco per Render (`generateRenderId`)**: ciascun ciclo di render genera un nonce crittografico o pseudo-casuale (formato `MP-{id}-CODE-N`, `MP-{id}-ICODE-N`, `MP-{id}-CUR-N`), azzerando qualsiasi rischio di collisione accidentale con testo utente o stringhe letterali (es. `@@MP_CODE_0@@`).
+- **Eliminazione Loop Fragili**: la garanzia di unicità strutturale elimina la necessità di cicli `while` iterativi di espansione dei placeholder, semplificando e velocizzando il ripristino.
+
+#### 2. Priorità e Isolamento Multi-Backtick
+- **Ordine di Estrazione Rigoroso**: i code span con doppi o più backtick vengono estratti e protetti rigorosamente *prima* dei backtick singoli.
+- **Isolamento Valute Preventivo**: isolamento immediato delle valute escapate `\$19,99` per evitare che vengano agganciate da delimitatori matematici.
+
+---
+
 ## [v1.5.3] - 2026-11-06
 
 ### Conformità CommonMark, Rifinitura i18n & Hardening Pipeline

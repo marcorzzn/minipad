@@ -1,63 +1,27 @@
 /**
- * MiniPad Preview
- * - Pipeline robusta: protegge i blocchi di codice (fenced e inline) PRIMA di processare Markdown e KaTeX
- * - marked + marked-katex-extension per il parsing matematico
- * - Mermaid integrato con securityLevel: 'strict' e htmlLabels: false (prevenzione XSS)
- * - Promozione automatica dei blocchi ```mermaid in <pre class="mermaid"> post-parse
- * - DOMPurify per la sanitizzazione finale
- * - Gestione immediata dell'azzeramento anteprima su nota vuota
- * - Debounce a 60ms per preview a 60 FPS
+ * MiniPad Preview v1.5.3.1
+ * - marked + marked-katex-extension
+ * - Renderer Mermaid via post-processing
+ * - DOMPurify su output finale
+ * - Placeholder nonce-based: MP-{id}-CODE-N / MP-{id}-ICODE-N / MP-{id}-CUR-N
+ * - Bug fix v1.5.3.1:
+ *   C1: collisione placeholder con testo utente (nonce random per render)
+ *   C5: doppi backtick (multi-backtick estrae PRIMA dei singoli)
  */
 window.MiniPadPreview = (function () {
   let _el = null;
   let _debounceTimer = null;
   let _initialized = false;
 
-  function init() {
-    if (_initialized) return;
-    _initialized = true;
-
-    if (typeof marked === 'undefined') {
-      console.warn('[Preview] marked non disponibile');
-      return;
+  function generateRenderId() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return 'r' + crypto.randomUUID().replace(/-/g, '').slice(0, 10);
     }
-
-    // Configura marked-katex-extension
-    if (typeof markedKatex === 'function') {
-      try {
-        marked.use(
-          markedKatex({
-            throwOnError: false,
-            displayMode: false,
-            output: 'htmlAndMathml',
-            nonStandard: true,
-            strict: false
-          })
-        );
-      } catch (e) {
-        console.warn('[Preview] Inizializzazione markedKatex con fallback:', e);
-        try { marked.use(markedKatex({ throwOnError: false })); } catch (e2) {}
-      }
-    }
-
-    // Inizializza Mermaid con impostazioni di massima sicurezza (no XSS)
-    if (typeof mermaid !== 'undefined') {
-      try {
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: document.body.classList.contains('dark-mode') ? 'dark' : 'default',
-          securityLevel: 'strict', // Sicurezza attiva: nessun HTML arbitrario nelle label
-          fontFamily: 'inherit',
-          htmlLabels: false
-        });
-      } catch (err) {
-        console.warn('[Preview] Inizializzazione Mermaid fallita:', err);
-      }
-    }
+    return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   }
 
   function escapeHtml(s) {
-    return String(s || '')
+    return String(s)
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -65,37 +29,62 @@ window.MiniPadPreview = (function () {
       .replace(/'/g, '&#39;');
   }
 
-  function getEl() {
-    if (!_el) _el = document.getElementById('preview-content');
-    return _el;
+  function init() {
+    if (_initialized) return;
+    _initialized = true;
+
+    if (typeof marked === 'undefined') {
+      console.error('[Preview] marked non caricato');
+      return;
+    }
+
+    if (typeof markedKatex === 'function') {
+      marked.use(
+        markedKatex({
+          throwOnError: false,
+          displayMode: false,
+          output: 'htmlAndMathml',
+          nonStandard: true,
+          strict: false
+        })
+      );
+    }
+
+    if (typeof mermaid !== 'undefined') {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'default',
+        securityLevel: 'strict',
+        fontFamily: 'inherit',
+        htmlLabels: false
+      });
+    }
   }
 
-  const PLACEHOLDER_OPEN = '@@MP_CODE_';
-  const PLACEHOLDER_INLINE = '@@MP_ICODE_';
-  const PLACEHOLDER_CLOSE = '@@';
-
   /**
-   * Protegge i blocchi di codice (fenced e inline) trasformandoli in
-   * segnaposto immuni da alterazioni UTF-8/HTML e senza tag HTML intermedi.
+   * Protegge i blocchi di codice (fence multipli PRIMA dei singoli)
+   * e le valute escape \$N.
+   * Ritorna { md, codeBlocks, currencies, rid }
    */
-  function protectCodeBlocks(md) {
+  function protectCodeAndCurrency(md, rid) {
     const codeBlocks = [];
+    const currencies = [];
 
-    // 1. Fenced code ```lang\n...\n``` (richiede line break per non catturare inline backticks su riga singola)
-    md = md.replace(/(^|\n)```([\w-]*)[ \t]*\r?\n([\s\S]*?)\r?\n[ \t]*```(?=\r?\n|$)/g, (_, lead, lang, code) => {
-      const cleanLang = (lang || '').trim().toLowerCase();
-      const escaped = escapeHtml(code.replace(/\r?\n$/, ''));
-      const cls = cleanLang ? ` class="language-${cleanLang}"` : '';
+    // 1. Fenced code ```lang\n...\n```
+    md = md.replace(/```([\w-]*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+      const escaped = escapeHtml(code.replace(/\n$/, ''));
+      const cls = lang ? ` class="language-${lang}"` : '';
       codeBlocks.push({
         html: `<pre><code${cls}>${escaped}</code></pre>`,
-        lang: cleanLang,
-        rawCode: code.replace(/\r?\n$/, '')
+        lang,
+        raw: code.replace(/\n$/, '')
       });
-      return `${lead}\n\n${PLACEHOLDER_OPEN}${codeBlocks.length - 1}${PLACEHOLDER_CLOSE}\n\n`;
+      return `\n\nMP-${rid}-CODE-${codeBlocks.length - 1}\n\n`;
     });
 
-    // 2. Inline code CommonMark: prima i fence multipli (2+ backtick), che possono contenere backtick letterali
-    md = md.replace(/(`{2,})([\s\S]*?)\1/g, (_, fence, code) => {
+    // 2. Inline code con fence multipli ``...`` (PRIMA dei singoli)
+    md = md.replace(/(`{2,})((?:[^`]|`(?![`]))*?)\1/g, (_, fence, code) => {
+      // CommonMark: se inizia e finisce con spazio (ma non è tutto spazio), rimuovi uno spazio
       if (code.length >= 2 && code.startsWith(' ') && code.endsWith(' ') && code.trim()) {
         code = code.slice(1, -1);
       }
@@ -103,162 +92,121 @@ window.MiniPadPreview = (function () {
       codeBlocks.push({
         html: `<code>${escaped}</code>`,
         lang: '',
-        rawCode: code
+        raw: code,
+        inline: true
       });
-      return `${PLACEHOLDER_INLINE}${codeBlocks.length - 1}${PLACEHOLDER_CLOSE}`;
+      return `MP-${rid}-ICODE-${codeBlocks.length - 1}`;
     });
 
-    // Poi i fence singoli (che non contengono backtick per definizione)
-    md = md.replace(/`([^`\r\n]+)`/g, (_, code) => {
+    // 3. Inline code con fence singoli `...` (dopo i multi)
+    md = md.replace(/`([^`\n]+)`/g, (_, code) => {
       const escaped = escapeHtml(code);
       codeBlocks.push({
         html: `<code>${escaped}</code>`,
         lang: '',
-        rawCode: code
+        raw: code,
+        inline: true
       });
-      return `${PLACEHOLDER_INLINE}${codeBlocks.length - 1}${PLACEHOLDER_CLOSE}`;
+      return `MP-${rid}-ICODE-${codeBlocks.length - 1}`;
     });
 
-    return { md, codeBlocks };
+    // 4. Valute escape \$N (dopo i code, prima della math)
+    md = md.replace(/\\\$(\d[\d.,]*)/g, (_, amount) => {
+      currencies.push(amount);
+      return `MP-${rid}-CUR-${currencies.length - 1}`;
+    });
+
+    return { md, codeBlocks, currencies };
   }
 
   /**
-   * Estrae il testo grezzo dal blocco code
+   * Ripristina placeholder. Con nonce, non serve loop.
    */
-  function extractCodeContent(preHtml) {
-    const m = preHtml.match(/<code[^>]*>([\s\S]*?)<\/code>/);
-    return m ? m[1] : '';
-  }
-
-  /**
-   * Ripristina i blocchi di codice proteggendoli da marked e KaTeX,
-   * e promuove i blocchi ```mermaid in <pre class="mermaid">.
-   */
-  function restoreCodeBlocks(html, codeBlocks) {
-    // Il loop è necessario perché il contenuto utente può annidare
-    // placeholder (es. una tabella Markdown con inline code che contiene
-    // un altro inline code o backticks). Ogni passaggio risolve un livello.
-    // Limite 5: oltre è quasi certamente un bug (auto-referenza).
-    // NON semplificare a un singolo passaggio senza rompere i casi con celle di tabella + code.
-    let prev = '';
-    let iterations = 0;
-    while (html !== prev && iterations < 5) {
-      prev = html;
-      iterations++;
-
-      // Ripristina inline code
-      html = html.replace(new RegExp(`${PLACEHOLDER_INLINE}(\\d+)${PLACEHOLDER_CLOSE}`, 'g'), (_, i) => {
-        const b = codeBlocks[+i];
-        return b ? b.html : '';
-      });
-
-      // Ripristina blocchi multiriga rimuovendo eventuale <p> aggiunto da marked
-      html = html.replace(new RegExp(`(?:<p>)?${PLACEHOLDER_OPEN}(\\d+)${PLACEHOLDER_CLOSE}(?:<\\/p>)?`, 'g'), (_, i) => {
+  function restoreAll(html, codeBlocks, currencies, rid) {
+    // Mermaid: promuovi CODE con lang==='mermaid' a <pre class="mermaid">
+    html = html.replace(
+      new RegExp(`MP-${rid}-CODE-(\\d+)`, 'g'),
+      (_, i) => {
         const b = codeBlocks[+i];
         if (!b) return '';
         if (b.lang === 'mermaid') {
-          return `<pre class="mermaid">${escapeHtml(b.rawCode)}</pre>`;
+          return `<pre class="mermaid">${escapeHtml(b.raw)}</pre>`;
         }
         return b.html;
+      }
+    );
+
+    html = html.replace(
+      new RegExp(`MP-${rid}-ICODE-(\\d+)`, 'g'),
+      (_, i) => codeBlocks[+i] ? codeBlocks[+i].html : ''
+    );
+
+    html = html.replace(
+      new RegExp(`MP-${rid}-CUR-(\\d+)`, 'g'),
+      (_, i) => `$${currencies[+i]}`
+    );
+
+    return html;
+  }
+
+  function renderToHTML(markdown) {
+    init();
+    if (typeof marked === 'undefined') return escapeHtml(markdown || '');
+
+    const rid = generateRenderId();
+    const source = String(markdown || '');
+    const { md: protectedMd, codeBlocks, currencies } = protectCodeAndCurrency(source, rid);
+
+    let html;
+    try {
+      html = marked.parse(protectedMd);
+    } catch (e) {
+      console.error('[Preview] parse error', e);
+      html = `<pre>${escapeHtml(source)}</pre>`;
+    }
+
+    html = restoreAll(html, codeBlocks, currencies, rid);
+
+    if (typeof DOMPurify !== 'undefined') {
+      html = DOMPurify.sanitize(html, {
+        ADD_ATTR: ['class', 'style', 'data-tex'],
+        ADD_TAGS: ['use'],
+        USE_PROFILES: { html: true, svg: true, svgFilters: true }
       });
     }
 
     return html;
   }
 
-  /**
-   * Genera l'HTML renderizzato a partire dal Markdown.
-   * Utilizzato sia per l'anteprima live che per l'export (.html / .pdf).
-   */
-  function renderToHTML(markdown) {
-    init();
-    if (markdown === undefined || markdown === null || !markdown.trim()) {
-      return '';
-    }
-
-    let md = String(markdown || '');
-
-    // 1. Normalizza la sintassi LaTeX da LLM prima del parsing, ma RISPETTANDO i code block
-    if (typeof MiniPadSmartPaste !== 'undefined') {
-      md = MiniPadSmartPaste.normalizeLLMMath(md);
-    }
-
-    // 2. Proteggi tutti i blocchi di codice (fenced e inline)
-    const { md: protectedMd, codeBlocks } = protectCodeBlocks(md);
-
-    // 3. Esegui il parsing con marked (marked-katex-extension processa solo il testo fuori dal codice)
-    let html = '';
-    try {
-      html = marked.parse(protectedMd);
-    } catch (e) {
-      console.error('[Preview] Errore parsing marked:', e);
-      html = `<pre>${escapeHtml(md)}</pre>`;
-    }
-
-    // 4. Ripristina i blocchi di codice e promuovi i blocchi Mermaid
-    html = restoreCodeBlocks(html, codeBlocks);
-
-    // 5. Sanitizzazione sicura con DOMPurify
-    if (typeof DOMPurify !== 'undefined') {
-      try {
-        html = DOMPurify.sanitize(html, {
-          USE_PROFILES: { html: true, svg: true, svgFilters: true },
-          ADD_TAGS: [
-            'svg', 'path', 'circle', 'rect', 'line', 'polyline', 'polygon',
-            'defs', 'marker', 'text', 'tspan', 'g', 'style', 'foreignObject',
-            'annotation', 'semantics', 'math', 'mrow', 'mi', 'mo', 'mn', 'msup',
-            'msub', 'mfrac', 'mover', 'munder', 'munderover', 'mtable', 'mtr', 'mtd',
-            'use'
-          ],
-          ADD_ATTR: [
-            'cx', 'cy', 'r', 'x', 'y', 'width', 'height', 'rx', 'ry', 'd',
-            'fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-linecap',
-            'stroke-linejoin', 'transform', 'marker-end', 'marker-start',
-            'text-anchor', 'class', 'style', 'viewBox', 'data-tex', 'encoding',
-            'xmlns', 'aria-hidden', 'data-codeblock', 'data-inlinecode'
-          ]
-        });
-      } catch (e) {
-        console.warn('[Preview] DOMPurify sanitize warning:', e);
-      }
-    }
-
-    return html;
+  function getEl() {
+    if (!_el) _el = document.getElementById('preview-content');
+    return _el;
   }
 
-  /**
-   * Aggiorna l'elemento di anteprima del DOM.
-   */
-  async function updatePreviewWithContent(content) {
+  function updatePreviewWithContent(content) {
     init();
     const el = getEl();
     if (!el) return;
 
-    // Azzeramento immediato se il contenuto è vuoto o null
-    if (content === undefined || content === null || !content.trim()) {
+    if (content === undefined || content === null) {
       el.innerHTML = '';
       return;
     }
 
-    const html = renderToHTML(content);
-    el.innerHTML = html;
+    el.innerHTML = renderToHTML(content);
 
-    // Renderizza i blocchi Mermaid presenti con gestione errori
     if (typeof mermaid !== 'undefined') {
-      const mermaidNodes = el.querySelectorAll('.mermaid');
-      if (mermaidNodes.length > 0) {
+      const nodes = el.querySelectorAll('pre.mermaid');
+      if (nodes.length) {
         try {
-          await mermaid.run({ nodes: Array.from(mermaidNodes) });
-        } catch (err) {
-          console.warn('[Preview] Mermaid run error:', err);
+          mermaid.run({ nodes: Array.from(nodes) });
+        } catch (e) {
+          console.warn('[Preview] mermaid.render failed', e);
         }
       }
     }
   }
 
-  /**
-   * Wrapper con debounce per l'evento input (60ms).
-   */
   function updatePreviewDebounced(content, delay = 60) {
     if (_debounceTimer) clearTimeout(_debounceTimer);
     _debounceTimer = setTimeout(() => {
@@ -271,11 +219,13 @@ window.MiniPadPreview = (function () {
     init,
     renderToHTML,
     updatePreviewWithContent,
-    updatePreviewDebounced
+    updatePreviewDebounced,
+    generateRenderId,
+    escapeHtml
   };
 })();
 
-// Funzioni ponte globali per retrocompatibilità
+// Funzioni ponte globali per retrocompatibilità con editor.js e main.js
 function updatePreview() {
   if (typeof getEditorContent === 'function') {
     MiniPadPreview.updatePreviewWithContent(getEditorContent());

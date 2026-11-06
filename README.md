@@ -1,37 +1,55 @@
 # minipad 📝
-**minipad** è un editor di testo gratuito e leggerissimo che gira interamente in locale nel tuo browser. Combina la semplicità di un blocco note con la potenza di **Markdown** e **LaTeX** e per creare documenti, appunti matematici e diagrammi.
 
-*🇬🇧 **minipad** is an advanced, free, and feather-light text editor that runs entirely locally within your browser. It combines the simplicity of a notepad with the power of Markdown and LaTeX to create documents, math notes, and diagrams.*
+**minipad** è un editor di testo gratuito e leggerissimo che gira interamente in locale nel tuo browser. Combina la semplicità di un blocco note con la potenza di **Markdown**, **LaTeX** e **Mermaid** per creare documenti, appunti matematici e diagrammi vettoriali.
+
+*🇬🇧 **minipad** is an advanced, free, and feather-light text editor that runs entirely locally within your browser. It combines the simplicity of a notepad with the power of Markdown, LaTeX, and Mermaid to create documents, math notes, and vector diagrams.*
+
+---
 
 ## ✨ Funzionalità Principali / Main Features
 
 - 🌍 **Supporto Bilingue (IT/EN)**: Cambia lingua dell'interfaccia al volo con l'apposito pulsante in alto a destra. *(Bilingual Support: Switch UI language instantly on the fly).*
-- 🔒 **100% Locale & Privacy-First**: Minipad è completamente "serverless". Nessun dato viene mai inviato a server esterni; tutto funziona e si salva nel tuo browser offline. *(Local & Privacy first: serverless app, everything works and saves offline in your browser).*
-- 🤖 **Incolla Perfetto dalle AI (Copia & Incolla)**: Incolla risposte e testi generati dalle Intelligenze Artificiali (es. ChatGPT, Gemini, Claude). Minipad riconosce e renderizza automaticamente le espressioni matematiche esportate nei formati `\[ \]` e `\( \)`, mostrandoti subito la formula corretta senza farti impazzire tra sintassi rotte! *(AI Seamless Pasting: easily paste ChatGPT/Gemini/Claude answers and Minipad will automatically render mathematical expressions exported as `\[ \]` or `\( \)`).*
-- 📝 **Editor Markdown Completo**: Formattazione veloce, tabelle avanzate ed evidenziazione, affiancati a un'anteprima in tempo reale ultra veloce. *(Full Markdown Editor with live parsing and advanced tables).*
-- 🧮 **Matematica Avanzata e Simboli (LaTeX)**: Supporto nativo integrato a KaTeX. Usa i blocchi `$$ ... $$` o seleziona dal vasto menu a discesa per digitare matrici, frazioni ed equazioni senza sforzo. *(Advanced Math with LaTeX support using KaTeX).*
-- 📊 **Diagrammi Integrati**: Crea grafici di flusso, diagrammi di sequenza e mentali usando istantaneamente la sintassi testuale 
-- 💾 **Gestione File & Backup**: Puoi importare o esportare liberamente i file Markdown (.md), LaTeX (.tex) e HTML. Inoltre c'è un potente sistema di Backup/Ripristino per non perdere mai le tue sessioni su dispositivi diversi. *(File Management & Backup: export PDF, MD, HTML, TEX, and use the full JSON backup/restore tool).*
-- 🔄 **Salvataggio & Esplora Note**: Nessuna scheda persa! Puoi passare da una nota all'altra dalla pratica barra laterale (Sidebar). Il salvataggio dei tuoi documenti è automatico fin dal primo carattere (tramite IndexedDB). *(Autosave & Note Explorer: switch notes seamlessly from the sidebar).*
-- 🧘 **Interfaccia Zen & Temi Scuri**: Scegli tra la comoda Visualizzazione Divisa (Editor/Preview), oppure concentrati con la "Modalità Zen" a Schermo Intero. Disponibili i temi: Chiaro, Scuro, Sepia e Hacker. *(Zen Interface & Dark Themes: choose split view or Full-Screen Zen mode. Available themes: Default, Dark, Sepia, Hacker).*
+- 🔒 **100% Locale & Privacy-First**: Minipad è completamente serverless. Nessun dato viene mai inviato a server esterni; tutto funziona e si salva in modo persistente nel tuo browser (tramite IndexedDB con fallback su LocalStorage). *(100% Local & Privacy-First: No telemetry, no external databases. Everything persists safely inside your browser).*
+- 🤖 **Smart Paste per AI & Fonti Scientifiche**: Incolla risposte da ChatGPT, Gemini, Claude, Wikipedia o portali scientifici (KaTeX, MathML, MathJax). Minipad estrae automaticamente il codice LaTeX originale da `<annotation>` e converte delimitatori `\[ \]` e `\( \)` in `$$` e `$`, proteggendo selettivamente codice e valute (es. `$19,99`). *(Smart Paste: Seamlessly paste AI or scientific text with automatic delimiter normalization and math/currency preservation).*
+- 🧮 **Matematica Avanzata (LaTeX con KaTeX)**: Supporto nativo integrato con parsing isolato privo di conflitti Markdown. Usa formule inline `$ ... $` o blocchi `$$ ... $$` con palette rapida per simboli, matrici ed equazioni. *(Advanced Math: Native KaTeX rendering isolated from Markdown markup).*
+- 📊 **Diagrammi Mermaid Integrati**: Compilazione visuale nativa in SVG per Flowchart, Sequence Diagram, Mindmap, Class Diagram e grafici logici in blocchi ````mermaid````. Include anche palette di template rapidi e retrocompatibilità per diagrammi ASCII. *(Native Mermaid Diagrams: Real-time SVG rendering for flowcharts, sequence diagrams, and mindmaps with strict security).*
+- 💾 **Esportazione Professionale Multi-Formato**:
+  - **Markdown (.md)**: sorgente originale pulito.
+  - **HTML Standalone (.html)**: anteprima completa pronta da visualizzare e condividere.
+  - **LaTeX (.tex)**: codice compilabile con `pdflatex`, con conversione automatica delle tabelle in `\begin{tabular}` e codice inline in `\texttt{...}`.
+  - **PDF (.pdf)**: documento A4 generato in-app via `html2pdf.js`.
+  - **Plain Text (.txt)**: testo puro con formule matematiche e blocchi di codice preservati senza perdita di dati.
+  - **🖨️ Stampa Vettoriale**: impaginazione tipografica ad alta risoluzione tramite finestra di stampa del browser (`Ctrl+P`).
+- 📁 **Esplora Note & Gruppi con Drag & Drop**: Organizza i tuoi appunti in cartelle e gruppi personalizzati con drag & drop nativo HTML5, barra di ricerca istantanea e menu contestuale tasto destro. *(Notes & Groups Explorer: Folders, drag & drop sorting, instant search filter, and custom context menus).*
+- 📱 **PWA Installabile & Funzionante Offline**: Installabile su Desktop, Android e iOS come Progressive Web App (PWA) con Service Worker aggiornato e supporto offline completo. *(Installable PWA: Full offline capabilities on desktop and mobile).*
+- 🧘 **Modalità Zen & Temi Personalizzati**: Scegli tra Vista Divisa (Editor + Anteprima), Solo Editor, Solo Anteprima o la "Modalità Zen" a schermo intero. Temi disponibili: Chiaro, Scuro, Sepia e Hacker. *(Zen Mode & Color Themes: Split view, Zen full-screen, Light, Dark, Sepia, and Hacker themes).*
+
+---
 
 ## 🚀 Come Usarlo / How to Use
 
-Non serve installare nulla, ma può essere installata come libreria desktop (PWA)! *(No installation required, but it works as an installable PWA!)*
+Minipad non richiede configurazione o server backend:
 
-1.  Scarica il pacchetto e apri il file `index.html`. *(Download the package and open `index.html`).*
-2.  Oppure naviga all'indirizzo online e clicca su "Installa Minipad" dal menu **File** per averlo fisso sul dispositivo. *(Or navigate online and click "Install Minipad" from the File menu to have it on your device).*
-3.  Inizia a scrivere liberamente. *(Start writing freely).*
+1. **Uso Web**: Naviga all'indirizzo online (es. [GitHub Pages](https://marcorzzn.github.io/minipad/)).
+2. **Uso Offline Standalone**: Scarica il repository, scompatta e fai doppio clic su `index.html`.
+3. **Installazione PWA**: Apri il menu **File** e clicca su **📱 Installa Minipad** per installarlo sul tuo sistema operativo.
 
-## 🛠️ Tecnologie Utilizzate / Stack
+---
 
-Minipad è costruito con standard web ottimizzati all'osso e zero framework ingombranti (Solo HTML5, puro CSS, Vanilla JS), appoggiandosi a solide librerie open-source:
+## 🛠️ Tecnologie Utilizzate / Tech Stack
 
-*   [Marked.js](https://marked.js.org/) - Parsing ultraveloce del Markdown
-*   [KaTeX](https://katex.org/) - Rendering iperveloce per le formule matematiche
-*   [Mermaid.js](https://mermaid.js.org/) - Generazione visuale di diagrammi e grafici logici 
-*   [DOMPurify](https://github.com/cure53/DOMPurify) - Sanitizzazione affidabile dell'HTML 
-*   [idb-keyval](https://github.com/jakearchibald/idb-keyval) - Salvataggio locale persistente / Persistent Local Storage
+Minipad è costruito su standard web moderni in Vanilla JavaScript con zero overhead da framework pesanti:
+
+* [EasyMDE](https://github.com/Ionaru/easy-markdown-editor) / [CodeMirror 5](https://codemirror.net/5/) - Editor di testo e syntax highlighting
+* [Marked.js](https://marked.js.org/) & [marked-katex-extension](https://github.com/UziTech/marked-katex-extension) - Parsing ultraveloce Markdown e formule
+* [KaTeX](https://katex.org/) - Rendering tipografico matematico ad alte prestazioni
+* [Mermaid.js](https://mermaid.js.org/) - Generazione visuale diagrammi in SVG (con `securityLevel: 'strict'`)
+* [Turndown](https://github.com/mixmark-io/turndown) - Conversione da HTML ad alta fedeltà a Markdown per Smart Paste
+* [DOMPurify](https://github.com/cure53/DOMPurify) - Sanitizzazione XSS su anteprima e SVG
+* [idb-keyval](https://github.com/jakearchibald/idb-keyval) - Persistenza asincrona IndexedDB con fallback locale
+* [html2pdf.js](https://github.com/eKoopmans/html2pdf.js) - Generazione documenti PDF A4 lato client
+
+---
 
 ## 📄 Licenza / License
 

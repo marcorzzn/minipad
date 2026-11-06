@@ -1,12 +1,19 @@
 /**
- * MiniPad Export
- * Standard di settore: .md, .html (standalone), .tex (con escape corretto), .pdf, .txt, e stampa nativa
+ * MiniPad Export v1.5.3.1
+ * Bug fix v1.5.3.1:
+ *   C1: placeholder nonce-based (MP-{id}-*)
+ *   C2: escape LaTeX non distrugge placeholder (_ non presente nel formato)
+ *   C3: math regex (?<![\\$]) esclude \$ escapati
+ *   C4: estrazione valute dedicata DOPO code, PRIMA di math
+ *   C5: doppi backtick (multi PRIMA di singoli)
  */
 window.MiniPadExport = (function () {
   const LATEX_ESCAPE = {
+    '\\': '\\textbackslash{}',
     '&': '\\&',
     '%': '\\%',
-    '_': '\\_',
+    '$': '\\$',
+    '#': '\\#',
     '{': '\\{',
     '}': '\\}',
     '~': '\\textasciitilde{}',
@@ -14,7 +21,16 @@ window.MiniPadExport = (function () {
   };
 
   function escapeLatexText(s) {
-    return String(s || '').replace(/[&%_{}~^]/g, (c) => LATEX_ESCAPE[c] || c);
+    return String(s).replace(/[\\&%$#_{}~^]/g, (c) => LATEX_ESCAPE[c]);
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function sanitizeFilename(name) {
@@ -22,6 +38,13 @@ window.MiniPadExport = (function () {
       .replace(/[\\/:*?"<>|]+/g, '_')
       .replace(/\s+/g, '_')
       .slice(0, 120) || 'minipad';
+  }
+
+  function generateRenderId() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return 'r' + crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+    }
+    return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   }
 
   function download(blob, filename) {
@@ -35,54 +58,235 @@ window.MiniPadExport = (function () {
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
 
-  function escapeHtml(s) {
-    return String(s || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+  /* ============================================================
+     Estrazione protetta (condivisa da TeX e TXT)
+     ============================================================ */
+  function extractProtected(md, rid) {
+    const codeBlocks = [];
+    const maths = [];
+    const currencies = [];
+
+    md = String(md || '');
+
+    // 1. Fenced code PRIMA di tutto
+    md = md.replace(/```([\w-]*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+      codeBlocks.push({ lang, code: code.replace(/\n$/, ''), inline: false });
+      return `\n\nMP-${rid}-CODE-${codeBlocks.length - 1}\n\n`;
+    });
+
+    // 2. Inline code con fence multipli (PRIMA dei singoli)
+    md = md.replace(/(`{2,})((?:[^`]|`(?![`]))*?)\1/g, (_, fence, code) => {
+      if (code.length >= 2 && code.startsWith(' ') && code.endsWith(' ') && code.trim()) {
+        code = code.slice(1, -1);
+      }
+      codeBlocks.push({ lang: '', code, inline: true });
+      return `MP-${rid}-ICODE-${codeBlocks.length - 1}`;
+    });
+
+    // 3. Inline code con fence singoli
+    md = md.replace(/`([^`\n]+)`/g, (_, code) => {
+      codeBlocks.push({ lang: '', code, inline: true });
+      return `MP-${rid}-ICODE-${codeBlocks.length - 1}`;
+    });
+
+    // 4. Valute escape \$N (DOPO code, PRIMA math)
+    md = md.replace(/\\\$(\d[\d.,]*)/g, (_, amount) => {
+      currencies.push(amount);
+      return `MP-${rid}-CUR-${currencies.length - 1}`;
+    });
+
+    // 5. Math block $$...$$
+    md = md.replace(/\$\$([\s\S]*?)\$\$/g, (_, m) => {
+      maths.push({ block: true, tex: m.trim() });
+      return `\n\nMP-${rid}-MATH-${maths.length - 1}\n\n`;
+    });
+
+    // 6. Math inline $...$ (escluso \$ escapato)
+    md = md.replace(/(?<![\\$])\$(?!\$)([^$\n]+?)\$(?!\$)/g, (_, m) => {
+      maths.push({ block: false, tex: m.trim() });
+      return `MP-${rid}-MATH-${maths.length - 1}`;
+    });
+
+    return { md, codeBlocks, maths, currencies, rid };
   }
 
-  /* ---------- Markdown ---------- */
+  /* ============================================================
+     Markdown → LaTeX
+     ============================================================ */
+  function markdownToLatex(md) {
+    const rid = generateRenderId();
+    const { md: prot, codeBlocks, maths, currencies } = extractProtected(md, rid);
+    const tables = [];
+
+    // Tabelle Markdown → tabular (salvate in array e isolate tramite segnaposto)
+    let body = prot.replace(/(?:^|\n)((?:\|.+\|\n?)+)/g, (block) => {
+      const lines = block.trim().split('\n').filter((r) => r.trim());
+      if (lines.length < 2) return block;
+      const parseRow = (r) =>
+        r.split('|').slice(1, -1).map((c) => c.trim());
+      const header = parseRow(lines[0]);
+      const sep = parseRow(lines[1]) || [];
+      const bodyRows = lines.slice(2).map(parseRow);
+      const spec = header.map((_, i) => {
+        const s = sep[i] || '';
+        if (/^:-+:$/.test(s)) return 'c';
+        if (/^-+:$/.test(s)) return 'r';
+        return 'l';
+      }).join('');
+      let tex = `\n\\begin{center}\n\\begin{tabular}{${spec}}\n\\hline\n`;
+      tex += header.map((c) => escapeLatexText(c)).join(' & ') + ' \\\\\n\\hline\n';
+      for (const row of bodyRows) {
+        tex += row.map((c) => escapeLatexText(c)).join(' & ') + ' \\\\\n';
+      }
+      tex += '\\hline\n\\end{tabular}\n\\end{center}\n';
+      tables.push(tex);
+      return `\n\nMP-${rid}-TAB-${tables.length - 1}\n\n`;
+    });
+
+    // Trasformazioni strutturali
+    body = body
+      .replace(/^###### (.+)$/gm, '\\paragraph{$1}')
+      .replace(/^##### (.+)$/gm, '\\subparagraph{$1}')
+      .replace(/^#### (.+)$/gm, '\\subsubsection{$1}')
+      .replace(/^### (.+)$/gm, '\\subsection{$1}')
+      .replace(/^## (.+)$/gm, '\\section{$1}')
+      .replace(/^# (.+)$/gm, '\\section*{$1}')
+      .replace(/^---+$/gm, '\\bigskip\\hrule\\bigskip');
+
+    // Blockquote (semplice, un livello)
+    body = body.replace(
+      /(?:^|\n)((?:> .+\n?)+)/g,
+      (block) => {
+        const inner = block.trim().split('\n').map((l) => l.replace(/^> ?/, '')).join('\n');
+        return `\n\\begin{quote}\n${inner}\n\\end{quote}\n`;
+      }
+    );
+
+    // Liste
+    body = body.replace(/(?:^|\n)((?:[-*] .+\n?)+)/g, (block) => {
+      const items = block.trim().split('\n')
+        .map((l) => `\\item ${l.replace(/^[-*] /, '')}`)
+        .join('\n');
+      return `\n\\begin{itemize}\n${items}\n\\end{itemize}\n`;
+    });
+    body = body.replace(/(?:^|\n)((?:1\. .+\n?)+)/g, (block) => {
+      const items = block.trim().split('\n')
+        .map((l) => `\\item ${l.replace(/^\d+\. /, '')}`)
+        .join('\n');
+      return `\n\\begin{enumerate}\n${items}\n\\end{enumerate}\n`;
+    });
+
+    // Grassetto / corsivo
+    body = body
+      .replace(/\*\*(.+?)\*\*/g, '\\textbf{$1}')
+      .replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, '$1\\textit{$2}')
+      .replace(/\[(.+?)\]\((.+?)\)/g, (_, text, url) => {
+        // Rimuove eventuale title "..." dall'URL
+        const cleanUrl = url.replace(/\s+"[^"]*"$/, '').trim();
+        return `\\href{${cleanUrl}}{${text}}`;
+      });
+
+    // Escape del testo libero (SOLO fuori da placeholder, preservando i comandi LaTeX)
+    const placeholderRe = new RegExp(
+      `MP-${rid}-(CODE|ICODE|MATH|CUR|TAB)-(\\d+)`,
+      'g'
+    );
+    const parts = body.split(placeholderRe);
+    let escaped = '';
+    for (let i = 0; i < parts.length; i++) {
+      if (i % 3 === 0) {
+        escaped += parts[i]
+          .replace(/&/g, '\\&')
+          .replace(/%/g, '\\%')
+          .replace(/_/g, '\\_')
+          .replace(/~/g, '\\textasciitilde{}')
+          .replace(/\^/g, '\\textasciicircum{}')
+          .replace(/(?<!\\)#/g, '\\#');
+      } else {
+        escaped += `MP-${rid}-${parts[i]}-${parts[i + 1]}`;
+        i += 1; // salta l'index, già usato
+      }
+    }
+
+    // Re-inject tabelle PRIMA di valute/math/code per risolverne i placeholder interni
+    escaped = escaped.replace(
+      new RegExp(`MP-${rid}-TAB-(\\d+)`, 'g'),
+      (_, i) => tables[+i]
+    );
+
+    // Re-inject: currency, math, code
+    escaped = escaped.replace(
+      new RegExp(`MP-${rid}-CUR-(\\d+)`, 'g'),
+      (_, i) => `\\$${currencies[+i]}`
+    );
+
+    escaped = escaped.replace(
+      new RegExp(`MP-${rid}-MATH-(\\d+)`, 'g'),
+      (_, i) => {
+        const m = maths[+i];
+        return m.block ? `\n\\[\n${m.tex}\n\\]\n` : `\\(${m.tex}\\)`;
+      }
+    );
+
+    escaped = escaped.replace(
+      new RegExp(`MP-${rid}-CODE-(\\d+)`, 'g'),
+      (_, i) => {
+        const b = codeBlocks[+i];
+        return `\n\\begin{verbatim}\n${b.code}\n\\end{verbatim}\n`;
+      }
+    );
+
+    escaped = escaped.replace(
+      new RegExp(`MP-${rid}-ICODE-(\\d+)`, 'g'),
+      (_, i) => {
+        const b = codeBlocks[+i];
+        const txt = b.code
+          .replace(/\\/g, '\\textbackslash{}')
+          .replace(/([&%$#_{}])/g, '\\$1')
+          .replace(/~/g, '\\textasciitilde{}')
+          .replace(/\^/g, '\\textasciicircum{}')
+          .replace(/`/g, '\\textasciigrave{}');
+        return `\\texttt{${txt}}`;
+      }
+    );
+
+    return escaped;
+  }
+
+  /* ============================================================
+     Export Markdown
+     ============================================================ */
   function exportMarkdown(content, name) {
-    const blob = new Blob([content || ''], { type: 'text/markdown;charset=utf-8' });
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
     download(blob, `${sanitizeFilename(name)}.md`);
   }
 
-  /* ---------- HTML Standalone ---------- */
+  /* ============================================================
+     Export HTML standalone
+     ============================================================ */
   function exportHTML(content, name) {
-    const body = typeof MiniPadPreview !== 'undefined'
-      ? MiniPadPreview.renderToHTML(content)
-      : (content || '');
+    const body = MiniPadPreview.renderToHTML(content);
     const title = escapeHtml(name || 'minipad');
     const doc = `<!DOCTYPE html>
-<!-- Nota: questo file richiede internet al primo caricamento per i font KaTeX e il runtime Mermaid.
-     Per un documento 100% autonomo offline senza dipendenze CDN, usa "Stampa…" -> "Salva come PDF". -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Nota: questo file richiede internet al primo caricamento per i font KaTeX e il runtime Mermaid.
+     Per un documento 100% autonomo offline senza dipendenze CDN, usa "Stampa…" -> "Salva come PDF". -->
 <title>${title}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"><\/script>
 <style>
   :root { color-scheme: light dark; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    max-width: 820px;
-    margin: 2em auto;
-    padding: 0 1.2em;
-    line-height: 1.65;
-    color: #222;
-  }
-  @media (prefers-color-scheme: dark) {
-    body { color: #e6e6e6; background: #111; }
-    pre, code { background: #1e1e1e !important; }
-  }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+         max-width: 820px; margin: 2em auto; padding: 0 1.2em; line-height: 1.65; color: #222; }
+  @media (prefers-color-scheme: dark) { body { color: #e6e6e6; background: #111; }
+    pre, code { background: #1e1e1e !important; } }
   h1, h2, h3, h4 { margin-top: 1.4em; border-bottom: 1px solid #eee; padding-bottom: 6px; }
   pre { background: #f4f4f4; padding: 1em; border-radius: 6px; overflow-x: auto; }
-  code { background: #f4f4f4; padding: .15em .35em; border-radius: 3px; font-size: .93em; font-family: Consolas, monospace; }
+  code { background: #f4f4f4; padding: .15em .35em; border-radius: 3px; font-size: .93em;
+         font-family: Consolas, monospace; }
   pre code { background: transparent; padding: 0; }
   blockquote { border-left: 4px solid #0067c0; margin-left: 0; padding-left: 1em; color: #555; }
   img { max-width: 100%; border-radius: 4px; }
@@ -106,12 +310,8 @@ ${body}
     async function renderMermaid() {
       if (typeof mermaid === 'undefined') return;
       try {
-        mermaid.initialize({
-          startOnLoad: false,
-          securityLevel: 'strict',
-          htmlLabels: false,
-          theme: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default'
-        });
+        mermaid.initialize({ startOnLoad: false, securityLevel: 'strict',
+          htmlLabels: false, theme: 'default' });
         const nodes = document.querySelectorAll('pre.mermaid');
         if (nodes.length > 0) {
           if (typeof mermaid.run === 'function') {
@@ -124,15 +324,11 @@ ${body}
             }
           }
         }
-      } catch (e) {
-        console.warn('Mermaid render fallito:', e);
-      }
+      } catch (e) { console.warn('Mermaid render fallito:', e); }
     }
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', renderMermaid);
-    } else {
-      renderMermaid();
-    }
+    } else { renderMermaid(); }
   })();
 <\/script>
 </body>
@@ -141,157 +337,9 @@ ${body}
     download(blob, `${sanitizeFilename(name)}.html`);
   }
 
-  /* ---------- LaTeX ---------- */
-  function markdownToLatex(md) {
-    const codeBlocks = [];
-    const mathBlocks = [];
-    const tables = [];
-
-    let text = String(md || '');
-
-    // 1. CODE PRIMA DI TUTTO — protegge $HOME, $(( )), etc.
-    text = text.replace(/(^|\n)```([\w-]*)[ \t]*\r?\n([\s\S]*?)\r?\n[ \t]*```(?=\r?\n|$)/g, (_, lead, lang, code) => {
-      codeBlocks.push({ lang, code: code.replace(/\r?\n$/, ''), inline: false });
-      return `${lead}\n\n@@MP_CODE_${codeBlocks.length - 1}@@\n\n`;
-    });
-
-    // Inline code CommonMark: prima i fence multipli (2+ backtick), poi i singoli
-    text = text.replace(/(`{2,})([\s\S]*?)\1/g, (match, fence, code) => {
-      if (code.length >= 2 && code.startsWith(' ') && code.endsWith(' ') && code.trim()) {
-        code = code.slice(1, -1);
-      }
-      codeBlocks.push({ lang: '', code, inline: true });
-      return `@@MP_ICODE_${codeBlocks.length - 1}@@`;
-    });
-
-    text = text.replace(/`([^`\r\n]+)`/g, (_, code) => {
-      codeBlocks.push({ lang: '', code, inline: true });
-      return `@@MP_ICODE_${codeBlocks.length - 1}@@`;
-    });
-
-    // 2. PROTEZIONE VALUTE: $<cifra> non deve MAI diventare math
-    text = text.replace(/(^|[^\\])\$(\d)/g, '$1@@MP_CURR_$2');
-
-    // 3. MATH (le formule non collidono con le valute protette)
-    text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, m) => {
-      mathBlocks.push({ block: true, tex: m.trim() });
-      return `\n\n@@MP_MATH_${mathBlocks.length - 1}@@\n\n`;
-    });
-
-    text = text.replace(/(?<!\$)\$(?!\$)([^$\n]+?)\$(?!\$)/g, (_, m) => {
-      mathBlocks.push({ block: false, tex: m.trim() });
-      return `@@MP_MATH_${mathBlocks.length - 1}@@`;
-    });
-
-    // Ripristina valute con \$ per LaTeX usando function replacer
-    text = text.replace(/@@MP_CURR_(\d)/g, (_, d) => `\\$${d}`);
-
-    // 4. Tabelle Markdown -> tabular
-    text = text.replace(
-      /(?:^|\n)((?:\|.+\|\r?\n)+)/g,
-      (block) => {
-        const rows = block.trim().split(/\r?\n/).filter(r => r.trim());
-        if (rows.length < 2) return block;
-        const parseRow = r => r.split('|').slice(1, -1).map(c => c.trim());
-        const header = parseRow(rows[0]);
-        const bodyRows = rows.slice(1).filter(r => !/^\s*\|?\s*:?-+:?\s*\|/.test(r));
-        const body = bodyRows.map(parseRow);
-        const spec = 'l'.repeat(header.length);
-        let tex = `\n\\begin{center}\n\\begin{tabular}{${spec}}\n\\hline\n`;
-        tex += header.map(c => escapeLatexText(c)).join(' & ') + ' \\\\\n\\hline\n';
-        for (const row of body) {
-          tex += row.map(c => escapeLatexText(c)).join(' & ') + ' \\\\\n';
-        }
-        tex += '\\hline\n\\end{tabular}\n\\end{center}\n';
-        tables.push(tex);
-        return `\n\n@@MP_TAB_${tables.length - 1}@@\n\n`;
-      }
-    );
-
-    // 5. Struttura titoli e linee Markdown -> comandi LaTeX (PRIMA di escape #)
-    text = text
-      .replace(/^###### (.+)$/gm, '\\paragraph{$1}')
-      .replace(/^##### (.+)$/gm, '\\subparagraph{$1}')
-      .replace(/^#### (.+)$/gm, '\\subsubsection{$1}')
-      .replace(/^### (.+)$/gm, '\\subsection{$1}')
-      .replace(/^## (.+)$/gm, '\\section{$1}')
-      .replace(/^# (.+)$/gm, '\\section*{$1}')
-      .replace(/^---+$/gm, '\\bigskip\\hrule\\bigskip');
-
-    // 6. Escape testo ordinario preservando i placeholder @@MP_...@@ e comandi LaTeX
-    const parts = text.split(/(@@MP_[A-Z]+_\d+@@)/);
-    text = parts.map(part => {
-      if (/^@@MP_[A-Z]+_\d+@@$/.test(part)) return part;
-      return part
-        .replace(/&/g, '\\&')
-        .replace(/%/g, '\\%')
-        .replace(/_/g, '\\_')
-        .replace(/~/g, '\\textasciitilde{}')
-        .replace(/\^/g, '\\textasciicircum{}')
-        .replace(/(?<!\\)#/g, '\\#');
-    }).join('');
-
-    // 7. Grassetto, corsivo, link
-    text = text
-      .replace(/\*\*(.+?)\*\*/g, '\\textbf{$1}')
-      .replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, '$1\\textit{$2}')
-      .replace(/\[(.+?)\]\((.+?)\)/g, '\\href{$2}{$1}');
-
-    // 8. Liste puntate e numerate
-    text = text.replace(/(?:^|\n)((?:[-*] .+\r?\n?)+)/g, (block) => {
-      const items = block.trim().split(/\r?\n/).map(l => `\\item ${l.replace(/^[-*] /, '')}`).join('\n');
-      return `\n\\begin{itemize}\n${items}\n\\end{itemize}\n`;
-    });
-    text = text.replace(/(?:^|\n)((?:\d+\. .+\r?\n?)+)/g, (block) => {
-      const items = block.trim().split(/\r?\n/).map(l => `\\item ${l.replace(/^\d+\. /, '')}`).join('\n');
-      return `\n\\begin{enumerate}\n${items}\n\\end{enumerate}\n`;
-    });
-
-    // 9. Re-inject TABELLE
-    text = text.replace(/@@MP_TAB_(\d+)@@/g, (_, i) => tables[+i] || '');
-
-    // 10. Re-inject MATH
-    text = text.replace(/@@MP_MATH_(\d+)@@/g, (_, i) => {
-      const m = mathBlocks[+i];
-      if (!m) return '';
-      return m.block ? `\n\\[\n${m.tex}\n\\]\n` : `\\(${m.tex}\\)`;
-    });
-
-    // 11. Re-inject CODE (con loop di risoluzione per placeholder annidati)
-    // Il loop è necessario perché il contenuto utente può annidare placeholder
-    // (es. una tabella Markdown con inline code che contiene backtick o formule).
-    // Limite 5: oltre è quasi certamente un bug di auto-referenza.
-    let prevCode = '';
-    let itCode = 0;
-    while (text !== prevCode && itCode < 5) {
-      prevCode = text;
-      itCode++;
-      text = text.replace(/@@MP_CODE_(\d+)@@/g, (_, i) => {
-        const b = codeBlocks[+i];
-        return b ? `\n\\begin{verbatim}\n${b.code}\n\\end{verbatim}\n` : '';
-      });
-
-      text = text.replace(/@@MP_ICODE_(\d+)@@/g, (_, i) => {
-        const b = codeBlocks[+i];
-        if (!b) return '';
-        const txt = b.code
-          .replace(/\\/g, '\\textbackslash{}')
-          .replace(/([{}])/g, '\\$1')
-          .replace(/\$/g, '\\$')
-          .replace(/_/g, '\\_')
-          .replace(/%/g, '\\%')
-          .replace(/&/g, '\\&')
-          .replace(/#/g, '\\#')
-          .replace(/\^/g, '\\textasciicircum{}')
-          .replace(/~/g, '\\textasciitilde{}')
-          .replace(/`/g, '\\textasciigrave{}');
-        return `\\texttt{${txt}}`;
-      });
-    }
-
-    return text;
-  }
-
+  /* ============================================================
+     Export LaTeX
+     ============================================================ */
   function exportLaTeX(content, name) {
     const body = markdownToLatex(content);
     const doc = `\\documentclass[11pt,a4paper]{article}
@@ -320,12 +368,133 @@ ${body}
     download(blob, `${sanitizeFilename(name)}.tex`);
   }
 
-  /* ---------- Stampa Nativa Browser ---------- */
+  /* ============================================================
+     Export TXT
+     ============================================================ */
+  function exportTxt(content, name) {
+    const rid = generateRenderId();
+    let text = String(content || '');
+
+    const codeBlocks = [];
+    const maths = [];
+    const currencies = [];
+
+    // Code PRIMA di tutto
+    text = text.replace(/```([\w-]*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+      codeBlocks.push({ code: code.replace(/\n$/, ''), inline: false });
+      return `\n\nMP-${rid}-CODE-${codeBlocks.length - 1}\n\n`;
+    });
+    text = text.replace(/(`{2,})((?:[^`]|`(?![`]))*?)\1/g, (_, fence, code) => {
+      if (code.length >= 2 && code.startsWith(' ') && code.endsWith(' ') && code.trim()) {
+        code = code.slice(1, -1);
+      }
+      codeBlocks.push({ code: code.replace(/`/g, ''), inline: true });
+      return `MP-${rid}-ICODE-${codeBlocks.length - 1}`;
+    });
+    text = text.replace(/`([^`\n]+)`/g, (_, code) => {
+      codeBlocks.push({ code, inline: true });
+      return `MP-${rid}-ICODE-${codeBlocks.length - 1}`;
+    });
+
+    // Valute escape
+    text = text.replace(/\\\$(\d[\d.,]*)/g, (_, amt) => {
+      currencies.push(amt);
+      return `MP-${rid}-CUR-${currencies.length - 1}`;
+    });
+
+    // Math (block preserva $$, inline preserva $)
+    text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, m) => {
+      maths.push({ block: true, tex: m.trim() });
+      return `MP-${rid}-MATH-${maths.length - 1}`;
+    });
+    text = text.replace(/(?<![\\$])\$(?!\$)([^$\n]+?)\$(?!\$)/g, (_, m) => {
+      maths.push({ block: false, tex: m.trim() });
+      return `MP-${rid}-MATH-${maths.length - 1}`;
+    });
+
+    // Markdown → plain
+    text = text
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/^>\s?/gm, '')
+      .replace(/\*\*(.+?)\*\*/g, '$1')
+      .replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, '$1$2')
+      .replace(/~~(.+?)~~/g, '$1')
+      .replace(/\[(.+?)\]\((.+?)\)/g, (_, t, u) => {
+        const clean = u.replace(/\s+"[^"]*"$/, '').trim();
+        return `${t} (${clean})`;
+      })
+      .replace(/^[-*]\s+/gm, '• ')
+      .replace(/^\d+\.\s+/gm, '');
+
+    // Restore
+    text = text.replace(
+      new RegExp(`MP-${rid}-CUR-(\\d+)`, 'g'),
+      (_, i) => `$${currencies[+i]}`
+    );
+    text = text.replace(
+      new RegExp(`MP-${rid}-MATH-(\\d+)`, 'g'),
+      (_, i) => {
+        const m = maths[+i];
+        return m.block ? `$$${m.tex}$$` : `$${m.tex}$`;
+      }
+    );
+    text = text.replace(
+      new RegExp(`MP-${rid}-CODE-(\\d+)`, 'g'),
+      (_, i) => `\n${codeBlocks[+i].code}\n`
+    );
+    text = text.replace(
+      new RegExp(`MP-${rid}-ICODE-(\\d+)`, 'g'),
+      (_, i) => codeBlocks[+i].code
+    );
+
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    download(blob, `${sanitizeFilename(name)}.txt`);
+  }
+
+  /* ============================================================
+     Export PDF via html2pdf
+     ============================================================ */
+  async function exportPDF(content, name) {
+    if (typeof html2pdf === 'undefined') {
+      alert('Export PDF non disponibile: libreria html2pdf non caricata.');
+      return;
+    }
+    const holder = document.createElement('div');
+    holder.style.cssText =
+      'padding:24px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;' +
+      'line-height:1.6;color:#222;background:#fff;max-width:820px;';
+    holder.innerHTML = MiniPadPreview.renderToHTML(content);
+    document.body.appendChild(holder);
+
+    const mermaidNodes = holder.querySelectorAll('.mermaid');
+    if (typeof mermaid !== 'undefined' && mermaidNodes.length) {
+      try {
+        await mermaid.run({ nodes: Array.from(mermaidNodes) });
+      } catch (e) { console.warn(e); }
+    }
+
+    try {
+      await html2pdf().set({
+        margin: [12, 12, 12, 12],
+        filename: `${sanitizeFilename(name)}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
+      }).from(holder).save();
+    } catch (e) {
+      console.error('[Export] PDF fallito', e);
+      alert("Errore durante l'esportazione PDF: " + e.message);
+    } finally {
+      document.body.removeChild(holder);
+    }
+  }
+
+  /* ============================================================
+     Stampa (window.print — qualità tipografica nativa)
+     ============================================================ */
   function printDocument(content, name) {
-    const body = typeof MiniPadPreview !== 'undefined'
-      ? MiniPadPreview.renderToHTML(content)
-      : (content || '');
-    const title = escapeHtml(name || 'minipad');
+    const body = MiniPadPreview.renderToHTML(content);
     const w = window.open('', '_blank');
     if (!w) {
       alert('Blocca-popup attivo: consenti i popup per stampare.');
@@ -335,21 +504,15 @@ ${body}
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title}</title>
+<title>${escapeHtml(name || 'minipad')}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"><\/script>
 <style>
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    max-width: 820px;
-    margin: 1.5em auto;
-    padding: 0 1em;
-    line-height: 1.6;
-    color: #222;
-  }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         max-width: 820px; margin: 1.5em auto; padding: 0 1em; line-height: 1.6; color: #222; }
   pre { background: #f4f4f4; padding: 1em; border-radius: 6px; overflow-x: auto; }
-  code { background: #f4f4f4; padding: .15em .35em; border-radius: 3px; font-family: Consolas, monospace; }
+  code { background: #f4f4f4; padding: .15em .35em; border-radius: 3px;
+         font-family: Consolas, monospace; }
   pre code { background: transparent; padding: 0; }
   table { border-collapse: collapse; width: 100%; margin: 1em 0; }
   th, td { border: 1px solid #ccc; padding: .45em .8em; text-align: left; }
@@ -364,150 +527,10 @@ ${body}
   }
 </style>
 </head>
-<body>
-${body}
-<script>
-  (async function () {
-    if (typeof mermaid !== 'undefined') {
-      try {
-        mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', htmlLabels: false });
-        const nodes = document.querySelectorAll('.mermaid');
-        if (nodes.length > 0) {
-          await mermaid.run({ nodes: Array.from(nodes) });
-        }
-      } catch (e) {
-        console.warn('Mermaid print error:', e);
-      }
-    }
-    setTimeout(() => {
-      window.focus();
-      window.print();
-    }, 500);
-  })();
-<\/script>
-</body>
+<body>${body}</body>
 </html>`);
     w.document.close();
-  }
-
-  /* ---------- PDF ---------- */
-  async function exportPDF(content, name) {
-    if (typeof html2pdf === 'undefined') {
-      console.warn('[Export] html2pdf non disponibile, fallback su stampa nativa');
-      printDocument(content, name);
-      return;
-    }
-    const holder = document.createElement('div');
-    holder.style.cssText =
-      'padding:24px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; line-height:1.6; color:#222; background:#fff; max-width:820px;';
-    holder.innerHTML = typeof MiniPadPreview !== 'undefined'
-      ? MiniPadPreview.renderToHTML(content)
-      : (content || '');
-    document.body.appendChild(holder);
-
-    // Aspetta che Mermaid renderizzi gli SVG
-    if (typeof mermaid !== 'undefined') {
-      const mermaidNodes = holder.querySelectorAll('.mermaid');
-      if (mermaidNodes.length > 0) {
-        try {
-          await mermaid.run({ nodes: Array.from(mermaidNodes) });
-        } catch (e) {
-          console.warn('[Export] Mermaid error in PDF:', e);
-        }
-      }
-    }
-
-    try {
-      await html2pdf()
-        .set({
-          margin: [12, 12, 12, 12],
-          filename: `${sanitizeFilename(name)}.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['css', 'legacy'] }
-        })
-        .from(holder)
-        .save();
-    } catch (e) {
-      console.error('[Export] PDF fallito, fallback su printDocument', e);
-      printDocument(content, name);
-    } finally {
-      if (holder.parentNode) {
-        holder.parentNode.removeChild(holder);
-      }
-    }
-  }
-
-  /* ---------- Plain Text ---------- */
-  function exportTxt(content, name) {
-    let text = String(content || '');
-    const codeBlocks = [];
-    const mathBlocks = [];
-
-    // 1. Proteggi code
-    text = text.replace(/(^|\n)```[\w-]*[ \t]*\r?\n([\s\S]*?)\r?\n[ \t]*```(?=\r?\n|$)/g, (_, lead, code) => {
-      codeBlocks.push(code.replace(/\r?\n$/, ''));
-      return `${lead}\n\n@@MP_CODE_${codeBlocks.length - 1}@@\n\n`;
-    });
-    // Fence multipli
-    text = text.replace(/(`{2,})([\s\S]*?)\1/g, (match, fence, code) => {
-      if (code.length >= 2 && code.startsWith(' ') && code.endsWith(' ') && code.trim()) {
-        code = code.slice(1, -1);
-      }
-      codeBlocks.push(code.replace(/`/g, ''));
-      return `@@MP_ICODE_${codeBlocks.length - 1}@@`;
-    });
-
-    // Singoli
-    text = text.replace(/`([^`\r\n]+)`/g, (_, code) => {
-      codeBlocks.push(code);
-      return `@@MP_ICODE_${codeBlocks.length - 1}@@`;
-    });
-
-    // 2. Proteggi valute prima di math
-    text = text.replace(/(^|[^\\])\$(\d)/g, '$1@@MP_CURR_$2');
-
-    // 3. Proteggi math
-    text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, m) => {
-      mathBlocks.push(m.trim());
-      return `\n\n@@MP_MATH_${mathBlocks.length - 1}@@\n\n`;
-    });
-    text = text.replace(/(?<!\$)\$(?!\$)([^$\n]+?)\$(?!\$)/g, (_, m) => {
-      mathBlocks.push(m.trim());
-      return `@@MP_MATH_${mathBlocks.length - 1}@@`;
-    });
-
-    // Ripristina valute ($ è letterale in TXT)
-    text = text.replace(/@@MP_CURR_(\d)/g, '$$$1');
-
-    // Rimuovi eventuali dollari escapati (\$) -> $
-    text = text.replace(/\\(\$)/g, '$1');
-
-    // 4. Rimuovi markup Markdown base
-    text = text
-      .replace(/^#{1,6}\s+/gm, '')
-      .replace(/\*\*(.+?)\*\*/g, '$1')
-      .replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, '$1$2')
-      .replace(/\[(.+?)\]\((.+?)\)/g, '$1 ($2)')
-      .replace(/^---+$/gm, '----------------------------------------');
-
-    // 5. Re-inject math (come formule tra $)
-    text = text.replace(/@@MP_MATH_(\d+)@@/g, (_, i) => `$${mathBlocks[+i]}$`);
-
-    // 6. Re-inject code come testo puro (con loop di risoluzione per annidamenti)
-    // Risolve fino a 5 livelli di placeholder annidati (es. tabelle con frammenti di codice multipli)
-    let prevTxt = '';
-    let itTxt = 0;
-    while (text !== prevTxt && itTxt < 5) {
-      prevTxt = text;
-      itTxt++;
-      text = text.replace(/@@MP_CODE_(\d+)@@/g, (_, i) => `\n${codeBlocks[+i]}\n`);
-      text = text.replace(/@@MP_ICODE_(\d+)@@/g, (_, i) => codeBlocks[+i]);
-    }
-
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    download(blob, `${sanitizeFilename(name)}.txt`);
+    setTimeout(() => { w.focus(); w.print(); }, 900);
   }
 
   return {
