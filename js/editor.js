@@ -222,11 +222,11 @@ function updateTabTitleFromContent(tab) {
     } else if (lines[0].startsWith('## ')) {
         newTitle = lines[0].substring(3).trim();
     } else {
-        // Use first line or fallback
-        newTitle = lines[0].trim().substring(0, 30) || getStr('new_tab_name');
+        // Use first line or fallback (fino a 120 caratteri per evitare troncamenti)
+        newTitle = lines[0].trim().substring(0, 120) || getStr('new_tab_name');
     }
     
-    tab.name = newTitle.substring(0, 30);
+    tab.name = newTitle.substring(0, 120);
 }
 
 function renameTab(tabId) {
@@ -235,7 +235,7 @@ function renameTab(tabId) {
     
     const newName = prompt(getStr('rename_tab_prompt'), tab.name);
     if (newName && newName.trim()) {
-        tab.name = newName.trim().substring(0, 30);
+        tab.name = newName.trim().substring(0, 120);
         tab.isTitleManual = true;
         saveToStorage();
         renderSidebar();

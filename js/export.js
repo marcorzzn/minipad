@@ -72,8 +72,10 @@ window.MiniPadExport = (function () {
     const currencies = [];
 
     md = String(md || '');
-    if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.normalizeLLMMath === 'function') {
-      md = MiniPadSmartPaste.normalizeLLMMath(md);
+    if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.normalizeAllMath === 'function') {
+      md = MiniPadSmartPaste.normalizeAllMath(md);
+    } else if (typeof window !== 'undefined' && typeof window.normalizeAllMath === 'function') {
+      md = window.normalizeAllMath(md);
     }
 
     // 1. Fenced code PRIMA di tutto
@@ -206,7 +208,8 @@ window.MiniPadExport = (function () {
     // Salto pagina manuale (incluso \pagebreak, <!-- pagebreak -->, ---pagebreak---)
     let body = prot
       .replace(/^[ \t]*(?:\\pagebreak|<!--\s*pagebreak\s*-->|---pagebreak---|===pagebreak===)[ \t]*$/gim, '\n\\clearpage\n')
-      .replace(/<div\s+class=["']page-break["']\s*><\/div>/gi, '\n\\clearpage\n');
+      .replace(/<div\s+class=["']page-break["']\s*><\/div>/gi, '\n\\clearpage\n')
+      .replace(/^[ \t]*\\+[ \t]*$/gm, '');
 
     // Tabelle Markdown → tabular
     body = body.replace(/(?:^|\n)((?:\|.+\|\n?)+)/g, (block) => {
@@ -367,7 +370,13 @@ window.MiniPadExport = (function () {
      Export Markdown
      ============================================================ */
   function exportMarkdown(content, name) {
-    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    let clean = String(content || '');
+    if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.normalizeAllMath === 'function') {
+      clean = MiniPadSmartPaste.normalizeAllMath(clean);
+    } else if (typeof window !== 'undefined' && typeof window.normalizeAllMath === 'function') {
+      clean = window.normalizeAllMath(clean);
+    }
+    const blob = new Blob([clean], { type: 'text/markdown;charset=utf-8' });
     download(blob, `${sanitizeFilename(name)}.md`);
   }
 

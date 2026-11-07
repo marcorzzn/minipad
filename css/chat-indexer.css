@@ -1,0 +1,308 @@
+/* =========================================================
+   MiniPad Chat Indexer (Mac Classic Style)
+   Modulo di parsing, indicizzazione e navigazione conversazioni AI
+   ========================================================= */
+
+/* Modale di importazione conversazione */
+.mp-modal-chat-indexer {
+  max-width: 760px;
+  width: 92vw;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.mp-chat-textarea {
+  width: 100%;
+  height: 220px;
+  min-height: 140px;
+  max-height: 360px;
+  font-family: Consolas, "SF Mono", Monaco, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 10px;
+  border: 1px solid var(--mp-border, #999);
+  border-radius: 4px;
+  background: var(--mp-surface, #fff);
+  color: var(--mp-text, #111);
+  box-sizing: border-box;
+  resize: vertical;
+  outline: none;
+}
+
+.mp-chat-textarea:focus {
+  border-color: var(--mp-primary, #0067c0);
+  box-shadow: 0 0 0 2px rgba(0, 103, 192, 0.2);
+}
+
+.mp-chat-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 600px) {
+  .mp-chat-options-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mp-chat-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mp-chat-field label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mp-text, #333);
+}
+
+.mp-chat-select {
+  padding: 5px 8px;
+  font-size: 12px;
+  border: 1px solid var(--mp-border, #999);
+  border-radius: 4px;
+  background: var(--mp-surface, #fff);
+  color: var(--mp-text, #111);
+  outline: none;
+}
+
+/* Pannello Laterale dell'Indice Conversazione (Drawer Mac Classic) */
+.mp-chat-index-panel {
+  position: fixed;
+  top: 86px; /* Sotto la toolbar principale */
+  right: 0;
+  bottom: 24px; /* Sopra la statusbar */
+  width: 310px;
+  background: var(--mp-bevel-light, #f7f7f7);
+  border-left: 2px solid var(--mp-border, #999);
+  box-shadow: -3px 0 10px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  z-index: 95;
+  transform: translateX(100%);
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mp-chat-index-panel.is-open {
+  transform: translateX(0);
+}
+
+.mp-chat-index-header {
+  padding: 8px 10px;
+  background: var(--mp-bevel-mid, #e4e4e4);
+  border-bottom: 1px solid var(--mp-border, #999);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.mp-chat-index-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mp-text, #111);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mp-chat-index-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mp-chat-index-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 6px;
+}
+
+.mp-chat-index-stats {
+  padding: 4px 8px;
+  font-size: 10.5px;
+  color: var(--mp-text-subtle, #666);
+  background: rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid var(--mp-border-soft, #ddd);
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Albero di navigazione */
+.mp-chat-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Turno Utente (nodo radice del turno) */
+.mp-tree-turn {
+  margin-bottom: 4px;
+  border-radius: 4px;
+  border: 1px solid var(--mp-border-soft, #ccc);
+  background: var(--mp-surface, #fff);
+  overflow: hidden;
+}
+
+.mp-tree-turn-header {
+  padding: 6px 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  background: rgba(0, 103, 192, 0.06);
+  border-bottom: 1px solid rgba(0, 103, 192, 0.12);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.mp-tree-turn-header:hover {
+  background: rgba(0, 103, 192, 0.14);
+}
+
+.mp-tree-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--mp-primary, #0067c0);
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.mp-tree-turn-text {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--mp-text, #111);
+  line-height: 1.35;
+  flex: 1;
+}
+
+/* Sezioni della risposta dell'AI */
+.mp-tree-sublist {
+  list-style: none;
+  margin: 0;
+  padding: 3px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mp-tree-item {
+  padding: 4px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--mp-text, #333);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mp-tree-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--mp-primary, #0067c0);
+}
+
+.mp-tree-item.level-1 {
+  font-weight: 600;
+  padding-left: 6px;
+}
+
+.mp-tree-item.level-2 {
+  padding-left: 14px;
+}
+
+.mp-tree-item.level-3 {
+  padding-left: 22px;
+  font-size: 10.5px;
+  color: #555;
+}
+
+.mp-tree-item.is-active {
+  background: var(--mp-primary, #0067c0);
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* Animazione flash quando si salta a una riga dell'editor */
+@keyframes mpLineHighlight {
+  0% { background: rgba(255, 235, 59, 0.7); }
+  100% { background: transparent; }
+}
+
+.mp-highlight-flash {
+  animation: mpLineHighlight 1.6s ease-out forwards;
+}
+
+/* Supporto Dark Mode */
+body.force-dark .mp-chat-index-panel,
+body.dark-mode .mp-chat-index-panel {
+  background: #252525;
+  border-left-color: #444;
+}
+
+body.force-dark .mp-chat-index-header,
+body.dark-mode .mp-chat-index-header {
+  background: #1c1c1c;
+  border-bottom-color: #383838;
+}
+
+body.force-dark .mp-chat-index-title,
+body.dark-mode .mp-chat-index-title {
+  color: #e0e0e0;
+}
+
+body.force-dark .mp-tree-turn,
+body.dark-mode .mp-tree-turn {
+  background: #2d2d2d;
+  border-color: #3d3d3d;
+}
+
+body.force-dark .mp-tree-turn-header,
+body.dark-mode .mp-tree-turn-header {
+  background: rgba(74, 158, 255, 0.12);
+  border-bottom-color: rgba(74, 158, 255, 0.2);
+}
+
+body.force-dark .mp-tree-turn-text,
+body.dark-mode .mp-tree-turn-text {
+  color: #f0f0f0;
+}
+
+body.force-dark .mp-tree-item,
+body.dark-mode .mp-tree-item {
+  color: #ccc;
+}
+
+body.force-dark .mp-tree-item:hover,
+body.dark-mode .mp-tree-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #4a9eff;
+}
+
+body.force-dark .mp-chat-textarea,
+body.dark-mode .mp-chat-textarea,
+body.force-dark .mp-chat-select,
+body.dark-mode .mp-chat-select {
+  background: #1e1e1e;
+  border-color: #444;
+  color: #eee;
+}

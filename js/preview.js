@@ -160,9 +160,11 @@ window.MiniPadPreview = (function () {
       '\n\n<div class="page-break"></div>\n\n'
     );
 
-    // Safety net: normalizza eventuali formule LLM (\\[ o \\( o \[ o \() residue
-    if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.normalizeLLMMath === 'function') {
-      source = MiniPadSmartPaste.normalizeLLMMath(source);
+    // Pipeline Universale di Normalizzazione Matematica (LLM, doppi backslash, escaping, HTML KaTeX/Wikipedia)
+    if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.normalizeAllMath === 'function') {
+      source = MiniPadSmartPaste.normalizeAllMath(source);
+    } else if (typeof window !== 'undefined' && typeof window.normalizeAllMath === 'function') {
+      source = window.normalizeAllMath(source);
     }
 
     const { md: protectedMd, codeBlocks, currencies } = protectCodeAndCurrency(source, rid);

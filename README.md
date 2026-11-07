@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://marcorzzn.github.io/minipad/"><img src="https://img.shields.io/badge/Web_App-Live_Demo-success?style=flat-square&logo=googlechrome&logoColor=white" alt="Live Demo"></a>
-  <a href="https://github.com/marcorzzn/minipad/releases/tag/v1.5.7.2"><img src="https://img.shields.io/badge/Release-v1.5.7.2-blue.svg?style=flat-square" alt="Release"></a>
+  <a href="https://github.com/marcorzzn/minipad/releases/tag/v1.5.8"><img src="https://img.shields.io/badge/Release-v1.5.8-blue.svg?style=flat-square" alt="Release"></a>
   <img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="License">
   <img src="https://img.shields.io/badge/PWA-Ready-orange.svg?style=flat-square" alt="PWA">
   <img src="https://img.shields.io/badge/Privacy-100%25_Local-purple.svg?style=flat-square" alt="Privacy First">
@@ -42,6 +42,12 @@
 - 🖥️ **Design "Mac Classic" & Toolbar Fluida**:
   - Toolbar superiore a larghezza piena auto-adattiva (`100%`) senza spazi vuoti sui display widescreen.
   - Icone dedicate per l'esploratore di Schede & Gruppi (`#i-tabs-sidebar`) e pulsante di salvataggio rapido (`💾`) accessibile direttamente accanto a `File ▾`.
+
+- 💬 **Indicizzatore Intelligente Chat AI (Stile DeepSeek)**:
+  - Modale dedicato per incollare intere conversazioni da ChatGPT, Claude, DeepSeek o Gemini.
+  - Riconoscimento automatico dei turni di dialogo Utente/Assistente con formattazione tipografica chiara (`> 💬 Utente:`).
+  - Pannello laterale di navigazione ad albero interattivo con salto sincronizzato tra editor e anteprima.
+  - Generazione automatica dell'indice della conversazione (TOC) integrabile nel testo o navigabile dal cassetto laterale.
 
 - 🤖 **Smart Paste per AI & Fonti Scientifiche**:
   - Incolla contenuti formattati da ChatGPT, Claude, Gemini, Wikipedia, arXiv o portali KaTeX/MathML.

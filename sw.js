@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minipad-v1.5.7.2';
+const CACHE_NAME = 'minipad-v1.5.8';
 const urlsToCache = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const urlsToCache = [
   './css/style.css',
   './css/mac-classic.css',
   './css/diagram-modal.css',
+  './css/chat-indexer.css',
   './js/data.js',
   './js/smart-paste.js',
   './js/preview.js',
@@ -21,6 +22,7 @@ const urlsToCache = [
   './js/editor.js',
   './js/main.js',
   './js/diagram-builder.js',
+  './js/chat-indexer.js',
 
   // Editor EasyMDE
   'https://unpkg.com/easymde/dist/easymde.min.js',

@@ -71,53 +71,130 @@ window.MiniPadSmartPaste = (function () {
     const ann =
       node.querySelector &&
       node.querySelector('annotation[encoding="application/x-tex"]');
-    if (ann && ann.textContent.trim()) return ann.textContent.trim();
+    if (ann && ann.textContent.trim()) return cleanMathFormula(ann.textContent.trim());
 
-    // 2. <script type="math/tex"> (MathJax)
+    // 2. Attributo alttext su <math> o sul nodo
+    if (node.getAttribute && (node.getAttribute('alttext') || '').trim()) {
+      return cleanMathFormula(node.getAttribute('alttext').trim());
+    }
+    const mathEl = node.querySelector && node.querySelector('math[alttext]');
+    if (mathEl && (mathEl.getAttribute('alttext') || '').trim()) {
+      return cleanMathFormula(mathEl.getAttribute('alttext').trim());
+    }
+
+    // 3. <script type="math/tex"> (MathJax)
     if (node.tagName && node.tagName.toLowerCase() === 'script' && (node.getAttribute('type') || '').startsWith('math/tex')) {
-      return (node.textContent || '').trim();
+      return cleanMathFormula((node.textContent || '').trim());
     }
     const scr =
       node.querySelector &&
       node.querySelector('script[type^="math/tex"]');
-    if (scr && scr.textContent.trim()) return scr.textContent.trim();
+    if (scr && scr.textContent.trim()) return cleanMathFormula(scr.textContent.trim());
 
-    // 3. Attributo alt sull'elemento stesso
+    // 4. Attributo alt sull'elemento stesso
     if (node.getAttribute) {
       const alt = node.getAttribute('alt');
-      if (alt && alt.trim()) return alt.trim();
+      if (alt && alt.trim()) return cleanMathFormula(alt.trim());
     }
 
-    // 4. <img alt="...">
+    // 5. <img alt="...">
     const img = node.querySelector && node.querySelector('img[alt]');
     if (img && img.getAttribute('alt') && img.getAttribute('alt').trim()) {
-      return img.getAttribute('alt').trim();
+      return cleanMathFormula(img.getAttribute('alt').trim());
     }
 
-    // 5. data-tex o data-latex attribute
+    // 6. data-tex o data-latex attribute
     if (node.getAttribute) {
       const dataTex = node.getAttribute('data-tex') || node.getAttribute('data-latex');
-      if (dataTex && dataTex.trim()) return dataTex.trim();
+      if (dataTex && dataTex.trim()) return cleanMathFormula(dataTex.trim());
+    }
+
+    // 7. Fallback per .katex-html
+    const kHtml = node.querySelector && node.querySelector('.katex-html');
+    if (kHtml && kHtml.textContent.trim()) {
+      return cleanMathFormula(kHtml.textContent.trim());
     }
 
     return '';
   }
 
   /**
-   * Normalizza \( \) → $ $ e \[ \] → $$ $$, protegge valute e code block.
-   * Gestisce:
-   * - \[...\] (singolo backslash da Claude/Gemini)
-   * - \\[...\\] (doppio backslash da ChatGPT plain text copy)
-   * - \(...\) e \\(...)
-   * - Rimuove trailing backslash orfani prima della chiusura formula (\ $$)
-   * - De-escapa markdown escaping dentro la formula (\_ -> _, \* -> *)
+   * Pulisce una formula LaTeX da residui di escaping Markdown, doppi backslash e caratteri orfani.
    */
-  function normalizeLLMMath(text) {
-    if (!text) return text;
+  function cleanMathFormula(tex) {
+    if (!tex) return '';
+    let f = String(tex).trim();
 
-    // 1. Isola temporaneamente tutti i blocchi di codice (fenced e inline)
+    // Rimuove backslash finali orfani (evita che rompano la chiusura $$ o KaTeX)
+    f = f.replace(/\\+\s*$/, '').trim();
+
+    // Converte doppi backslash davanti a comandi LaTeX (\\hat -> \hat, \\frac -> \frac, ecc.)
+    f = f.replace(/\\\\([a-zA-Z]+)/g, '\\$1');
+    f = f.replace(/\\\\([,;!])/g, '\\$1');
+
+    // De-escapa caratteri markdown indebitamente escapati dentro formule:
+    // \_ -> _   \* -> *   \^ -> ^   \~ -> ~
+    f = f.replace(/\\+([_*^~])/g, '$1');
+
+    // Ripara graffe doppie escapate {\{p\}} o \{\{p\}\} -> {p}
+    f = f.replace(/\{\\?\{([^{}]+)\}\\?\}/g, '{$1}');
+
+    // Ripara \mathrm se perso o scritto come mathrm senza backslash:
+    f = f.replace(/_\{mathrm\{([^}]+)\}\}/g, '_{\\mathrm{$1}}');
+    f = f.replace(/_mathrm\{([^}]+)\}/g, '_{\\mathrm{$1}}');
+
+    return f.trim();
+  }
+
+  /**
+   * Estrae TeX da snippet HTML grezzi (es. span KaTeX o MediaWiki incollati o presenti nel testo).
+   */
+  function extractTexFromHtml(html) {
+    const annMatch = html.match(/<annotation\s+[^>]*encoding=["']application\/x-tex["'][^>]*>([\s\S]*?)<\/annotation>/i);
+    let tex = annMatch ? annMatch[1].trim() : '';
+
+    if (!tex) {
+      const altMatch = html.match(/(?:alttext|alt)=["']([^"']+)["']/i);
+      if (altMatch) tex = altMatch[1].trim();
+    }
+
+    if (!tex) {
+      const kHtmlMatch = html.match(/<span\s+class="katex-html"[^>]*>([\s\S]*?)<\/span>/i);
+      if (kHtmlMatch) tex = kHtmlMatch[1].replace(/<[^>]+>/g, '').trim();
+    }
+
+    if (!tex) return html;
+
+    tex = tex.replace(/&amp;/g, '&')
+             .replace(/&lt;/g, '<')
+             .replace(/&gt;/g, '>')
+             .replace(/&quot;/g, '"')
+             .replace(/&#39;/g, "'");
+
+    tex = cleanMathFormula(tex);
+
+    const isDisplay = /katex-display|display=["']block["']|mwe-math-fallback-image-display|\\displaystyle/i.test(html);
+    return isDisplay ? `\n\n$$\n${tex}\n$$\n\n` : `$${tex}$`;
+  }
+
+  /**
+   * Pipeline Universale di Normalizzazione Matematica MiniPad.
+   * - Converte HTML matematico grezzo in TeX
+   * - Elimina righe con soli backslash orfani
+   * - Elimina backslash orfani prima di $$
+   * - Converte \[...\] e \\[...\\] in $$...$$
+   * - Converte \(...\) e \\(...) in $...$
+   * - Ripulisce doppi backslash e de-escapa _ e * all'interno delle formule
+   * - Protegge valute ($19,99 -> \$19,99)
+   * - Preserva i blocchi di codice originali
+   */
+  function normalizeAllMath(text) {
+    if (!text) return '';
+    let md = String(text);
+
+    // 1. Isola code blocks fenced e inline
     const blocks = [];
-    let md = text.replace(/```[\s\S]*?```/g, m => {
+    md = md.replace(/```[\s\S]*?```/g, m => {
       blocks.push(m);
       return `\u0000B${blocks.length - 1}\u0000`;
     });
@@ -126,32 +203,53 @@ window.MiniPadSmartPaste = (function () {
       return `\u0000B${blocks.length - 1}\u0000`;
     });
 
-    // 2. Converte i delimitatori standard degli LLM.
-    //    Gestisce sia \[...\] che \\[...\\]
+    // 2. Converti snippet HTML matematici grezzi (KaTeX / Wikipedia / MathML) in TeX standard
+    md = md.replace(/<(?:span|div)\s+class="[^"]*(?:katex|mwe-math-element)[^"]*"[\s\S]*?<\/(?:span|div)>\s*<\/(?:span|div)>/gi, (match) => {
+      return extractTexFromHtml(match);
+    });
+    md = md.replace(/<math[\s\S]*?<\/math>/gi, (match) => {
+      return extractTexFromHtml(match);
+    });
+
+    // 3. Rimuovi righe composte ESCLUSIVAMENTE da backslash orfani (es. \, \\, \\\)
+    md = md.replace(/^[ \t]*\\+[ \t]*$/gm, '');
+
+    // 4. Rimuovi backslash orfano subito prima della chiusura $$ (usando arrow function per non corrompere $$ in $)
+    md = md.replace(/\\+\s*\$\$/g, () => '\n$$');
+
+    // 5. Converti delimitatori standard LLM: sia \\[...\\] che \[...\]
     md = md.replace(/\\{1,2}\[([\s\S]*?)\\{1,2}\]/g, (_, f) => {
-      let clean = f.trim();
-      // Rimuove eventuali backslash orfani alla fine della formula (che romperebbero \ $$)
-      clean = clean.replace(/\\+$/, '').trim();
-      // De-escapa caratteri markdown escapati all'interno della formula (\_ -> _, \* -> *)
-      clean = clean.replace(/\\([_*])/g, '$1');
-      return `\n\n$$\n${clean}\n$$\n\n`;
+      return `\n\n$$\n${cleanMathFormula(f)}\n$$\n\n`;
     });
-
     md = md.replace(/\\{1,2}\(([\s\S]*?)\\{1,2}\)/g, (_, f) => {
-      let clean = f.trim();
-      clean = clean.replace(/\\+$/, '').trim();
-      clean = clean.replace(/\\([_*])/g, '$1');
-      return `$${clean}$`;
+      return `$${cleanMathFormula(f)}$`;
     });
 
-    // 3. Protegge le valute: $<cifra> → \$<cifra> (evita che $19,99 e $4,50 diventino formule matematiche)
+    // 6. Normalizza formule display $$ ... $$ esistenti
+    md = md.replace(/\$\$([\s\S]*?)\$\$/g, (_, f) => {
+      return `\n\n$$\n${cleanMathFormula(f)}\n$$\n\n`;
+    });
+
+    // 7. Normalizza formule inline $ ... $ esistenti (escluso valute $10)
+    md = md.replace(/(?<![\\$])\$(?!\$)([^$\n]+?)\$(?!\$)/g, (match, f) => {
+      if (/^\d+(?:[.,]\d+)?$/.test(f.trim())) return match;
+      return `$${cleanMathFormula(f)}$`;
+    });
+
+    // 8. Proteggi valute: $<cifra> -> \$<cifra>
     md = md.replace(/(^|[^\\])\$(\d+(?:[.,]\d+)?)(?![\d$])/g, (match, prefix, num) => prefix + '\\$' + num);
 
-    // 4. Ripristina i blocchi di codice originali
+    // 9. Rimuovi righe vuote multiple
+    md = md.replace(/\n{3,}/g, '\n\n');
+
+    // 10. Ripristina code blocks
     md = md.replace(/\u0000B(\d+)\u0000/g, (_, i) => blocks[+i] || '');
 
     return md;
   }
+
+  // Alias retrocompatibile
+  const normalizeLLMMath = normalizeAllMath;
 
   /**
    * Gestisce l'evento paste. Ritorna true se ha gestito l'incolla.
@@ -178,10 +276,10 @@ window.MiniPadSmartPaste = (function () {
       return true;
     }
 
-    // Caso 2: Plain text con \( o \[ o \$ (singolo o doppio backslash degli LLM)
-    if (plain && (/\\{1,2}\(|\\{1,2}\[|\\{1,2}\$/.test(plain))) {
+    // Caso 2: Plain text con delimitatori LaTeX, formule KaTeX o snippet HTML matematici
+    if (plain && (/\\{1,2}\(|\\{1,2}\[|\\{1,2}\$|\$\$|<(?:span|div|math)[^>]*class=["'][^"']*(?:katex|mwe-math)/i.test(plain))) {
       event.preventDefault();
-      insertAtCursor(cmOrTextarea, normalizeLLMMath(plain));
+      insertAtCursor(cmOrTextarea, normalizeAllMath(plain));
       return true;
     }
 
@@ -209,5 +307,19 @@ window.MiniPadSmartPaste = (function () {
     }
   }
 
-  return { init, handlePaste, normalizeLLMMath, extractLatex, insertAtCursor };
+  return {
+    init,
+    handlePaste,
+    normalizeAllMath,
+    normalizeLLMMath,
+    cleanMathFormula,
+    extractTexFromHtml,
+    extractLatex,
+    insertAtCursor
+  };
 })();
+
+// Bridge globale
+if (typeof window !== 'undefined') {
+  window.normalizeAllMath = window.MiniPadSmartPaste.normalizeAllMath;
+}

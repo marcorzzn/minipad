@@ -101,6 +101,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/mac-classic.css">
     <link rel="stylesheet" href="css/diagram-modal.css">
+    <link rel="stylesheet" href="css/chat-indexer.css">
 
 </head>
 
@@ -113,6 +114,17 @@
     <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
   <defs>
     <!-- ===== Menu / nav ===== -->
+    <symbol id="i-chat-index" viewBox="0 0 16 16">
+      <path d="M2 3a1.5 1.5 0 0 1 1.5-1.5h9A1.5 1.5 0 0 1 14 3v6.5a1.5 1.5 0 0 1-1.5 1.5H6.8L3.5 13.5v-2.5H3.5A1.5 1.5 0 0 1 2 9.5V3z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M5 4.5h6M5 7h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-refresh" viewBox="0 0 16 16">
+      <path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9L14 2v4h-4l1.8-1.8A4.5 4.5 0 1 0 12.5 8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-toc" viewBox="0 0 16 16">
+      <path d="M2 3h12M2 7h8M2 11h10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      <circle cx="13" cy="7" r="1" fill="currentColor"/>
+    </symbol>
     <symbol id="i-menu" viewBox="0 0 16 16">
       <path d="M2 4h12M2 8h12M2 12h12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
     </symbol>
@@ -373,8 +385,9 @@
 
             <span class="mp-sep"></span>
 
-            <!-- Gruppo 8: diagrammi Mermaid -->
+            <!-- Gruppo 8: diagrammi Mermaid & Chat Indexer -->
             <button class="mp-btn" id="btn-diagram-main" title="Diagrammi Mermaid" onclick="openDiagramModal(event)"><svg class="mp-i"><use href="#i-diagram"/></svg></button>
+            <button class="mp-btn" id="btn-chat-indexer" title="Indicizza Chat (Conversazione AI)" onclick="openChatIndexerModal()"><svg class="mp-i"><use href="#i-chat-index"/></svg></button>
 
             <!-- Distanziatore flessibile: espande automaticamente la barra riempiendo tutto lo spazio verso destra -->
             <div class="mp-toolbar-spacer"></div>
@@ -388,7 +401,8 @@
 
             <!-- Gruppo 10: meta (cerca, indice, indicatore) -->
             <button class="mp-btn" id="btn-find" title="Cerca (Ctrl+F)" onclick="toggleFindBar()"><svg class="mp-i"><use href="#i-search"/></svg></button>
-            <button class="mp-btn" id="btn-toc" title="Genera Indice (TOC)" onclick="generateTOC()"><svg class="mp-i"><use href="#i-help"/></svg></button>
+            <button class="mp-btn" id="btn-toc" title="Genera Indice (TOC)" onclick="generateTOC()"><svg class="mp-i"><use href="#i-toc"/></svg></button>
+            <button class="mp-btn" id="btn-chat-panel" title="Indice Conversazione (Pannello)" onclick="toggleChatIndexPanel()"><svg class="mp-i"><use href="#i-chat-index"/></svg></button>
             <span id="save-indicator" class="mp-save-toast">Salvato</span>
 
             <span class="mp-sep"></span>
@@ -419,6 +433,9 @@
             <div class="dropdown-item" data-i18n="print_doc" onclick="openPrintModal('print'); closeAllMenus();">🖨️ Stampa / Opzioni PDF…</div>
             <div class="dropdown-item" data-i18n="export_pdf" onclick="openPrintModal('pdf'); closeAllMenus();">📄 Esporta PDF Diretto…</div>
             <div class="dropdown-item" onclick="insertPageBreak(); closeAllMenus();">✂️ Inserisci Salto Pagina</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" onclick="openChatIndexerModal(); closeAllMenus();">💬 Indicizza Conversazione AI…</div>
+            <div class="dropdown-item" onclick="toggleChatIndexPanel(); closeAllMenus();">📑 Indice Conversazione (Pannello)</div>
             <div class="dropdown-divider"></div>
             <div class="dropdown-item" data-i18n="btn_guida" onclick="openHelp(); closeAllMenus();">ℹ️ Guida</div>
             <div class="dropdown-divider" id="install-divider" style="display:none;"></div>
@@ -765,6 +782,79 @@
         </div>
     </div>
 
+    <!-- ===== MODALE INDICIZZA CONVERSAZIONE CHAT ===== -->
+    <div class="mp-modal-overlay" id="chat-indexer-modal-overlay" onclick="if(event.target===this)closeChatIndexerModal()">
+        <div class="mp-modal mp-modal-chat-indexer" role="dialog" aria-modal="true" aria-labelledby="chat-indexer-title">
+            <div class="mp-modal-header">
+                <h2 id="chat-indexer-title" style="display:flex;align-items:center;gap:8px;">
+                    <svg class="mp-i" style="width:18px;height:18px;"><use href="#i-chat-index"/></svg>
+                    Indicizza Conversazione AI
+                </h2>
+                <button class="mp-btn" title="Chiudi" onclick="closeChatIndexerModal()"><svg class="mp-i"><use href="#i-close"/></svg></button>
+            </div>
+            <div class="mp-modal-body" style="padding:14px 18px;">
+                <p style="font-size:12px;margin:0 0 10px 0;color:var(--mp-text-subtle,#555);">
+                    Incolla qui l'intera conversazione o articolo (da ChatGPT, Claude, DeepSeek, Gemini, Wikipedia). Il parser identificherà automaticamente i turni di dialogo, sanificherà le formule LaTeX e genererà l'indice di navigazione ad albero.
+                </p>
+                <textarea id="chat-indexer-input" class="mp-chat-textarea" placeholder="Incolla qui la chat o il testo... (es. **User:** ... **ChatGPT:** ... oppure testo libero con titoli #)"></textarea>
+
+                <div class="mp-chat-options-grid">
+                    <div class="mp-chat-field">
+                        <label for="chat-opt-toc-mode">Visualizzazione Indice:</label>
+                        <select id="chat-opt-toc-mode" class="mp-chat-select">
+                            <option value="panel" selected>Pannello Laterale Interattivo (Consigliato)</option>
+                            <option value="doc">Inserisci TOC all'inizio del documento</option>
+                            <option value="both">Entrambi (Pannello + TOC nel testo)</option>
+                        </select>
+                    </div>
+                    <div class="mp-chat-field">
+                        <label for="chat-opt-target">Destinazione Documento:</label>
+                        <select id="chat-opt-target" class="mp-chat-select">
+                            <option value="replace" selected>Sostituisci documento corrente</option>
+                            <option value="append">Accoda alla fine del documento</option>
+                            <option value="new">Crea una nuova scheda / nota</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top:10px;">
+                    <label class="mp-print-check" style="font-size:12px;display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" id="chat-opt-format-turns" checked>
+                        <span>Formatta turni Utente / Assistente con stili tipografici dedicati</span>
+                    </label>
+                </div>
+            </div>
+            <div class="mp-modal-footer">
+                <div style="flex:1;"></div>
+                <button class="mp-modal-btn" type="button" onclick="closeChatIndexerModal()">Annulla</button>
+                <button class="mp-modal-btn is-primary" type="button" onclick="applyIndexedChat()">⚡ Analizza &amp; Indicizza</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== PANNELLO LATERALE INDICE CONVERSAZIONE (DEEPSEEK STYLE) ===== -->
+    <aside class="mp-chat-index-panel" id="chat-index-panel" aria-label="Indice Conversazione">
+        <div class="mp-chat-index-header">
+            <div class="mp-chat-index-title">
+                <svg class="mp-i" style="width:14px;height:14px;"><use href="#i-chat-index"/></svg>
+                <span>Indice Conversazione</span>
+            </div>
+            <div class="mp-chat-index-actions">
+                <button class="mp-btn" title="Aggiorna Indice dal testo corrente" onclick="refreshFromEditor()"><svg class="mp-i"><use href="#i-refresh"/></svg></button>
+                <button class="mp-btn" title="Copia Indice Markdown" onclick="copyTocMarkdown()"><svg class="mp-i"><use href="#i-link"/></svg></button>
+                <button class="mp-btn" title="Chiudi Pannello" onclick="toggleChatIndexPanel(false)"><svg class="mp-i"><use href="#i-close"/></svg></button>
+            </div>
+        </div>
+        <div class="mp-chat-index-stats" id="chat-index-stats">
+            <span>Elementi: 0</span>
+        </div>
+        <div class="mp-chat-index-body">
+            <ul class="mp-chat-tree" id="chat-index-tree">
+                <!-- Injected dynamically by MiniPadChatIndexer -->
+            </ul>
+        </div>
+    </aside>
+
     <!-- Dependencies -->
     <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
     <!-- ORDINE CRITICO: katex.min.js DEVE precedere marked-katex-extension
@@ -787,6 +877,7 @@
     <script src="js/ui.js"></script>
     <script src="js/main.js"></script>
     <script src="js/diagram-builder.js"></script>
+    <script src="js/chat-indexer.js"></script>
     <!-- Hidden file inputs for import functionality -->
     <input type="file" id="import-file" accept=".md,.txt,.html,.tex" style="display:none" onchange="importFile(event)">
     <input type="file" id="import-backup" accept=".json" style="display:none" onchange="importBackup(event)">

@@ -2,7 +2,37 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
-## [v1.5.7.2] - 2026-11-07
+## [v1.5.8] - 2026-11-07
+
+### Nuova Funzionalità "Indicizza Chat" & Risoluzione Totale Pipeline Matematica (LLM, Wikipedia HTML & Formati Export)
+
+#### 1. Nuova Funzionalità: Indicizzazione Intelligente Chat AI (Stile DeepSeek) (`js/chat-indexer.js`, `css/chat-indexer.css`, `index.html`)
+- **Pulsante dedicato e modale di importazione**:
+  - Aggiunto il pulsante con icona SVG pixel-crisp `#i-chat-index` nella toolbar principale e nel menu "File ▾".
+  - Modale interattivo per incollare l'intera conversazione (ChatGPT, Claude, Gemini, DeepSeek, Wikipedia, ecc.) con opzioni di formattazione turni e destinazione (Sostituisci, Accoda, Nuova nota).
+- **Riconoscimento intelligente dei turni di dialogo**:
+  - Parser euristico per identificare messaggi utente (`**User:**`, `**Tu:**`, `### Utente`, `Prompt:`, `Domanda:`, `Q`) e risposte assistente (`**Assistant:**`, `**ChatGPT:**`, `**Claude:**`, `**DeepSeek:**`, `**Gemini:**`, `Risposta:`, `A`).
+  - Formattazione tipografica pulita ed elegante (`> 💬 **Utente (Turno N):** ...`).
+  - Fallback automatico su documenti continuativi o privi di turni: estrazione dell'indice da tutti i titoli Markdown (`#`, `##`, `###`, ecc.).
+- **Pannello laterale di navigazione ad albero (DeepSeek Style)**:
+  - Cassetto laterale a scomparsa ancorato a destra con albero gerarchico navigabile: ogni turno di dialogo mostra la domanda utente (primi 75 caratteri) e la gerarchia dei titoli delle risposte AI.
+  - **Salto sincronizzato a doppio canale**: un clic su qualsiasi nodo fa scorrere istantaneamente CodeMirror/EasyMDE con animazione flash della riga attiva E sincronizza lo scroll dell'anteprima live (`preview-content`).
+  - Pulsante "Aggiorna Indice" per ricalcolare l'albero in tempo reale e pulsante "Copia Indice Markdown" per chi desidera inserire la TOC direttamente nel documento.
+
+#### 2. Risoluzione Globale della Pipeline Matematica & Smart Paste (`js/smart-paste.js`, `js/preview.js`, `js/export.js`, `js/editor.js`)
+- **Estrazione Universale da HTML Matematico (Wikipedia, KaTeX, MathML)**:
+  - Estrazione automatica del codice sorgente LaTeX da tag `<annotation encoding="application/x-tex">`, attributi `alttext` / `alt` su tag `<math>` e `<img>`, e blocchi `<span class="katex">` / `<span class="mwe-math-element">`.
+  - Gestione sia di HTML incollato negli appunti sia di frammenti HTML grezzi incollati o presenti nel testo Markdown.
+- **Normalizzazione Totale dei Delimitatori e Pulizia Backslash**:
+  - Risolto il bug di sostituzione JavaScript in cui `\n$$` veniva corrotto in un dollaro singolo `\n$`, eliminando il fenomeno per cui il testo successivo alla formula veniva inglobato da KaTeX.
+  - Eliminazione di righe composte esclusivamente da barre inverse orfane (`\`, `\\`, `\\\`).
+  - Normalizzazione dei comandi LaTeX con doppio backslash (`\\hat`, `\\omega`, `\\frac`, `\\int`, `\\quad`, `\\,`, ecc.) in singoli comandi LaTeX (`\hat`, `\omega`, ecc.), eliminando le interruzioni di riga spurie che spezzavano le formule.
+  - De-escaping di `\_`, `\*`, `\^`, `\~` dentro qualsiasi formula matematica.
+- **Coerenza Assoluta della Pipeline di Esportazione**:
+  - La funzione centralizzata `normalizeAllMath` viene ora applicata preventivamente a tutti i formati: `.md`, `.html`, `.tex`, `.txt`, `.pdf` e alla stampa.
+  - Nessun backslash orfano né HTML matematico residuo nelle esportazioni LaTeX, né formule corrotte nei file TXT.
+- **Risoluzione Troncamento Titolo del Documento**:
+  - Incrementato il limite di denominazione schede e file da 30 a 120 caratteri, impedendo il troncamento di titoli lunghi in `.tex`, `.pdf`, `.html` e nei nomi file.
 
 ### Fix Critico Smart Paste da ChatGPT & Layout Unificato Esportazione PDF Diretto
 
