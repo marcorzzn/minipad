@@ -416,8 +416,8 @@
             <div class="dropdown-item" data-i18n="backup_json" onclick="exportBackup(); closeAllMenus();">💾 Backup JSON</div>
             <div class="dropdown-item" data-i18n="restore_backup" onclick="document.getElementById('import-backup').click(); closeAllMenus();">📥 Ripristina Backup</div>
             <div class="dropdown-divider"></div>
-            <div class="dropdown-item" data-i18n="print_doc" onclick="openPrintModal(); closeAllMenus();">🖨️ Stampa / Opzioni PDF…</div>
-            <div class="dropdown-item" data-i18n="export_pdf" onclick="exportPDF(); closeAllMenus();">📄 Esporta PDF Diretto</div>
+            <div class="dropdown-item" data-i18n="print_doc" onclick="openPrintModal('print'); closeAllMenus();">🖨️ Stampa / Opzioni PDF…</div>
+            <div class="dropdown-item" data-i18n="export_pdf" onclick="openPrintModal('pdf'); closeAllMenus();">📄 Esporta PDF Diretto…</div>
             <div class="dropdown-item" onclick="insertPageBreak(); closeAllMenus();">✂️ Inserisci Salto Pagina</div>
             <div class="dropdown-divider"></div>
             <div class="dropdown-item" data-i18n="btn_guida" onclick="openHelp(); closeAllMenus();">ℹ️ Guida</div>
@@ -653,7 +653,13 @@
     <div class="mp-modal-overlay" id="print-modal-overlay" onclick="if(event.target===this)closePrintModal()">
         <div class="mp-modal mp-modal-print" role="dialog" aria-modal="true" aria-labelledby="print-modal-title">
             <div class="mp-modal-header">
-                <h2 id="print-modal-title">Impostazioni &amp; Anteprima di Stampa / PDF</h2>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <h2 id="print-modal-title">Stampa &amp; Anteprima PDF</h2>
+                    <div class="mp-modal-mode-tabs" id="print-modal-mode-tabs">
+                        <button type="button" class="mp-mode-tab" id="mode-tab-pdf" onclick="setPrintModalMode('pdf')">📄 Esporta PDF</button>
+                        <button type="button" class="mp-mode-tab is-active" id="mode-tab-print" onclick="setPrintModalMode('print')">🖨️ Stampa</button>
+                    </div>
+                </div>
                 <button class="mp-btn" title="Chiudi" onclick="closePrintModal()"><svg class="mp-i"><use href="#i-close"/></svg></button>
             </div>
             <div class="mp-print-body">
@@ -743,7 +749,7 @@
                             </label>
                         </div>
 
-                        <div class="mp-print-tip">
+                        <div class="mp-print-tip" id="print-modal-tip">
                             💡 L'anteprima a sinistra mostra il rendering fedele in scala A4. Per il miglior risultato vettoriale premi <strong>"Stampa / Salva PDF"</strong>.
                         </div>
                     </div>
@@ -753,8 +759,8 @@
                 <button class="mp-modal-btn" type="button" onclick="insertPageBreak(); updatePrintPreview();" title="Inserisci una linea di salto pagina nel documento">✂️ Inserisci Salto Pagina</button>
                 <div style="flex:1;"></div>
                 <button class="mp-modal-btn" type="button" onclick="closePrintModal()">Annulla</button>
-                <button class="mp-modal-btn" type="button" onclick="confirmPrintDocument('direct-pdf')" title="Scarica direttamente il file PDF">📄 Scarica PDF Diretto</button>
-                <button class="mp-modal-btn is-primary" type="button" onclick="confirmPrintDocument('print')" title="Apri il dialogo per la stampa o il salvataggio in PDF vettoriale">🖨️ Stampa / Salva PDF</button>
+                <button class="mp-modal-btn" id="btn-print-direct-pdf" type="button" onclick="confirmPrintDocument('direct-pdf')" title="Scarica direttamente il file PDF">📄 Scarica PDF Diretto</button>
+                <button class="mp-modal-btn is-primary" id="btn-print-confirm" type="button" onclick="confirmPrintDocument('print')" title="Apri il dialogo per la stampa o il salvataggio in PDF vettoriale">🖨️ Stampa / Salva PDF</button>
             </div>
         </div>
     </div>

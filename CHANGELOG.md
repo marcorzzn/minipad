@@ -2,7 +2,28 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
-## [v1.5.7.1] - 2026-11-06
+## [v1.5.7.2] - 2026-11-07
+
+### Fix Critico Smart Paste da ChatGPT & Layout Unificato Esportazione PDF Diretto
+
+#### 1. Risoluzione Critica Bug Smart Paste da ChatGPT e LLM (`js/smart-paste.js`, `js/preview.js`, `js/export.js`, `js/editor.js`)
+- **Supporto Delimitatori con Doppio Backslash (`\\[...\\]` e `\\(...)`)**:
+  - Quando il testo viene copiato da ChatGPT (tramite pulsante "Copia" o selezione testo), i delimitatori delle formule matematiche contengono due barre inverse (`\\[` e `\\]`, `\\(` e `\\)`).
+  - La vecchia espressione regolare catturava solo il singolo backslash, lasciando una barra orfana `\` isolata su una riga e un `\` terminale subito prima dei dollari di chiusura (`\ $$`).
+  - Questo induceva in errore il parser KaTeX (`ParseError: Can't use function '$' in math mode`), provocando il rendering come testo grezzo in rosso o la mancata compilazione di tutte le formule del documento.
+  - La nuova logica in `normalizeLLMMath` gestisce sia `\[...\]` che `\\[...\\]`, `\(...\)` e `\\(...)`, ripulendo automaticamente eventuali barre inverse terminali orfane prima di `$$`.
+- **Pulizia dei caratteri Markdown escapati all'interno delle formule**:
+  - Risolto il problema per cui `\_` e `\*` generati dall'esportatore markdown degli LLM (es. `n\_{\mathrm{inc}}` e `q^\*`) entravano in conflitto con la sintassi KaTeX. Vengono ora de-escapati correttamente in `n_{\mathrm{inc}}` e `q^*`.
+- **Rete di sicurezza multi-livello**:
+  - Applicata la normalizzazione automatica anche all'apertura/importazione di file Markdown esterni (`importFile`), all'esportazione verso TeX/TXT (`extractProtected`) e come fallback in anteprima (`renderToHTML`).
+
+#### 2. Layout Unificato e Selettore di Modalità per l'Esportazione PDF Diretto (`index.html`, `js/export.js`, `css/mac-classic.css`)
+- **Tab di Selezione Modalità nel Modale**:
+  - Aggiunti i tab a segmento `📄 Esporta PDF` e `🖨️ Stampa` nell'intestazione del modale in puro stile Mac Classic.
+  - L'apertura da menu "File ▾ → 📄 Esporta PDF Diretto" imposta automaticamente la modalità PDF con titolo dedicato, evidenziazione del pulsante principale "Scarica PDF Diretto" e messaggio contestuale.
+  - L'apertura da menu "File ▾ → 🖨️ Stampa / Opzioni PDF…" imposta la modalità Stampa con pulsante primario "Stampa / Salva PDF".
+- **Fedeltà Totale dell'Esportazione PDF rispetto all'Anteprima A4**:
+  - Il motore `exportPDF` tramite `html2pdf` ora applica l'intero set di opzioni tipografiche scelte dall'utente: margini (Stretti, Normali, Ampi, Minimi), font family (Moderno Sans, Classico Serif, Tecnico Mono), scala font, interlinea, stile impaginazione (Pulito, Accademico B&W, Formale), intestazione con titolo, piè di pagina con data/ora e regole anti-spezzamento dei blocchi.
 
 ### Anteprima Live del Foglio A4 nel Modale di Stampa & PDF
 

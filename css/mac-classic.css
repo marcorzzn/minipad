@@ -510,6 +510,40 @@ body.dark-mode .mp-save-toast {
   flex-direction: column;
 }
 
+/* Tab di selezione modalità: Stampa vs Esporta PDF */
+.mp-modal-mode-tabs {
+  display: inline-flex;
+  background: var(--mp-bevel-dark, #d0d0d0);
+  padding: 2px;
+  border-radius: 4px;
+  border: 1px solid var(--mp-border, #999);
+  gap: 2px;
+  margin-left: 8px;
+}
+
+.mp-mode-tab {
+  border: none;
+  background: transparent;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 3px;
+  color: var(--mp-text, #222);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mp-mode-tab:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.mp-mode-tab.is-active {
+  background: var(--mp-surface, #fff);
+  color: var(--mp-primary, #0067c0);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
 .mp-print-body {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;

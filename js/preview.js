@@ -155,10 +155,16 @@ window.MiniPadPreview = (function () {
 
     const rid = generateRenderId();
     // Normalizza scorciatoie salto pagina (\pagebreak, <!-- pagebreak -->, ---pagebreak---) in <div class="page-break"></div>
-    const source = String(markdown || '').replace(
+    let source = String(markdown || '').replace(
       /^[ \t]*(?:\\pagebreak|<!--\s*pagebreak\s*-->|---pagebreak---|===pagebreak===)[ \t]*$/gim,
       '\n\n<div class="page-break"></div>\n\n'
     );
+
+    // Safety net: normalizza eventuali formule LLM (\\[ o \\( o \[ o \() residue
+    if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.normalizeLLMMath === 'function') {
+      source = MiniPadSmartPaste.normalizeLLMMath(source);
+    }
+
     const { md: protectedMd, codeBlocks, currencies } = protectCodeAndCurrency(source, rid);
 
     let html;

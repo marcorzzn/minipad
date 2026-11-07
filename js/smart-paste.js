@@ -105,6 +105,12 @@ window.MiniPadSmartPaste = (function () {
 
   /**
    * Normalizza \( \) → $ $ e \[ \] → $$ $$, protegge valute e code block.
+   * Gestisce:
+   * - \[...\] (singolo backslash da Claude/Gemini)
+   * - \\[...\\] (doppio backslash da ChatGPT plain text copy)
+   * - \(...\) e \\(...)
+   * - Rimuove trailing backslash orfani prima della chiusura formula (\ $$)
+   * - De-escapa markdown escaping dentro la formula (\_ -> _, \* -> *)
    */
   function normalizeLLMMath(text) {
     if (!text) return text;
@@ -120,10 +126,23 @@ window.MiniPadSmartPaste = (function () {
       return `\u0000B${blocks.length - 1}\u0000`;
     });
 
-    // 2. Converte i delimitatori standard degli LLM
-    md = md
-      .replace(/\\\[([\s\S]*?)\\\]/g, (_, f) => `\n\n$$\n${f.trim()}\n$$\n\n`)
-      .replace(/\\\(([\s\S]*?)\\\)/g, (_, f) => `$${f.trim()}$`);
+    // 2. Converte i delimitatori standard degli LLM.
+    //    Gestisce sia \[...\] che \\[...\\]
+    md = md.replace(/\\{1,2}\[([\s\S]*?)\\{1,2}\]/g, (_, f) => {
+      let clean = f.trim();
+      // Rimuove eventuali backslash orfani alla fine della formula (che romperebbero \ $$)
+      clean = clean.replace(/\\+$/, '').trim();
+      // De-escapa caratteri markdown escapati all'interno della formula (\_ -> _, \* -> *)
+      clean = clean.replace(/\\([_*])/g, '$1');
+      return `\n\n$$\n${clean}\n$$\n\n`;
+    });
+
+    md = md.replace(/\\{1,2}\(([\s\S]*?)\\{1,2}\)/g, (_, f) => {
+      let clean = f.trim();
+      clean = clean.replace(/\\+$/, '').trim();
+      clean = clean.replace(/\\([_*])/g, '$1');
+      return `$${clean}$`;
+    });
 
     // 3. Protegge le valute: $<cifra> → \$<cifra> (evita che $19,99 e $4,50 diventino formule matematiche)
     md = md.replace(/(^|[^\\])\$(\d+(?:[.,]\d+)?)(?![\d$])/g, (match, prefix, num) => prefix + '\\$' + num);
@@ -159,8 +178,8 @@ window.MiniPadSmartPaste = (function () {
       return true;
     }
 
-    // Caso 2: Plain text con \( o \[ o \$ (pulsante "Copia" degli LLM)
-    if (plain && (/\\\(|\\\[|\\\$/.test(plain))) {
+    // Caso 2: Plain text con \( o \[ o \$ (singolo o doppio backslash degli LLM)
+    if (plain && (/\\{1,2}\(|\\{1,2}\[|\\{1,2}\$/.test(plain))) {
       event.preventDefault();
       insertAtCursor(cmOrTextarea, normalizeLLMMath(plain));
       return true;

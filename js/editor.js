@@ -919,7 +919,10 @@ function importFile(event) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-        const text = e.target.result;
+        let text = e.target.result;
+        if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.normalizeLLMMath === 'function') {
+            text = MiniPadSmartPaste.normalizeLLMMath(text);
+        }
         const name = file.name.replace(/\.[^/.]+$/, "");
         createNote(name, text);
     };

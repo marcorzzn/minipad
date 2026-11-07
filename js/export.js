@@ -72,6 +72,9 @@ window.MiniPadExport = (function () {
     const currencies = [];
 
     md = String(md || '');
+    if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.normalizeLLMMath === 'function') {
+      md = MiniPadSmartPaste.normalizeLLMMath(md);
+    }
 
     // 1. Fenced code PRIMA di tutto
     md = md.replace(/```([\w-]*)\n?([\s\S]*?)```/g, (_, lang, code) => {
@@ -577,22 +580,85 @@ ${body}
       alert('Export PDF non disponibile: libreria html2pdf non caricata. Puoi usare "Stampa / Salva PDF" per salvare via browser.');
       return;
     }
-    const opts = options || {};
+    const opts = Object.assign({
+      margins: 'normal',
+      fontFamily: 'sans',
+      fontSize: 'normal',
+      lineHeight: 'normal',
+      orientation: 'portrait',
+      theme: 'clean',
+      avoidBreaks: true,
+      headerTitle: true,
+      footerDate: true,
+      h1Break: false
+    }, options || {});
+
     const marginMap = {
       compact: [10, 10, 10, 10],
       normal: [15, 15, 15, 15],
       wide: [25, 25, 25, 25],
       zero: [6, 6, 6, 6]
     };
-    const marginArr = marginMap[opts.margins] || [12, 12, 12, 12];
+    const marginArr = marginMap[opts.margins] || [15, 15, 15, 15];
     const orient = opts.orientation === 'landscape' ? 'landscape' : 'portrait';
 
+    const fontFamMap = {
+      sans: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      serif: 'Georgia, Cambria, "Times New Roman", Times, serif',
+      mono: 'Consolas, "SF Mono", Monaco, "Liberation Mono", monospace'
+    };
+    const fontScaleMap = {
+      compact: '11px',
+      normal: '12.5px',
+      large: '14.5px'
+    };
+    const lineHMap = {
+      compact: '1.4',
+      normal: '1.6',
+      relaxed: '1.85'
+    };
+
     const holder = document.createElement('div');
+    holder.className = 'mp-print-sheet theme-' + opts.theme + (orient === 'landscape' ? ' is-landscape' : '');
     holder.style.cssText =
-      'padding:20px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;' +
-      'line-height:1.6;color:#111;background:#fff;max-width:820px;';
-    holder.innerHTML = MiniPadPreview.renderToHTML(content);
+      'background:#fff;color:#111;max-width:820px;padding:0;box-sizing:border-box;' +
+      `font-family:${fontFamMap[opts.fontFamily] || fontFamMap.sans};` +
+      `font-size:${fontScaleMap[opts.fontSize] || '12.5px'};` +
+      `line-height:${lineHMap[opts.lineHeight] || '1.6'};`;
+
+    const body = MiniPadPreview.renderToHTML(content);
+
+    let html = '';
+    if (opts.headerTitle) {
+      html += `
+        <div style="border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:18px;display:flex;justify-content:space-between;font-size:0.85em;color:#666;">
+          <strong>${escapeHtml(name || 'minipad')}</strong>
+          <span>${new Date().toLocaleDateString('it-IT')}</span>
+        </div>
+      `;
+    }
+
+    html += `<div class="mp-print-sheet-content ${opts.h1Break ? 'h1-break-active' : ''}">${body}</div>`;
+
+    if (opts.footerDate) {
+      html += `
+        <div style="border-top:1px solid #ccc;padding-top:6px;margin-top:24px;display:flex;justify-content:space-between;font-size:0.8em;color:#777;">
+          <span>MiniPad — Documento esportato</span>
+          <span>${new Date().toLocaleDateString('it-IT')} ${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+      `;
+    }
+
+    holder.innerHTML = html;
     document.body.appendChild(holder);
+
+    if (opts.avoidBreaks) {
+      const breakAvoidNodes = holder.querySelectorAll('.katex-display, pre, table, blockquote, .mermaid');
+      breakAvoidNodes.forEach(node => {
+        node.style.breakInside = 'avoid';
+        node.style.pageBreakInside = 'avoid';
+      });
+    }
 
     const mermaidNodes = holder.querySelectorAll('.mermaid');
     if (typeof mermaid !== 'undefined' && mermaidNodes.length) {
@@ -994,9 +1060,54 @@ ${opts.footerDate ? `
   /* ============================================================
      Modale Impostazioni Stampa & PDF
      ============================================================ */
-  function openPrintModal() {
+  let _currentPrintMode = 'print';
+
+  function setPrintModalMode(mode) {
+    _currentPrintMode = mode === 'pdf' ? 'pdf' : 'print';
+    const tabPdf = document.getElementById('mode-tab-pdf');
+    const tabPrint = document.getElementById('mode-tab-print');
+    const titleEl = document.getElementById('print-modal-title');
+    const btnDirectPdf = document.getElementById('btn-print-direct-pdf');
+    const btnPrintConfirm = document.getElementById('btn-print-confirm');
+    const tipEl = document.getElementById('print-modal-tip');
+
+    if (tabPdf && tabPrint) {
+      if (_currentPrintMode === 'pdf') {
+        tabPdf.classList.add('is-active');
+        tabPrint.classList.remove('is-active');
+      } else {
+        tabPrint.classList.add('is-active');
+        tabPdf.classList.remove('is-active');
+      }
+    }
+
+    if (titleEl) {
+      titleEl.textContent = _currentPrintMode === 'pdf'
+        ? 'Esporta PDF — Impostazioni & Anteprima'
+        : 'Stampa & PDF Vettoriale — Impostazioni & Anteprima';
+    }
+
+    if (btnDirectPdf && btnPrintConfirm) {
+      if (_currentPrintMode === 'pdf') {
+        btnDirectPdf.classList.add('is-primary');
+        btnPrintConfirm.classList.remove('is-primary');
+      } else {
+        btnPrintConfirm.classList.add('is-primary');
+        btnDirectPdf.classList.remove('is-primary');
+      }
+    }
+
+    if (tipEl) {
+      tipEl.innerHTML = _currentPrintMode === 'pdf'
+        ? '💡 L\'anteprima a sinistra mostra il layout A4 del PDF. Clicca su <strong>"Scarica PDF Diretto"</strong> per scaricare il file PDF con lo stile scelto.'
+        : '💡 L\'anteprima a sinistra mostra il rendering fedele in scala A4. Per il miglior risultato vettoriale premi <strong>"Stampa / Salva PDF"</strong>.';
+    }
+  }
+
+  function openPrintModal(mode) {
     const modal = document.getElementById('print-modal-overlay');
     if (modal) {
+      setPrintModalMode(mode || 'print');
       modal.classList.add('is-open');
       document.body.classList.add('mp-modal-open');
       updatePrintPreview();
@@ -1041,7 +1152,18 @@ ${opts.footerDate ? `
     }
 
     if (action === 'direct-pdf') {
-      exportPDF(content, title, { margins, orientation });
+      exportPDF(content, title, {
+        margins,
+        fontFamily,
+        fontSize,
+        lineHeight,
+        orientation,
+        theme,
+        avoidBreaks,
+        headerTitle,
+        footerDate,
+        h1Break
+      });
     } else {
       printDocument(content, title, {
         margins,
@@ -1061,6 +1183,7 @@ ${opts.footerDate ? `
   // Bridge su window per retrocompatibilità ed eventi DOM inline
   window.openPrintModal = openPrintModal;
   window.closePrintModal = closePrintModal;
+  window.setPrintModalMode = setPrintModalMode;
   window.confirmPrintDocument = confirmPrintDocument;
   window.exportMarkdown = function() {
     const content = typeof getEditorContent === 'function' ? getEditorContent() : (window.editorInstance ? window.editorInstance.value() : '');
@@ -1083,7 +1206,7 @@ ${opts.footerDate ? `
     if (name) exportLaTeX(content, name);
   };
   window.exportPDF = function() {
-    openPrintModal();
+    openPrintModal('pdf');
   };
   window.updatePrintPreview = updatePrintPreview;
   window.printDocument = printDocument;
@@ -1097,6 +1220,7 @@ ${opts.footerDate ? `
     printDocument,
     openPrintModal,
     closePrintModal,
+    setPrintModalMode,
     confirmPrintDocument,
     updatePrintPreview,
     markdownToLatex,
