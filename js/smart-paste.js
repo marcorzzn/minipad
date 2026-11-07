@@ -1,9 +1,14 @@
 /**
- * MiniPad Smart Paste
+ * MiniPad Smart Paste v1.5.8.1
  * - Intercetta paste da ChatGPT/Claude/Gemini/Wikipedia/MathJax/EoM
+ * - Disabilita escaping distruttivo di Turndown (preserva #, *, -, [, ], `, _)
+ * - Supporto GFM (tabelle, task lists, strikethrough)
+ * - De-escaping automatico per markdown indebitamente escapato (\#, \**, \-, \```)
+ * - Isolamento prioritario dei blocchi di codice (fenced & inline) prima di qualsiasi parsing matematico
  * - Estrae LaTeX puro da KaTeX/MathML/alt/script con fallback gerarchico
- * - Converte \(...\) → $...$ e \[...\] → $$...$$
- * - Gestisce i dollari escapati (\$)
+ * - Converte \(...\) → $...$ e \[...\] → $$...$$ (senza intaccare link o task list)
+ * - Ripulisce doppi backslash e caratteri orfani (\, \\, \\_)
+ * - Protegge valute ($19,99 -> \$19,99)
  */
 window.MiniPadSmartPaste = (function () {
   let turndown = null;
@@ -21,7 +26,45 @@ window.MiniPadSmartPaste = (function () {
       strongDelimiter: '**'
     });
 
-    // Rimuove stili e script generici ma preserva il contenuto per il nostro estrattore
+    // CRITICO: Disabilita l'escaping distruttivo di Turndown!
+    // Di default Turndown applica escape() a ogni carattere markdown (#, *, -, [, ], `, _, ., etc.)
+    // distruggendo la formattazione, i blocchi di codice, i link e le formule.
+    turndown.escape = function (str) {
+      return str;
+    };
+
+    // Abilita il plugin GFM (tabelle, task lists, strikethrough) se disponibile
+    if (typeof turndownPluginGfm !== 'undefined' && turndownPluginGfm.gfm) {
+      turndown.use(turndownPluginGfm.gfm);
+    } else {
+      // Regole fallback per tabelle HTML se il plugin GFM non è caricato
+      turndown.addRule('tableCell', {
+        filter: ['th', 'td'],
+        replacement: function (content) {
+          return ' ' + content.trim().replace(/\n+/g, ' ') + ' |';
+        }
+      });
+      turndown.addRule('tableRow', {
+        filter: 'tr',
+        replacement: function (content, node) {
+          const isHeader = node.parentNode && node.parentNode.nodeName.toLowerCase() === 'thead';
+          let border = '';
+          if (isHeader) {
+            const cells = node.querySelectorAll('th, td');
+            border = '\n|' + Array.from(cells).map(() => ' --- |').join('');
+          }
+          return '\n|' + content + border;
+        }
+      });
+      turndown.addRule('table', {
+        filter: 'table',
+        replacement: function (content) {
+          return '\n\n' + content.trim() + '\n\n';
+        }
+      });
+    }
+
+    // Rimuove stili generici ma preserva il contenuto per il nostro estrattore
     turndown.remove(['style']);
 
     // Regola custom: estrai il LaTeX dai nodi matematici
@@ -128,6 +171,9 @@ window.MiniPadSmartPaste = (function () {
     // Rimuove backslash finali orfani (evita che rompano la chiusura $$ o KaTeX)
     f = f.replace(/\\+\s*$/, '').trim();
 
+    // Rimuove backslash orfani isolati all'inizio
+    f = f.replace(/^[ \t]*\\+(?![a-zA-Z,;!])/, '').trim();
+
     // Converte doppi backslash davanti a comandi LaTeX (\\hat -> \hat, \\frac -> \frac, ecc.)
     f = f.replace(/\\\\([a-zA-Z]+)/g, '\\$1');
     f = f.replace(/\\\\([,;!])/g, '\\$1');
@@ -139,11 +185,62 @@ window.MiniPadSmartPaste = (function () {
     // Ripara graffe doppie escapate {\{p\}} o \{\{p\}\} -> {p}
     f = f.replace(/\{\\?\{([^{}]+)\}\\?\}/g, '{$1}');
 
+    // Ripara annidamenti anomali \text{\mathrm{...}} -> \mathrm{...}
+    f = f.replace(/\\text\{\\?mathrm\{([^}]+)\}\}/g, '\\mathrm{$1}');
+
     // Ripara \mathrm se perso o scritto come mathrm senza backslash:
     f = f.replace(/_\{mathrm\{([^}]+)\}\}/g, '_{\\mathrm{$1}}');
     f = f.replace(/_mathrm\{([^}]+)\}/g, '_{\\mathrm{$1}}');
 
     return f.trim();
+  }
+
+  /**
+   * De-escapa costrutti Markdown che sono stati erroneamente escapati
+   * (ad es. da Turndown pre-fix o copia/incolla da formati raw).
+   */
+  function cleanOverEscapedMarkdown(md) {
+    if (!md) return '';
+    let s = String(md).replace(/\r\n/g, '\n');
+
+    // Rimuovi 'text\n' spurio in cima se il testo è stato copiato dal pulsante "Copia" di ChatGPT
+    if (/^text\s*\n\s*(?:#|\*\*|```|<)/i.test(s)) {
+      s = s.replace(/^text\s*\n/i, '');
+    }
+
+    // 1. Unescape blocchi di codice fenced (\`\`\` o \``` -> ```)
+    s = s.replace(/(?:\\`){3,}/g, '```');
+    s = s.replace(/^[ \t]*\\`{3,}/gm, '```');
+    s = s.replace(/`{3,}\\/g, '```');
+
+    // 2. Unescape titoli Markdown (\# -> #, \## -> ##)
+    s = s.replace(/^[ \t]*\\(#{1,6}[ \t]+)/gm, '$1');
+
+    // 3. Unescape righe orizzontali (\--- -> ---)
+    s = s.replace(/^[ \t]*\\(---|\*\*\*|___)[ \t]*$/gm, '$1');
+
+    // 4. Unescape citazioni blockquote (\> -> >)
+    s = s.replace(/^[ \t]*\\(>+[ \t]*)/gm, '$1');
+
+    // 5. Unescape task list checkboxes (\- \[ \] -> - [ ], \- \[x\] -> - [x])
+    s = s.replace(/^[ \t]*\\?([-*+])[ \t]+\\\[([ xX]?)\\\]/gm, '$1 [$2]');
+    s = s.replace(/\\\[([ xX]?)\\\]/g, '[$1]');
+
+    // 6. Unescape punti elenco elenchi (\- -> -, \* -> *, 1\. -> 1.)
+    s = s.replace(/^[ \t]*\\([-*+])[ \t]+/gm, '$1 ');
+    s = s.replace(/^[ \t]*(\d+)\\\.[ \t]+/gm, '$1. ');
+
+    // 7. Unescape link Markdown (\[text\](url) -> [text](url))
+    s = s.replace(/\\\[([^\]\n]+)\\\]\(([^)\n]+)\)/g, '[$1]($2)');
+
+    // 8. Unescape grassetto, corsivo e barrato (\** -> **, \* -> *, \~~ -> ~~)
+    s = s.replace(/\\\*/g, '*');
+    s = s.replace(/\\~/g, '~');
+
+    // 9. Unescape backtick singoli di codice inline (\`code\` -> `code`)
+    s = s.replace(/\\`/g, '`');
+
+    return s;
   }
 
   /**
@@ -179,70 +276,88 @@ window.MiniPadSmartPaste = (function () {
 
   /**
    * Pipeline Universale di Normalizzazione Matematica MiniPad.
+   * - Normalizza terminatori di riga CRLF
+   * - De-escapa costrutti Markdown danneggiati
+   * - Isola TUTTI i blocchi di codice (fenced & inline) proteggendo Bash, Python, HTML
    * - Converte HTML matematico grezzo in TeX
    * - Elimina righe con soli backslash orfani
    * - Elimina backslash orfani prima di $$
-   * - Converte \[...\] e \\[...\\] in $$...$$
+   * - Converte \[...\] e \\[...\\] in $$...$$ (escludendo task list e link Markdown)
    * - Converte \(...\) e \\(...) in $...$
    * - Ripulisce doppi backslash e de-escapa _ e * all'interno delle formule
    * - Protegge valute ($19,99 -> \$19,99)
-   * - Preserva i blocchi di codice originali
+   * - Ripristina i blocchi di codice originali intatti
    */
   function normalizeAllMath(text) {
     if (!text) return '';
-    let md = String(text);
+    let md = String(text).replace(/\r\n/g, '\n');
 
-    // 1. Isola code blocks fenced e inline
+    // Step 0: De-escape preventivo di costrutti Markdown danneggiati
+    md = cleanOverEscapedMarkdown(md);
+
+    // Step 1: Isola code blocks fenced e inline PRIMA di qualsiasi parsing
     const blocks = [];
-    md = md.replace(/```[\s\S]*?```/g, m => {
+    // Fenced code ```lang ... ``` oppure ~~~ ... ~~~
+    md = md.replace(/(^|\n)(```|~~~)[ \t]*[\w-]*\n[\s\S]*?\n\2[ \t]*(?=\n|$)/g, m => {
+      blocks.push(m);
+      return `\n\n\u0000B${blocks.length - 1}\u0000\n\n`;
+    });
+    // Inline code multi-backtick ``...``
+    md = md.replace(/(`{2,})((?:[^`]|`(?![`]))*?)\1/g, m => {
       blocks.push(m);
       return `\u0000B${blocks.length - 1}\u0000`;
     });
-    md = md.replace(/`[^`\r\n]+`/g, m => {
+    // Inline code singolo `...`
+    md = md.replace(/`([^`\n]+)`/g, m => {
       blocks.push(m);
       return `\u0000B${blocks.length - 1}\u0000`;
     });
 
-    // 2. Converti snippet HTML matematici grezzi (KaTeX / Wikipedia / MathML) in TeX standard
-    md = md.replace(/<(?:span|div)\s+class="[^"]*(?:katex|mwe-math-element)[^"]*"[\s\S]*?<\/(?:span|div)>\s*<\/(?:span|div)>/gi, (match) => {
-      return extractTexFromHtml(match);
-    });
-    md = md.replace(/<math[\s\S]*?<\/math>/gi, (match) => {
-      return extractTexFromHtml(match);
-    });
+    // Step 2: Converti snippet HTML matematici grezzi (KaTeX / Wikipedia / MathML) in TeX standard
+    md = md.replace(/<(?:span|div)\s+class="[^"]*(?:katex|mwe-math-element)[^"]*"[\s\S]*?<\/(?:span|div)>\s*<\/(?:span|div)>/gi, extractTexFromHtml);
+    md = md.replace(/<span\s+class="katex"[^>]*>[\s\S]*?<\/span>/gi, extractTexFromHtml);
+    md = md.replace(/<math[\s\S]*?<\/math>/gi, extractTexFromHtml);
 
-    // 3. Rimuovi righe composte ESCLUSIVAMENTE da backslash orfani (es. \, \\, \\\)
+    // Step 3: Rimuovi righe composte ESCLUSIVAMENTE da backslash orfani (es. \, \\, \\\)
     md = md.replace(/^[ \t]*\\+[ \t]*$/gm, '');
 
-    // 4. Rimuovi backslash orfano subito prima della chiusura $$ (usando arrow function per non corrompere $$ in $)
+    // Step 4: Rimuovi backslash orfano subito prima della chiusura $$
     md = md.replace(/\\+\s*\$\$/g, () => '\n$$');
 
-    // 5. Converti delimitatori standard LLM: sia \\[...\\] che \[...\]
-    md = md.replace(/\\{1,2}\[([\s\S]*?)\\{1,2}\]/g, (_, f) => {
-      return `\n\n$$\n${cleanMathFormula(f)}\n$$\n\n`;
-    });
-    md = md.replace(/\\{1,2}\(([\s\S]*?)\\{1,2}\)/g, (_, f) => {
-      return `$${cleanMathFormula(f)}$`;
+    // Step 5: Converti delimitatori standard LLM: sia \\[...\\] che \[...\]
+    // ATTENZIONE: escludi tassativamente i task list [-*+] \[ \] e i link Markdown \[text\](url)
+    md = md.replace(/(^|[^\\])\\{1,2}\[([\s\S]*?)\\{1,2}\](?!\()/g, (fullMatch, prefix, f) => {
+      const trimmed = f.trim();
+      // Se è un checkbox task list: [ ] o [x]
+      if (!trimmed || /^[xX]$/.test(trimmed)) {
+        return `${prefix}[${trimmed}]`;
+      }
+      return `${prefix}\n\n$$\n${cleanMathFormula(f)}\n$$\n\n`;
     });
 
-    // 6. Normalizza formule display $$ ... $$ esistenti
+    // Step 6: Converti delimitatori inline standard LLM: sia \\(...) che \(...\)
+    md = md.replace(/(^|[^\\])\\{1,2}\(([\s\S]*?)\\{1,2}\)/g, (fullMatch, prefix, f) => {
+      return `${prefix}$${cleanMathFormula(f)}$`;
+    });
+
+    // Step 7: Normalizza formule display $$ ... $$ esistenti
     md = md.replace(/\$\$([\s\S]*?)\$\$/g, (_, f) => {
       return `\n\n$$\n${cleanMathFormula(f)}\n$$\n\n`;
     });
 
-    // 7. Normalizza formule inline $ ... $ esistenti (escluso valute $10)
+    // Step 8: Normalizza formule inline $ ... $ esistenti (escluso valute $10)
     md = md.replace(/(?<![\\$])\$(?!\$)([^$\n]+?)\$(?!\$)/g, (match, f) => {
       if (/^\d+(?:[.,]\d+)?$/.test(f.trim())) return match;
       return `$${cleanMathFormula(f)}$`;
     });
 
-    // 8. Proteggi valute: $<cifra> -> \$<cifra>
+    // Step 9: Proteggi valute: $<cifra> -> \$<cifra>
     md = md.replace(/(^|[^\\])\$(\d+(?:[.,]\d+)?)(?![\d$])/g, (match, prefix, num) => prefix + '\\$' + num);
 
-    // 9. Rimuovi righe vuote multiple
+    // Step 10: Rimuovi righe vuote multiple eccessive
     md = md.replace(/\n{3,}/g, '\n\n');
 
-    // 10. Ripristina code blocks
+    // Step 11: Ripristina code blocks intatti al 100%
     md = md.replace(/\u0000B(\d+)\u0000/g, (_, i) => blocks[+i] || '');
 
     return md;
@@ -261,8 +376,8 @@ window.MiniPadSmartPaste = (function () {
     const html = cd.getData('text/html');
     const plain = cd.getData('text/plain');
 
-    // Caso 1: HTML con nodi matematici (ChatGPT/Claude/Wikipedia/EoM)
-    if (html && /katex|mwe-math|mathml|<math|application\/x-tex|math\/tex/i.test(html) && turndown) {
+    // Caso 1: HTML con nodi matematici o tabelle/blocchi ricchi
+    if (html && turndown && (/katex|mwe-math|mathml|<math|application\/x-tex|math\/tex|<table|<pre|<div|<h[1-6]/i.test(html))) {
       event.preventDefault();
       let md = '';
       try {
@@ -271,13 +386,13 @@ window.MiniPadSmartPaste = (function () {
         console.warn('[SmartPaste] Turndown fallito, fallback a plain text', e);
         md = plain || '';
       }
-      md = normalizeLLMMath(md);
+      md = normalizeAllMath(md);
       insertAtCursor(cmOrTextarea, md);
       return true;
     }
 
     // Caso 2: Plain text con delimitatori LaTeX, formule KaTeX o snippet HTML matematici
-    if (plain && (/\\{1,2}\(|\\{1,2}\[|\\{1,2}\$|\$\$|<(?:span|div|math)[^>]*class=["'][^"']*(?:katex|mwe-math)/i.test(plain))) {
+    if (plain && (/\\{1,2}\(|\\{1,2}\[|\\{1,2}\$|\$\$|<(?:span|div|math)[^>]*class=["'][^"']*(?:katex|mwe-math)|^[ \t]*\\#/im.test(plain))) {
       event.preventDefault();
       insertAtCursor(cmOrTextarea, normalizeAllMath(plain));
       return true;
@@ -312,6 +427,7 @@ window.MiniPadSmartPaste = (function () {
     handlePaste,
     normalizeAllMath,
     normalizeLLMMath,
+    cleanOverEscapedMarkdown,
     cleanMathFormula,
     extractTexFromHtml,
     extractLatex,
@@ -322,4 +438,5 @@ window.MiniPadSmartPaste = (function () {
 // Bridge globale
 if (typeof window !== 'undefined') {
   window.normalizeAllMath = window.MiniPadSmartPaste.normalizeAllMath;
+  window.cleanOverEscapedMarkdown = window.MiniPadSmartPaste.cleanOverEscapedMarkdown;
 }

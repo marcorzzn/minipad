@@ -3,6 +3,33 @@
    Modulo di parsing, indicizzazione e navigazione conversazioni AI
    ========================================================= */
 
+/* Regole dimensionali rigorose per le icone SVG in modale e cassetto */
+.mp-modal-chat-indexer svg,
+.mp-modal-chat-indexer .mp-i,
+.mp-modal-chat-indexer .mp-btn svg,
+.mp-chat-index-panel svg,
+.mp-chat-index-panel .mp-i,
+.mp-chat-index-panel .mp-btn svg {
+  width: 14px !important;
+  height: 14px !important;
+  max-width: 14px !important;
+  max-height: 14px !important;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+
+.mp-chat-index-title svg,
+.mp-chat-index-title .mp-i,
+#chat-indexer-title svg,
+#chat-indexer-title .mp-i {
+  width: 16px !important;
+  height: 16px !important;
+  max-width: 16px !important;
+  max-height: 16px !important;
+}
+
 /* Modale di importazione conversazione */
 .mp-modal-chat-indexer {
   max-width: 760px;
@@ -306,3 +333,4 @@ body.dark-mode .mp-chat-select {
   border-color: #444;
   color: #eee;
 }
+

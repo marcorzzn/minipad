@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://marcorzzn.github.io/minipad/"><img src="https://img.shields.io/badge/Web_App-Live_Demo-success?style=flat-square&logo=googlechrome&logoColor=white" alt="Live Demo"></a>
-  <a href="https://github.com/marcorzzn/minipad/releases/tag/v1.5.8"><img src="https://img.shields.io/badge/Release-v1.5.8-blue.svg?style=flat-square" alt="Release"></a>
+  <a href="https://github.com/marcorzzn/minipad/releases/tag/v1.5.8.1"><img src="https://img.shields.io/badge/Release-v1.5.8.1-blue.svg?style=flat-square" alt="Release"></a>
   <img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="License">
   <img src="https://img.shields.io/badge/PWA-Ready-orange.svg?style=flat-square" alt="PWA">
   <img src="https://img.shields.io/badge/Privacy-100%25_Local-purple.svg?style=flat-square" alt="Privacy First">

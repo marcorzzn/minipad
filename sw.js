@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minipad-v1.5.8';
+const CACHE_NAME = 'minipad-v1.5.8.1';
 const urlsToCache = [
   './',
   './index.html',
@@ -39,6 +39,7 @@ const urlsToCache = [
   // Nuove librerie (Mermaid, Turndown, html2pdf)
   'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',
   'https://cdn.jsdelivr.net/npm/turndown/dist/turndown.js',
+  'https://cdn.jsdelivr.net/npm/turndown-plugin-gfm/dist/turndown-plugin-gfm.js',
   'https://cdn.jsdelivr.net/npm/html2pdf.js/dist/html2pdf.bundle.min.js'
 ];
 

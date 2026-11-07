@@ -203,6 +203,17 @@ body.dark-mode {
   border-color: var(--mp-border-hard);
 }
 
+.mp-i, svg.mp-i {
+  width: 15px;
+  height: 15px;
+  max-width: 15px;
+  max-height: 15px;
+  fill: currentColor;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
 .mp-toolbar .mp-btn .mp-i {
   width: 15px;
   height: 15px;

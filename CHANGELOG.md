@@ -2,6 +2,41 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.8.1] - 2026-11-07
+
+### Fix Critico: Risoluzione Over-Escaping a Cascata, Protezione Codice Bash/Python, Sanificazione Delimitatori LaTeX e Icone SVG
+
+#### 1. Disabilitazione dell'Escaping Distruttivo di Turndown & Supporto GFM (`js/smart-paste.js`, `index.html`, `sw.js`)
+- **Override di `turndown.escape`**:
+  - Disabilitato il metodo predefinito di Turndown che anteponeva backslash a tutti i caratteri di sintassi Markdown (`#`, `*`, `-`, `[`, `]`, `` ` ``, `_`, `.`). I testi incollati mantengono ora intatta la formattazione originale.
+- **Supporto tabelle, task list e barrato con `turndown-plugin-gfm`**:
+  - Aggiunto lo script ufficiale `turndown-plugin-gfm.js` da CDN e integrato nel Service Worker per il funzionamento offline PWA. Le tabelle HTML incollate vengono convertite nativamente in tabelle Markdown con separatori di colonna conformi a GFM.
+
+#### 2. De-Escaping Automatico & Sanificazione Markdown (`js/smart-paste.js`, `js/chat-indexer.js`)
+- **Modulo `cleanOverEscapedMarkdown`**:
+  - Ripara e de-escapa istantaneamente documenti o selezioni che contengono caratteri Markdown precedentemente corrotti o copiati da viewer con backslash: `\#` $\to$ `#`, `\*\*` $\to$ `**`, `\-` $\to$ `-`, `\`\`\`` $\to$ ```` `, `\>` $\to$ `>`, `\[ \]` $\to$ `[ ]`, `\[x\]` $\to$ `[x]`, `\[link\](url)` $\to$ `[link](url)`.
+  - Rimozione automatica dell'header `text\n` spurio posizionato da ChatGPT in cima ai blocchi di codice copiati.
+
+#### 3. Isolamento Prioritario dei Blocchi di Codice & Protezione Variabili Bash/Python (`js/smart-paste.js`, `js/preview.js`, `js/export.js`)
+- **Protezione assoluta per sintassi con dollari (`$HOME`, `$(( $A * $B ))`, `$var`)**:
+  - I blocchi di codice fenced (sia ` ``` ` che `~~~`) e il codice inline (a backtick singoli e multipli) vengono isolati ed estratti come primo step assoluto prima di qualsiasi scansione matematica.
+  - La sintassi bash `$(( $PREZZO * $QUANTITA ))`, le f-string Python e gli array JSON con valori contenenti `$` rimangono inviolati e non vengono mai convertiti in formule KaTeX né spezzati in `\((`.
+
+#### 4. Prevenzione Falsi Positivi Matematici su Delimitatori `\[...\]` e KaTeX (`js/smart-paste.js`)
+- **Filtro selettivo per display math**:
+  - La conversione di `\[ ... \]` esclude tassativamente i link Markdown seguiti da parentesi tonde `[testo](url)` e i checkbox delle task list `[ ]` o `[x]`.
+  - Rimozione completa dei blocchi matematici vuoti o malformati (`$$ $$`), scongiurando i messaggi d'errore `ParseError` evidenziati in rosso nel preview e nei PDF.
+
+#### 5. Dimensionamento Rigoroso Icone SVG Modale e Cassetto (`css/chat-indexer.css`, `css/mac-classic.css`)
+- **Risoluzione icone giganti**:
+  - Aggiunte regole CSS vincolanti per tutte le icone SVG in `.mp-modal-chat-indexer` e `.mp-chat-index-panel`: larghezza e altezza forzate a `14px` (pulsanti e chiusura) e `16px` (titoli), eliminando il gigantismo visivo dell'icona `#i-refresh` e del pulsante di chiusura.
+  - Sizing globale di sicurezza per `.mp-i` e `svg.mp-i` in tutto il foglio di stile Classic Mac.
+
+#### 6. Ottimizzazione Esportazione LaTeX (.tex) (`js/export.js`)
+- **Aggregazione elenchi contigui**:
+  - Raggruppamento intelligente di elementi di elenco (sia densi che loose con righe vuote) all'interno di un unico ambiente `\begin{itemize}` o `\begin{enumerate}`, eliminando la frammentazione in ambienti separati per ogni elemento.
+  - Sanificazione automatica dei caratteri emoji nel corpo del documento LaTeX per garantire la compilazione immediata e senza warning con qualsiasi motore standard `pdflatex`.
+
 ## [v1.5.8] - 2026-11-07
 
 ### Nuova Funzionalità "Indicizza Chat" & Risoluzione Totale Pipeline Matematica (LLM, Wikipedia HTML & Formati Export)

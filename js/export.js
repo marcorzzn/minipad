@@ -250,11 +250,12 @@ window.MiniPadExport = (function () {
       return convertBlockquote(match.trim());
     });
 
-    // Task list interattive
+    // Task list interattive (raggruppa anche elementi con righe vuote intermedie)
     body = body.replace(
-      /(?:^|\n)((?:[ \t]*[-*] \[[ xX]\] .+\n?)+)/g,
+      /(?:^|\n)((?:[ \t]*[-*] \[[ xX]\] .+(?:\r?\n(?:[ \t]*\r?\n)?[ \t]*[-*] \[[ xX]\] .+)*))/g,
       (block) => {
         const items = block.trim().split('\n')
+          .filter((l) => l.trim())
           .map((l) => {
             const m = l.match(/^[ \t]*[-*] \[([ xX])\] (.+)$/);
             if (!m) return null;
@@ -268,16 +269,16 @@ window.MiniPadExport = (function () {
       }
     );
 
-    // Liste non ordinate con supporto annidamento
+    // Liste non ordinate con supporto annidamento (raggruppa liste dense e loose)
     body = body.replace(
-      /(?:^|\n)((?:[ \t]*[-*] .+\n?)+)/g,
-      (block) => convertNestedList(block.trim().split('\n'), false)
+      /(?:^|\n)((?:[ \t]*[-*] .+(?:\r?\n(?:[ \t]*\r?\n)?[ \t]*[-*] .+)*))/g,
+      (block) => convertNestedList(block.trim().split('\n').filter((l) => l.trim()), false)
     );
 
-    // Liste ordinate con supporto annidamento
+    // Liste ordinate con supporto annidamento (raggruppa liste dense e loose)
     body = body.replace(
-      /(?:^|\n)((?:[ \t]*\d+\. .+\n?)+)/g,
-      (block) => convertNestedList(block.trim().split('\n'), true)
+      /(?:^|\n)((?:[ \t]*\d+\. .+(?:\r?\n(?:[ \t]*\r?\n)?[ \t]*\d+\. .+)*))/g,
+      (block) => convertNestedList(block.trim().split('\n').filter((l) => l.trim()), true)
     );
 
     // Formattazione inline HTML supportata
@@ -460,7 +461,7 @@ ${body}
      Export LaTeX
      ============================================================ */
   function exportLaTeX(content, name) {
-    const body = markdownToLatex(content);
+    const body = stripEmoji(markdownToLatex(content));
     const doc = `\\documentclass[11pt,a4paper]{article}
 \\usepackage[utf8]{inputenc}
 \\usepackage[T1]{fontenc}
@@ -495,6 +496,12 @@ ${body}
   function exportTxt(content, name) {
     const rid = generateRenderId();
     let text = String(content || '');
+
+    if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.normalizeAllMath === 'function') {
+      text = MiniPadSmartPaste.normalizeAllMath(text);
+    } else if (typeof window !== 'undefined' && typeof window.normalizeAllMath === 'function') {
+      text = window.normalizeAllMath(text);
+    }
 
     const codeBlocks = [];
     const maths = [];
