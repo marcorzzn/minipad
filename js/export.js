@@ -45,6 +45,23 @@ window.MiniPadExport = (function () {
       .slice(0, 120) || 'minipad';
   }
 
+  /** Stessa normalizzazione conservativa dell'anteprima: l'export rispecchia ciò che si vede. */
+  function normalizeForExport(content) {
+    const md = String(content || '');
+    if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.normalizeForRender === 'function') {
+      return MiniPadSmartPaste.normalizeForRender(md);
+    }
+    return md;
+  }
+
+  /** Sostituisce i blocchi fenced con il parser condiviso (fallback: regex storica). */
+  function replaceFenced(md, fn) {
+    if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.replaceFencedBlocks === 'function') {
+      return MiniPadSmartPaste.replaceFencedBlocks(md, fn);
+    }
+    return md.replace(/```([\w-]*)\n?([\s\S]*?)```/g, (raw, lang, code) => fn({ lang, code: code.replace(/\n$/, ''), raw }));
+  }
+
   function generateRenderId() {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
       return 'r' + crypto.randomUUID().replace(/-/g, '').slice(0, 10);
@@ -71,16 +88,11 @@ window.MiniPadExport = (function () {
     const maths = [];
     const currencies = [];
 
-    md = String(md || '');
-    if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.normalizeAllMath === 'function') {
-      md = MiniPadSmartPaste.normalizeAllMath(md);
-    } else if (typeof window !== 'undefined' && typeof window.normalizeAllMath === 'function') {
-      md = window.normalizeAllMath(md);
-    }
+    md = normalizeForExport(md);
 
-    // 1. Fenced code PRIMA di tutto
-    md = md.replace(/```([\w-]*)\n?([\s\S]*?)```/g, (_, lang, code) => {
-      codeBlocks.push({ lang, code: code.replace(/\n$/, ''), inline: false });
+    // 1. Fenced code PRIMA di tutto (``` e ~~~, fence annidati, blocchi indentati)
+    md = replaceFenced(md, ({ lang, code }) => {
+      codeBlocks.push({ lang, code, inline: false });
       return `\n\nMP-${rid}-CODE-${codeBlocks.length - 1}-\n\n`;
     });
 
@@ -120,6 +132,16 @@ window.MiniPadExport = (function () {
       maths.push({ block: false, tex: m.trim() });
       return `MP-${rid}-MATH-${maths.length - 1}-`;
     });
+
+    // 7. Escape Markdown nel testo (\[ \] \* \_ \# ...) → carattere letterale in LaTeX.
+    //    Senza questo, "\[1\]" verrebbe interpretato da LaTeX come formula display.
+    const MD_ESC_TO_LATEX = {
+      '\\': '\\textbackslash{}', '[': '{[}', ']': '{]}', '*': '{\\textasteriskcentered}', '_': '\\_',
+      '#': '\\#', '%': '\\%', '&': '\\&', '{': '\\{', '}': '\\}', '`': '\\textasciigrave{}',
+      '~': '\\textasciitilde{}', '^': '\\textasciicircum{}', '|': '\\textbar{}',
+      '<': '\\textless{}', '>': '\\textgreater{}', '$': '\\$'
+    };
+    md = md.replace(/\\([!-/:-@[-`{-~])/g, (_, ch) => MD_ESC_TO_LATEX[ch] || ch);
 
     return { md, codeBlocks, maths, currencies, rid };
   }
@@ -371,12 +393,7 @@ window.MiniPadExport = (function () {
      Export Markdown
      ============================================================ */
   function exportMarkdown(content, name) {
-    let clean = String(content || '');
-    if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.normalizeAllMath === 'function') {
-      clean = MiniPadSmartPaste.normalizeAllMath(clean);
-    } else if (typeof window !== 'undefined' && typeof window.normalizeAllMath === 'function') {
-      clean = window.normalizeAllMath(clean);
-    }
+    const clean = normalizeForExport(content);
     const blob = new Blob([clean], { type: 'text/markdown;charset=utf-8' });
     download(blob, `${sanitizeFilename(name)}.md`);
   }
@@ -393,8 +410,8 @@ window.MiniPadExport = (function () {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${title}</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"><\/script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"><\/script>
 <style>
   :root { color-scheme: light dark; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -460,8 +477,20 @@ ${body}
   /* ============================================================
      Export LaTeX
      ============================================================ */
+  /**
+   * Pulizia del corpo LaTeX: rimuove emoji (pdflatex non le compila) e tag HTML residui,
+   * ma conserva gli a-capo e non tocca il contenuto degli ambienti verbatim.
+   */
+  function sanitizeLatexBody(tex) {
+    const EMOJI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F1E6}-\u{1F1FF}\u{200D}]/gu;
+    return String(tex || '').split(/(\\begin\{verbatim\}[\s\S]*?\\end\{verbatim\})/).map((part, i) => {
+      if (i % 2 === 1) return part.replace(EMOJI, '');
+      return part.replace(EMOJI, '').replace(/<\/?[a-zA-Z][^>\n]*>/g, '').replace(/[ \t]{2,}/g, ' ').replace(/\n{4,}/g, '\n\n\n');
+    }).join('');
+  }
+
   function exportLaTeX(content, name) {
-    const body = stripEmoji(markdownToLatex(content));
+    const body = sanitizeLatexBody(markdownToLatex(content));
     const doc = `\\documentclass[11pt,a4paper]{article}
 \\usepackage[utf8]{inputenc}
 \\usepackage[T1]{fontenc}
@@ -495,13 +524,7 @@ ${body}
      ============================================================ */
   function exportTxt(content, name) {
     const rid = generateRenderId();
-    let text = String(content || '');
-
-    if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.normalizeAllMath === 'function') {
-      text = MiniPadSmartPaste.normalizeAllMath(text);
-    } else if (typeof window !== 'undefined' && typeof window.normalizeAllMath === 'function') {
-      text = window.normalizeAllMath(text);
-    }
+    let text = normalizeForExport(content);
 
     const codeBlocks = [];
     const maths = [];
@@ -513,8 +536,8 @@ ${body}
       .replace(/<div\s+class=["']page-break["']\s*><\/div>/gi, '\n\n--------------------\n\n');
 
     // Code PRIMA di tutto
-    text = text.replace(/```([\w-]*)\n?([\s\S]*?)```/g, (_, lang, code) => {
-      codeBlocks.push({ code: code.replace(/\n$/, ''), inline: false });
+    text = replaceFenced(text, ({ code }) => {
+      codeBlocks.push({ code, inline: false });
       return `\n\nMP-${rid}-CODE-${codeBlocks.length - 1}-\n\n`;
     });
     text = text.replace(/(`{2,})((?:[^`]|`(?![`]))*?)\1/g, (_, fence, code) => {
@@ -774,8 +797,8 @@ ${body}
 <head>
 <meta charset="UTF-8">
 <title>${escapeHtml(name || 'minipad')}</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"><\/script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js"><\/script>
 <style>
   @page {
     size: A4 ${orientationVal};

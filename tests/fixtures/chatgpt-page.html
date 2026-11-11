@@ -1,0 +1,26 @@
+<html><body><div class="flex h-full">
+<nav aria-label="Cronologia chat"><a href="/c/1">Integrali e derivate</a><a href="/c/2">Ricetta torta</a><button>Nuova chat</button></nav>
+<main>
+<article data-testid="conversation-turn-1"><h5 class="sr-only">Hai detto:</h5>
+<div data-message-author-role="user" data-message-id="a1"><div class="whitespace-pre-wrap">Come si calcola l'integrale di x^2?</div></div>
+<div class="flex"><button aria-label="Modifica messaggio">Modifica</button></div></article>
+<article data-testid="conversation-turn-2"><h6 class="sr-only">ChatGPT ha detto:</h6>
+<div data-message-author-role="assistant" data-message-id="a2"><div class="markdown prose">
+<h2>Metodo</h2>
+<p>Si usa la regola della potenza: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∫</mo></mrow><annotation encoding="application/x-tex">\int x^2\,dx = \frac{x^3}{3} + C</annotation></semantics></math></span><span class="katex-html" aria-hidden="true">∫x2dx=3x3​+C</span></span>.</p>
+<h2>Verifica in Python</h2>
+<pre class="overflow-visible!"><div class="contain-inline-size"><div class="flex items-center">python</div><div class="sticky"><button class="flex gap-1">Copia codice</button></div><div class="overflow-y-auto p-4"><code class="whitespace-pre! language-python">import sympy as sp
+x = sp.symbols('x')
+print(sp.integrate(x**2, x))  # costa $0
+</code></div></div></pre>
+</div></div>
+<div class="flex"><button aria-label="Copia">Copia</button><button>Rigenera</button></div></article>
+<article data-testid="conversation-turn-3"><h5 class="sr-only">Hai detto:</h5>
+<div data-message-author-role="user"><div class="whitespace-pre-wrap">E se fosse x^3?</div></div></article>
+<article data-testid="conversation-turn-4"><h6 class="sr-only">ChatGPT ha detto:</h6>
+<div data-message-author-role="assistant"><div class="markdown prose"><p>Allora:</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math display="block"><semantics><mrow></mrow><annotation encoding="application/x-tex">\int x^3\,dx = \frac{x^4}{4} + C</annotation></semantics></math></span><span class="katex-html" aria-hidden="true">...</span></span></span>
+<p>Fine.</p></div></div></article>
+</main>
+<div class="text-xs">ChatGPT può commettere errori. Verifica le informazioni importanti.</div>
+</div></body></html>

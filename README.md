@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://marcorzzn.github.io/minipad/"><img src="https://img.shields.io/badge/Web_App-Live_Demo-success?style=flat-square&logo=googlechrome&logoColor=white" alt="Live Demo"></a>
-  <a href="https://github.com/marcorzzn/minipad/releases/tag/v1.5.8.1"><img src="https://img.shields.io/badge/Release-v1.5.8.1-blue.svg?style=flat-square" alt="Release"></a>
+  <a href="https://github.com/marcorzzn/minipad/releases/tag/v1.5.9"><img src="https://img.shields.io/badge/Release-v1.5.9-blue.svg?style=flat-square" alt="Release"></a>
   <img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="License">
   <img src="https://img.shields.io/badge/PWA-Ready-orange.svg?style=flat-square" alt="PWA">
   <img src="https://img.shields.io/badge/Privacy-100%25_Local-purple.svg?style=flat-square" alt="Privacy First">
@@ -43,11 +43,11 @@
   - Toolbar superiore a larghezza piena auto-adattiva (`100%`) senza spazi vuoti sui display widescreen.
   - Icone dedicate per l'esploratore di Schede & Gruppi (`#i-tabs-sidebar`) e pulsante di salvataggio rapido (`💾`) accessibile direttamente accanto a `File ▾`.
 
-- 💬 **Indicizzatore Intelligente Chat AI (Stile DeepSeek)**:
-  - Modale dedicato per incollare intere conversazioni da ChatGPT, Claude, DeepSeek o Gemini.
-  - Riconoscimento automatico dei turni di dialogo Utente/Assistente con formattazione tipografica chiara (`> 💬 Utente:`).
-  - Pannello laterale di navigazione ad albero interattivo con salto sincronizzato tra editor e anteprima.
-  - Generazione automatica dell'indice della conversazione (TOC) integrabile nel testo o navigabile dal cassetto laterale.
+- 💬 **Indice per le chat con gli LLM**:
+  - Per ritrovare una domanda o una risposta in una conversazione lunga senza rileggerla tutta: apri la chat, premi `Ctrl+A` e `Ctrl+C`, incolla in MiniPad.
+  - Domande e risposte vengono riconosciute dalla pagina di ChatGPT, Claude, Gemini e DeepSeek. Funziona anche con chat trascritte (`Utente:` / `Assistente:`, `Hai detto:` / `ChatGPT ha detto:`, `Q:` / `A:`).
+  - Ogni domanda diventa un titolo `## 💬 Turno N — …`, quindi l'indice è navigabile anche nel PDF e nell'HTML esportato.
+  - Pannello laterale con ricerca nel testo dei turni, turno attivo evidenziato, salto tra turni con `Alt+↑` / `Alt+↓`, aggiornamento automatico mentre scrivi.
 
 - 🤖 **Smart Paste per AI & Fonti Scientifiche**:
   - Incolla contenuti formattati da ChatGPT, Claude, Gemini, Wikipedia, arXiv o portali KaTeX/MathML.
@@ -95,6 +95,17 @@ Minipad è costruito su standard web moderni in Vanilla JavaScript con zero over
 * [DOMPurify](https://github.com/cure53/DOMPurify) - Sanitizzazione XSS su anteprima e SVG
 * [idb-keyval](https://github.com/jakearchibald/idb-keyval) - Persistenza asincrona IndexedDB con fallback locale
 * [html2pdf.js](https://github.com/eKoopmans/html2pdf.js) - Generazione documenti PDF A4 lato client
+
+---
+
+## 🧪 Test / Development
+
+Il sito non ha build step. I test (Node 20+) caricano in jsdom le stesse versioni delle librerie usate dalla pagina:
+
+```bash
+npm install
+npm test
+```
 
 ---
 

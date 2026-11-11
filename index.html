@@ -96,8 +96,8 @@
     </script>
 
     <!-- Librerie esterne CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css" integrity="sha384-WwGtaC6ywCHxA5cstpj/3+xIZvTez8dq2IcBQaXRkenHZ7FVVq1ZROtURwfbtTlG" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://unpkg.com/easymde@2.21.0/dist/easymde.min.css" integrity="sha384-ZoLYv3S+AsZX+zhbN1D1+WPpc8f+DmLfxfgw+qn0Nq8wJPOYQQXEW5ZrRhcGozlG" crossorigin="anonymous">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/mac-classic.css">
     <link rel="stylesheet" href="css/diagram-modal.css">
@@ -794,9 +794,10 @@
             </div>
             <div class="mp-modal-body" style="padding:14px 18px;">
                 <p style="font-size:12px;margin:0 0 10px 0;color:var(--mp-text-subtle,#555);">
-                    Incolla qui l'intera conversazione o articolo (da ChatGPT, Claude, DeepSeek, Gemini, Wikipedia). Il parser identificherà automaticamente i turni di dialogo, sanificherà le formule LaTeX e genererà l'indice di navigazione ad albero.
+                    Apri la chat (ChatGPT, Claude, Gemini, DeepSeek…), premi <kbd>Ctrl</kbd>+<kbd>A</kbd> e <kbd>Ctrl</kbd>+<kbd>C</kbd>, poi incolla qui: domande e risposte vengono riconosciute dalla pagina stessa, le formule restano LaTeX e ogni domanda diventa una voce dell'indice. Funziona anche con chat trascritte (<code>Utente:</code> / <code>Assistente:</code>, <code>Hai detto:</code>…) o con testo libero con titoli <code>#</code>.
                 </p>
-                <textarea id="chat-indexer-input" class="mp-chat-textarea" placeholder="Incolla qui la chat o il testo... (es. **User:** ... **ChatGPT:** ... oppure testo libero con titoli #)"></textarea>
+                <textarea id="chat-indexer-input" class="mp-chat-textarea" placeholder="Incolla qui la chat (Ctrl+V)…"></textarea>
+                <div id="chat-indexer-detect" class="mp-chat-detect" aria-live="polite"></div>
 
                 <div class="mp-chat-options-grid">
                     <div class="mp-chat-field">
@@ -837,16 +838,23 @@
         <div class="mp-chat-index-header">
             <div class="mp-chat-index-title">
                 <svg class="mp-i" style="width:14px;height:14px;"><use href="#i-chat-index"/></svg>
-                <span>Indice Conversazione</span>
+                <span>Indice chat</span>
             </div>
             <div class="mp-chat-index-actions">
+                <button class="mp-btn mp-chat-nav-btn" title="Turno precedente (Alt+↑)" aria-label="Turno precedente" onclick="gotoChatTurn(-1)">▲</button>
+                <button class="mp-btn mp-chat-nav-btn" title="Turno successivo (Alt+↓)" aria-label="Turno successivo" onclick="gotoChatTurn(1)">▼</button>
+                <button class="mp-btn" title="Formatta la nota corrente come conversazione indicizzata (un titolo per turno)" onclick="formatChatNote()"><svg class="mp-i"><use href="#i-toc"/></svg></button>
                 <button class="mp-btn" title="Aggiorna Indice dal testo corrente" onclick="refreshFromEditor()"><svg class="mp-i"><use href="#i-refresh"/></svg></button>
                 <button class="mp-btn" title="Copia Indice Markdown" onclick="copyTocMarkdown()"><svg class="mp-i"><use href="#i-link"/></svg></button>
                 <button class="mp-btn" title="Chiudi Pannello" onclick="toggleChatIndexPanel(false)"><svg class="mp-i"><use href="#i-close"/></svg></button>
             </div>
         </div>
+        <div class="mp-chat-index-search">
+            <svg class="mp-i"><use href="#i-search"/></svg>
+            <input type="search" id="chat-index-search" placeholder="Cerca nella conversazione…" aria-label="Cerca nella conversazione" autocomplete="off">
+        </div>
         <div class="mp-chat-index-stats" id="chat-index-stats">
-            <span>Elementi: 0</span>
+            <span>0</span>
         </div>
         <div class="mp-chat-index-body">
             <ul class="mp-chat-tree" id="chat-index-tree">
@@ -856,18 +864,18 @@
     </aside>
 
     <!-- Dependencies -->
-    <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+    <script src="https://unpkg.com/easymde@2.21.0/dist/easymde.min.js" integrity="sha384-mTM6vzy+/UiHrMBClNGViM9qEv0/26iCGqpJKhSzdnjrxbKjO3vkT62ujXQ8B5iv" crossorigin="anonymous"></script>
     <!-- ORDINE CRITICO: katex.min.js DEVE precedere marked-katex-extension
          perché la build UMD legge global.katex al momento del caricamento -->
-    <script src="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension/lib/index.umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/turndown/dist/turndown.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/turndown-plugin-gfm/dist/turndown-plugin-gfm.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2pdf.js/dist/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.js" integrity="sha384-a1WQdjRj162i159OYq041X6I4K8NenkrI09LlPmiHg0YOb7CR+wJOraXwK9abpnE" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js" integrity="sha384-948ahk4ZmxYVYOc+rxN1H2gM1EJ2Duhp7uHtZ4WSLkV4Vtx5MUqnV+l7u9B+jFv+" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension@5.1.13/lib/index.umd.js" integrity="sha384-znQsAXN+fVvr8zYDa4rV4/xDzH2i+E7ADJecUq9EivZT+JmM53FPEgn6nPK9ThKw" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js" integrity="sha384-cwS6YdhLI7XS60eoDiC+egV0qHp8zI+Cms46R0nbn8JrmoAzV9uFL60etMZhAnSu" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6.3.0/dist/umd.js" integrity="sha384-heZBNbZ5qOuEy6kN0six3ZVIzCVxqm0GmdO13Biy02ZPr/Ec/pXgGK5IBi2+z+XP" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js" integrity="sha384-N3QqR/7q+xm3BGX+CBbNI8AUmRRqcsDzToy+0z1NLDI0QmTKW8zvwLvqulJgk3dP" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/turndown@7.2.5/dist/turndown.js" integrity="sha384-HeSizhYqpEWYZr7f0vP+Ux9mam1bC3OSwAq6gkZO6AGz0joM/J4qAqVgjwdgawrf" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/turndown-plugin-gfm@1.0.2/dist/turndown-plugin-gfm.js" integrity="sha384-2TroN1N6OfLQ+K4qttptnIfMREzUlMa3hW/nZqDZXv7Sm9BkESfGEupDEqCbzyRl" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.14.0/dist/html2pdf.bundle.min.js" integrity="sha384-EaWTV/aVUkLz3tfwg3+5ycX7Q/d9ET9ruOKUgUuFIRUCfzHO1eo2J62a844iWPmY" crossorigin="anonymous"></script>
 
     <!-- App Modules -->
     <script src="js/smart-paste.js"></script>

@@ -2,6 +2,41 @@
 
 Tutte le modifiche significative a questo progetto sono documentate in questo file.
 
+## [v1.5.9] - 2026-11-12
+
+### Matematica e incolla: stesso risultato da qualsiasi fonte
+
+- **Due livelli di normalizzazione** (`js/smart-paste.js`): `normalizePasted` ripara in modo deciso il testo che *entra* in MiniPad (Ctrl+V, modale chat), `normalizeForRender` è conservativa e viene usata da anteprima ed export. L'anteprima non riscrive più il Markdown dell'utente.
+- **Corretti**:
+  - `\*testo\*` e `\#` scritti apposta venivano de-escapati in anteprima (diventavano corsivo/titolo).
+  - `\[1\]` e `\[a, b\]` venivano trasformati in formule display. Ora `\[…\]` è matematica solo se contiene matematica o occupa righe proprie.
+  - `Costa $5 e poi $10` perdeva uno spazio. Le valute seguono le regole Pandoc e non toccano più formule come `$5x + 3$`.
+  - Fence annidati (```` ```` ```` che contiene ```` ``` ````) lasciavano segnaposto `\u0000B0\u0000` nel testo e negli export.
+  - `$\{1, 2\}$` perdeva il backslash iniziale; `\text{my\_var}` veniva rotto; `\\` nelle matrici non viene più toccato.
+  - `\pagebreak` dentro un blocco di codice LaTeX diventava un salto pagina.
+  - `$$` su più righe subito dopo un paragrafo non veniva renderizzato.
+- **Codice sempre intatto**: parser dei blocchi fenced conforme a CommonMark (``` e ~~~, 4+ backtick, blocchi indentati nelle liste, fence non chiusi), condiviso da anteprima, `.tex` e `.txt`.
+- **Incolla da HTML**: rimossi pulsanti "Copia codice", icone e intestazioni dei blocchi di codice di ChatGPT/Claude; wrapper `{\displaystyle …}` di Wikipedia rimosso; se gli appunti contengono anche il Markdown sorgente (pulsante "Copia" degli LLM) viene usato quello; l'HTML degli editor di codice (VS Code) viene incollato come testo.
+
+### Indice delle chat AI
+
+- **Ruoli letti dalla pagina**: copiando una chat con Ctrl+A / Ctrl+C, domande e risposte vengono riconosciute dall'HTML di ChatGPT, Claude, Gemini e DeepSeek (ragionamenti, barre laterali e pulsanti esclusi). Incollando direttamente nell'editor compare l'avviso "Conversazione rilevata" con il pulsante **Indicizza**.
+- **Etichette testuali più affidabili**: "Hai detto:" / "ChatGPT ha detto:", "You said:", "User:", "**Assistant:**", "Domanda:"/"Risposta:", "Q:"/"A:" con priorità per livello di affidabilità. Niente più falsi positivi su frasi come "A volte…", "Tu sei…", "Claude Monet…"; etichette dentro i blocchi di codice ignorate.
+- **Formato indicizzato**: un titolo `## 💬 Turno N — domanda` per turno, domanda citata, titoli della risposta abbassati sotto il turno (anche nel PDF e nell'HTML esportato).
+- **Pannello**: righe esatte (l'indice è ricostruito dal testo reale), ricerca nel testo dei turni con evidenziazione e salto alla riga trovata, turno attivo evidenziato durante lo scorrimento, turno precedente/successivo (▲▼ o Alt+↑/↓), aggiornamento automatico mentre si scrive, sottotitolo con la prima sezione della risposta, pulsante "Formatta la nota corrente". Le note indicizzate con la v1.5.8 vengono ancora riconosciute.
+- La modale usa la stessa conversione dell'editor e mostra subito quanti turni ha riconosciuto.
+
+### Export
+
+- `.tex`: i blocchi di codice venivano appiattiti su una riga (`\begin{verbatim} x = 1 y = 2 …`) e i tag HTML venivano cancellati anche dentro il codice. Corretto.
+- `.tex`: gli escape Markdown (`\[`, `\*`, `\_`…) diventano caratteri letterali invece di comandi LaTeX.
+- Export HTML/PDF: CSS di KaTeX allineato alla versione usata dall'app (0.19.1 invece di 0.16.9).
+
+### Affidabilità
+
+- **Versioni CDN fissate con SRI** (`integrity` + `crossorigin`). Prima `marked` senza versione veniva risolto da jsDelivr alla v15.0.12 solo perché dalla v16 quel file non esiste più. Le versioni fissate sono identiche byte per byte a quelle servite finora.
+- **Test automatici**: `npm install && npm test` (Node + jsdom, con le stesse librerie della pagina). 41 test su pipeline matematica, incolla, indicizzazione chat ed export LaTeX.
+
 ## [v1.5.8.1] - 2026-11-07
 
 ### Fix Critico: Risoluzione Over-Escaping a Cascata, Protezione Codice Bash/Python, Sanificazione Delimitatori LaTeX e Icone SVG

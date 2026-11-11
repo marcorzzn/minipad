@@ -1,4 +1,4 @@
-const CACHE_NAME = 'minipad-v1.5.8.1';
+const CACHE_NAME = 'minipad-v1.5.9';
 const urlsToCache = [
   './',
   './index.html',
@@ -25,22 +25,22 @@ const urlsToCache = [
   './js/chat-indexer.js',
 
   // Editor EasyMDE
-  'https://unpkg.com/easymde/dist/easymde.min.js',
-  'https://unpkg.com/easymde/dist/easymde.min.css',
+  'https://unpkg.com/easymde@2.21.0/dist/easymde.min.js',
+  'https://unpkg.com/easymde@2.21.0/dist/easymde.min.css',
 
   // Core Markdown & Math
-  'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
-  'https://cdn.jsdelivr.net/npm/marked-katex-extension/lib/index.umd.js',
-  'https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css',
-  'https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js',
+  'https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js',
+  'https://cdn.jsdelivr.net/npm/marked-katex-extension@5.1.13/lib/index.umd.js',
+  'https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css',
+  'https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.js',
   'https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js',
-  'https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js',
+  'https://cdn.jsdelivr.net/npm/idb-keyval@6.3.0/dist/umd.js',
 
   // Nuove librerie (Mermaid, Turndown, html2pdf)
-  'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js',
-  'https://cdn.jsdelivr.net/npm/turndown/dist/turndown.js',
-  'https://cdn.jsdelivr.net/npm/turndown-plugin-gfm/dist/turndown-plugin-gfm.js',
-  'https://cdn.jsdelivr.net/npm/html2pdf.js/dist/html2pdf.bundle.min.js'
+  'https://cdn.jsdelivr.net/npm/mermaid@10.9.8/dist/mermaid.min.js',
+  'https://cdn.jsdelivr.net/npm/turndown@7.2.5/dist/turndown.js',
+  'https://cdn.jsdelivr.net/npm/turndown-plugin-gfm@1.0.2/dist/turndown-plugin-gfm.js',
+  'https://cdn.jsdelivr.net/npm/html2pdf.js@0.14.0/dist/html2pdf.bundle.min.js'
 ];
 
 self.addEventListener('install', (event) => {

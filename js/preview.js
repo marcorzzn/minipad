@@ -1,12 +1,10 @@
 /**
- * MiniPad Preview v1.5.3.1
- * - marked + marked-katex-extension
- * - Renderer Mermaid via post-processing
+ * MiniPad Preview v1.5.9
+ * - marked + marked-katex-extension; il codice (fenced/inline) è gestito nativamente da marked
+ * - Mermaid tramite renderer dedicato per i blocchi ```mermaid
+ * - Normalizzazione matematica conservativa (MiniPadSmartPaste.normalizeForRender)
+ * - Salti pagina riconosciuti solo fuori dai blocchi di codice
  * - DOMPurify su output finale
- * - Placeholder nonce-based: MP-{id}-CODE-N / MP-{id}-ICODE-N / MP-{id}-CUR-N
- * - Bug fix v1.5.3.1:
- *   C1: collisione placeholder con testo utente (nonce random per render)
- *   C5: doppi backtick (multi-backtick estrae PRIMA dei singoli)
  */
 window.MiniPadPreview = (function () {
   let _el = null;
@@ -50,6 +48,21 @@ window.MiniPadPreview = (function () {
       );
     }
 
+    // Blocchi ```mermaid → <pre class="mermaid"> (gli altri blocchi usano il renderer standard).
+    // Il codice è gestito nativamente da marked: nessun placeholder, nessuna alterazione.
+    marked.use({
+      renderer: {
+        code(token, langArg) {
+          const lang = (typeof token === 'object' && token !== null ? token.lang : langArg) || '';
+          const text = typeof token === 'object' && token !== null ? token.text : token;
+          if (String(lang).trim().split(/\s+/)[0] === 'mermaid') {
+            return `<pre class="mermaid">${escapeHtml(text)}</pre>\n`;
+          }
+          return false;
+        }
+      }
+    });
+
     if (typeof mermaid !== 'undefined') {
       mermaid.initialize({
         startOnLoad: false,
@@ -61,123 +74,35 @@ window.MiniPadPreview = (function () {
     }
   }
 
-  /**
-   * Protegge i blocchi di codice (fence multipli PRIMA dei singoli)
-   * e le valute escape \$N.
-   * Ritorna { md, codeBlocks, currencies, rid }
-   */
-  function protectCodeAndCurrency(md, rid) {
-    const codeBlocks = [];
-    const currencies = [];
+  const PAGEBREAK_RX = /^[ \t]*(?:\\pagebreak|<!--\s*pagebreak\s*-->|---pagebreak---|===pagebreak===)[ \t]*$/gim;
+  const PAGEBREAK_HTML = '\n\n<div class="page-break"></div>\n\n';
 
-    // 1. Fenced code ```lang\n...\n```
-    md = md.replace(/```([\w-]*)\n?([\s\S]*?)```/g, (_, lang, code) => {
-      const escaped = escapeHtml(code.replace(/\n$/, ''));
-      const cls = lang ? ` class="language-${lang}"` : '';
-      codeBlocks.push({
-        html: `<pre><code${cls}>${escaped}</code></pre>`,
-        lang,
-        raw: code.replace(/\n$/, '')
-      });
-      return `\n\nMP-${rid}-CODE-${codeBlocks.length - 1}\n\n`;
-    });
-
-    // 2. Inline code con fence multipli ``...`` (PRIMA dei singoli)
-    md = md.replace(/(`{2,})((?:[^`]|`(?![`]))*?)\1/g, (_, fence, code) => {
-      // CommonMark: se inizia e finisce con spazio (ma non è tutto spazio), rimuovi uno spazio
-      if (code.length >= 2 && code.startsWith(' ') && code.endsWith(' ') && code.trim()) {
-        code = code.slice(1, -1);
-      }
-      const escaped = escapeHtml(code);
-      codeBlocks.push({
-        html: `<code>${escaped}</code>`,
-        lang: '',
-        raw: code,
-        inline: true
-      });
-      return `MP-${rid}-ICODE-${codeBlocks.length - 1}`;
-    });
-
-    // 3. Inline code con fence singoli `...` (dopo i multi)
-    md = md.replace(/`([^`\n]+)`/g, (_, code) => {
-      const escaped = escapeHtml(code);
-      codeBlocks.push({
-        html: `<code>${escaped}</code>`,
-        lang: '',
-        raw: code,
-        inline: true
-      });
-      return `MP-${rid}-ICODE-${codeBlocks.length - 1}`;
-    });
-
-    // 4. Valute escape \$N (dopo i code, prima della math)
-    md = md.replace(/\\\$(\d[\d.,]*)/g, (_, amount) => {
-      currencies.push(amount);
-      return `MP-${rid}-CUR-${currencies.length - 1}`;
-    });
-
-    return { md, codeBlocks, currencies };
-  }
-
-  /**
-   * Ripristina placeholder. Con nonce, non serve loop.
-   */
-  function restoreAll(html, codeBlocks, currencies, rid) {
-    // Mermaid: promuovi CODE con lang==='mermaid' a <pre class="mermaid">
-    html = html.replace(
-      new RegExp(`MP-${rid}-CODE-(\\d+)`, 'g'),
-      (_, i) => {
-        const b = codeBlocks[+i];
-        if (!b) return '';
-        if (b.lang === 'mermaid') {
-          return `<pre class="mermaid">${escapeHtml(b.raw)}</pre>`;
-        }
-        return b.html;
-      }
-    );
-
-    html = html.replace(
-      new RegExp(`MP-${rid}-ICODE-(\\d+)`, 'g'),
-      (_, i) => codeBlocks[+i] ? codeBlocks[+i].html : ''
-    );
-
-    html = html.replace(
-      new RegExp(`MP-${rid}-CUR-(\\d+)`, 'g'),
-      (_, i) => `$${currencies[+i]}`
-    );
-
-    return html;
+  /** Prepara il sorgente: salti pagina e normalizzazione matematica, mai dentro il codice. */
+  function prepareSource(markdown) {
+    let source = String(markdown || '');
+    const SP = typeof MiniPadSmartPaste !== 'undefined' ? MiniPadSmartPaste : null;
+    if (SP && SP.mapProse) {
+      source = SP.mapProse(source, t => t.replace(PAGEBREAK_RX, PAGEBREAK_HTML));
+    } else {
+      source = source.replace(PAGEBREAK_RX, PAGEBREAK_HTML);
+    }
+    if (SP && SP.normalizeForRender) source = SP.normalizeForRender(source);
+    return source;
   }
 
   function renderToHTML(markdown) {
     init();
     if (typeof marked === 'undefined') return escapeHtml(markdown || '');
 
-    const rid = generateRenderId();
-    // Normalizza scorciatoie salto pagina (\pagebreak, <!-- pagebreak -->, ---pagebreak---) in <div class="page-break"></div>
-    let source = String(markdown || '').replace(
-      /^[ \t]*(?:\\pagebreak|<!--\s*pagebreak\s*-->|---pagebreak---|===pagebreak===)[ \t]*$/gim,
-      '\n\n<div class="page-break"></div>\n\n'
-    );
-
-    // Pipeline Universale di Normalizzazione Matematica (LLM, doppi backslash, escaping, HTML KaTeX/Wikipedia)
-    if (typeof MiniPadSmartPaste !== 'undefined' && typeof MiniPadSmartPaste.normalizeAllMath === 'function') {
-      source = MiniPadSmartPaste.normalizeAllMath(source);
-    } else if (typeof window !== 'undefined' && typeof window.normalizeAllMath === 'function') {
-      source = window.normalizeAllMath(source);
-    }
-
-    const { md: protectedMd, codeBlocks, currencies } = protectCodeAndCurrency(source, rid);
+    const source = prepareSource(markdown);
 
     let html;
     try {
-      html = marked.parse(protectedMd);
+      html = marked.parse(source);
     } catch (e) {
       console.error('[Preview] parse error', e);
       html = `<pre>${escapeHtml(source)}</pre>`;
     }
-
-    html = restoreAll(html, codeBlocks, currencies, rid);
 
     if (typeof DOMPurify !== 'undefined') {
       html = DOMPurify.sanitize(html, {
@@ -232,6 +157,7 @@ window.MiniPadPreview = (function () {
     renderToHTML,
     updatePreviewWithContent,
     updatePreviewDebounced,
+    prepareSource,
     generateRenderId,
     escapeHtml
   };
